@@ -18,17 +18,22 @@ Window::Window(const char* Title, const int X, const int Y, const int Width, con
 #ifndef NDEBUG
         const char* debugLayers[] = {
             "VK_LAYER_KHRONOS_validation", // standard validation layer
-            "VK_LAYER_LUNARG_standard_validation", // add if not on MacOS
-            "VK_LAYER_RENDERDOC_Capture" // add this if you have installed RenderDoc
+            //"VK_LAYER_LUNARG_standard_validation", // add if not on MacOS
+            //"VK_LAYER_RENDERDOC_Capture" // add this if you have installed RenderDoc
         }; 
-        if (+vulkanSurface_->Create(*window_, DEPTH_BUFFER_SUPPORT, std::size(debugLayers), debugLayers, 0, nullptr, 0, nullptr, false))
+        if (+vulkanSurface_->Create(*window_,
+                                    DEPTH_BUFFER_SUPPORT,
+                                    // ReSharper disable once CppUseStdSize
+                                    sizeof(debugLayers) / sizeof(debugLayers[0]),
+                                    debugLayers,
+                                    0, nullptr, 0, nullptr, false))
 #else
         if (+vulkanSurface_->Create(*window_, DEPTH_BUFFER_SUPPORT))
 #endif
         {
             wasWindowCreated_ = true;
         }
-
+        
         isRunning_ = true;
     }
 }

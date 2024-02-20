@@ -10,6 +10,13 @@ bool Engine::Init(const char* Title, int X, int Y, int Width, int Height)
     logger_ = std::make_unique<Logger>();
     window_ = std::make_unique<Window>(Title, X, Y, Width, Height);
     
+    if (!window_->IsRunning())
+    {
+        VK_LOG(LogCategory::Error, "Failed to create the window.")
+        isRunning_ = false;
+        return false;
+    }
+    
     // Start the graphics renderer, with 2 frames of buffer.
     if (!Renderer::GRenderer().Init(window_->GetVulkanSurface(), Width, Height, 2))
     {

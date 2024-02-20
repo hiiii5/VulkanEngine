@@ -39,19 +39,22 @@ SOFTWARE.
 static_assert(sizeof(void*) == 8, "Gateware supports x64 platforms only.");
 
 // The Major version is auto-generated based on the current year.
-#define GATEWARE_MAJOR 22
+#define GATEWARE_MAJOR 24
 // The Minor version is auto-generated based on the current day of the year.
-#define GATEWARE_MINOR 296
+#define GATEWARE_MINOR 47
 // The Patch version is auto-generated based on the current UTC hour of the day.
-#define GATEWARE_PATCH 20
+#define GATEWARE_PATCH 21
 // Pulled directly from GIT  
 #define GATEWARE_BRANCH "master"
 // Pulled directly from GIT
-#define GATEWARE_COMMIT_HASH 0x636b27d
+#define GATEWARE_COMMIT_HASH 0x6acdab6
 // Standard Window Title Bar
-#define GATEWARE_VERSION_STRING "Gateware v22.296.20"
+#define GATEWARE_VERSION_STRING "Gateware v24.47.21"
 // Window Title Bar displayed in DEBUG builds
-#define GATEWARE_VERSION_STRING_LONG "Gateware v22.296.20 (master) [636b27d]"
+#define GATEWARE_VERSION_STRING_LONG "Gateware v24.47.21 (master) [6acdab6]"
+
+// Distinguishes the platform Gateware is compiling for
+//#include "GEnvironment.hpp"
 
 #endif
 
@@ -173,13 +176,16 @@ namespace GW
 #define G_DEVIATION_STANDARD_D	(G_EPSILON_D * 10)
 #define G_DEVIATION_LOOSE_D		(G_EPSILON_D * 100)
 
-
 #define G_ABSOLUTE_COMPARISON(num1, num2, margin) (G_ABS((num1) - (num2)) <= (margin)) //returns true if the absolute difference between the two values is <= the given margin 
 #define G_RELATIVE_COMPARISON(num1, num2, margin) (G_ABS((num1) - (num2)) <= margin * (G_ABS_LARGER (num1, num2))) //returns true if the absolute difference between the two given values is <= (the given margin * the larger given value)
 //Relative comparison is used to adjust for the fact that floating point imprecison gets bigger as the values get bigger (the further away from 0, the larger the floating-point imprecision). 
 //That is: with relative comparison, as the smallest possible error grows the margin for error also grows. 
 #define G_HYBRID_COMPARISON(num1, num2, absoluteMargin, relativeMargin) (G_ABSOLUTE_COMPARISON(num1, num2, absoluteMargin) || G_RELATIVE_COMPARISON(num1, num2, relativeMargin))
 //This hybrid comparison is used to adjust for the fact that relative comparison breaks down at values very near to zero. First, it does an absolute check. Then, if the absolute check fails, it does a relative check. 
+
+//These macros allow for <= and >= floating point comparison
+#define G_HYBRID_COMPARISON_LESSER_OR_EQUAL(num1, num2, absoluteMargin, relativeMargin) (num1 <= num2 || G_ABSOLUTE_COMPARISON(num1, num2, absoluteMargin) || G_RELATIVE_COMPARISON(num1, num2, relativeMargin))
+#define G_HYBRID_COMPARISON_GREATER_OR_EQUAL(num1, num2, absoluteMargin, relativeMargin) (num1 >= num2 || G_ABSOLUTE_COMPARISON(num1, num2, absoluteMargin) || G_RELATIVE_COMPARISON(num1, num2, relativeMargin))
 
 //These helper macros are more for readability than for shorthand 
 #define G_WITHIN_PRECISE_DEVIATION_F(num1, num2)	(G_HYBRID_COMPARISON(num1, num2, G_DEVIATION_PRECISE_F, G_DEVIATION_PRECISE_F)) //Helper macro for precise float precision checking 
@@ -189,6 +195,22 @@ namespace GW
 #define G_WITHIN_PRECISE_DEVIATION_D(num1, num2)	(G_HYBRID_COMPARISON(num1, num2, G_DEVIATION_PRECISE_D, G_DEVIATION_PRECISE_D)) //Helper macro for precise double precision checking 
 #define G_WITHIN_STANDARD_DEVIATION_D(num1, num2)	(G_HYBRID_COMPARISON(num1, num2, G_DEVIATION_STANDARD_D, G_DEVIATION_STANDARD_D)) //Helper macro for standard double precision checking 
 #define G_WITHIN_LOOSE_DEVIATION_D(num1, num2)		(G_HYBRID_COMPARISON(num1, num2, G_DEVIATION_LOOSE_D, G_DEVIATION_LOOSE_D))  //Helper macro for loose double precision checking 
+
+#define G_LESSER_OR_EQUAL_PRECISE_F(num1, num2)		(G_HYBRID_COMPARISON_LESSER_OR_EQUAL(num1, num2, G_DEVIATION_PRECISE_F, G_DEVIATION_PRECISE_F))		//Helper macro for float comparison. Equivalent to '<=' with a precise margin.
+#define G_LESSER_OR_EQUAL_STANDARD_F(num1, num2)	(G_HYBRID_COMPARISON_LESSER_OR_EQUAL(num1, num2, G_DEVIATION_STANDARD_F, G_DEVIATION_STANDARD_F))	//Helper macro for float comparison. Equivalent to '<=' with a standard margin.
+#define G_LESSER_OR_EQUAL_LOOSE_F(num1, num2)		(G_HYBRID_COMPARISON_LESSER_OR_EQUAL(num1, num2, G_DEVIATION_LOOSE_F, G_DEVIATION_LOOSE_F))			//Helper macro for float comparison. Equivalent to '<=' with a loose margin.
+
+#define G_GREATER_OR_EQUAL_PRECISE_F(num1, num2)	(G_HYBRID_COMPARISON_GREATER_OR_EQUAL(num1, num2, G_DEVIATION_PRECISE_F, G_DEVIATION_PRECISE_F))	//Helper macro for float comparison. Equivalent to '>=' with a precise margin.
+#define G_GREATER_OR_EQUAL_STANDARD_F(num1, num2)	(G_HYBRID_COMPARISON_GREATER_OR_EQUAL(num1, num2, G_DEVIATION_STANDARD_F, G_DEVIATION_STANDARD_F))	//Helper macro for float comparison. Equivalent to '>=' with a standard margin.
+#define G_GREATER_OR_EQUAL_LOOSE_F(num1, num2)		(G_HYBRID_COMPARISON_GREATER_OR_EQUAL(num1, num2, G_DEVIATION_LOOSE_F, G_DEVIATION_LOOSE_F))		//Helper macro for float comparison. Equivalent to '>=' with a loose margin.
+
+#define G_LESSER_OR_EQUAL_PRECISE_D(num1, num2)		(G_HYBRID_COMPARISON_LESSER_OR_EQUAL(num1, num2, G_DEVIATION_PRECISE_D, G_DEVIATION_PRECISE_D))		//Helper macro for double comparison. Equivalent to '<=' with a precise margin.
+#define G_LESSER_OR_EQUAL_STANDARD_D(num1, num2)	(G_HYBRID_COMPARISON_LESSER_OR_EQUAL(num1, num2, G_DEVIATION_STANDARD_D, G_DEVIATION_STANDARD_D))	//Helper macro for double comparison. Equivalent to '<=' with a standard margin.
+#define G_LESSER_OR_EQUAL_LOOSE_D(num1, num2)		(G_HYBRID_COMPARISON_LESSER_OR_EQUAL(num1, num2, G_DEVIATION_LOOSE_D, G_DEVIATION_LOOSE_D))			//Helper macro for double comparison. Equivalent to '<=' with a loose margin.
+
+#define G_GREATER_OR_EQUAL_PRECISE_D(num1, num2)	(G_HYBRID_COMPARISON_GREATER_OR_EQUAL(num1, num2, G_DEVIATION_PRECISE_D, G_DEVIATION_PRECISE_D))	//Helper macro for double comparison. Equivalent to '>=' with a precise margin.
+#define G_GREATER_OR_EQUAL_STANDARD_D(num1, num2)	(G_HYBRID_COMPARISON_GREATER_OR_EQUAL(num1, num2, G_DEVIATION_STANDARD_D, G_DEVIATION_STANDARD_D))	//Helper macro for double comparison. Equivalent to '>=' with a standard margin.
+#define G_GREATER_OR_EQUAL_LOOSE_D(num1, num2)		(G_HYBRID_COMPARISON_GREATER_OR_EQUAL(num1, num2, G_DEVIATION_LOOSE_D, G_DEVIATION_LOOSE_D))		//Helper macro for double comparison. Equivalent to '>=' with a loose margin.
 
 
 #define G_FIRST_COMPARISON_F(num1 , num2)		( G_ABS( (num1) - (num2) ) <= ( G_EPSILON_F ) ) //G_FIRST_COMPARISON_F is deprecated! Use G_ABSOLUTE_COMPARISON instead. 
@@ -274,6 +296,11 @@ CHECK(G_WITHIN_STANDARD_DEVIATION_D(_a.data[13], _b.data[13]));\
 CHECK(G_WITHIN_STANDARD_DEVIATION_D(_a.data[14], _b.data[14]));\
 CHECK(G_WITHIN_STANDARD_DEVIATION_D(_a.data[15], _b.data[15]));\
 }
+
+//Used by collision library to approximate "close enough" detections (may need adjusting)
+#define G_COLLISION_THRESHOLD_F 0.000001f
+//This seems rather large tbh, but its what the lib was using at the time of ARM port
+#define G_COLLISION_THRESHOLD_D 1.192092896e-07
 
 namespace GW
 {
@@ -1327,7 +1354,7 @@ namespace GW
 #define G_UNKNOWN_INPUT                 255 
 
 
-// Bit-manip macros
+// Bit-manipulation macros
 #define G_CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 #define G_TURNON_BIT(var,pos) ((var) |=  (1<<(pos)))
 #define G_TURNOFF_BIT(var,pos) ((var) &= ~(1<<(pos)))
@@ -1422,7 +1449,7 @@ namespace GW
 #define G_MAX_THREAD_POOL_SIZE		64
 // default amount of time in microseconds to nap threads that should release resources
 #define G_THREAD_DEFAULT_SLEEP		5000
-// amount of time in microseconds below which daemons are spinlocked for launch
+// amount of time in microseconds below which daemons are spin-locked for launch
 #define G_DAEMON_LAUNCH_THRESHOLD	100
 // amount of bytes gconcurrent uses to determine how many elements should be allocated per-thread in BranchParallel
 #define G_CONCURRENT_AUTO_SECTION	131072
@@ -1628,7 +1655,7 @@ namespace GW
 			virtual operator bool() const final { return !access.expired(); };
 			// nullptr assignment is how to clear a proxy before waiting for it to fall out of scope
 			virtual thisClass& operator =(std::nullptr_t) final { access.reset(); storage.reset(); return *this; };
-			// The GProxy varadic template should match the main internal implementation "Create" function.
+			// The GProxy variadic template should match the main internal implementation "Create" function.
 			// Though the templated variadic version of this function can support any set of arguments,
 			// This version requires derived classes to define & support at least one specific Create variant.
 			// This is required for API consistency. Alternate Create routines are supported by the next function.
@@ -1670,7 +1697,7 @@ namespace GW
 				}
 				return canYield;
 			}
-			// Returns a direct copy of the Proxy with the current ownership status maintined
+			// Returns a direct copy of the Proxy with the current ownership status maintained
 			// If direct ownership cannot be shared it will provide it's weak ownership
 			virtual thisClass Mirror() const final
 			{
@@ -1691,15 +1718,15 @@ namespace GW
 			{
 				return (storage) ? storage : access.lock();
 			}
-			// Types that can be used to lock down the internal weak pointer in performance critcal areas.
-			// Do not use these unless you are very familiar & comforatable with how shared & weak pointers function.
+			// Types that can be used to lock down the internal weak pointer in performance critical areas.
+			// Do not use these unless you are very familiar & comfortable with how shared & weak pointers function.
 			// As a general rule of thumb only create these on the stack where you need multiple subsequent API calls.
 			// These should only be in places like inner loops or code that is currently being bottlenecked by std::weak_ptr::lock.
 			// If you are concerned about access performance it may make more sense to GProxy<>::Share() your proxies with systems
 			// which need to constantly access them. However, for edge cases of required weak access in high-perf systems use below:
 			typedef const std::shared_ptr<_Interface> burst_w; // use if you are about to author a burst of write (non-const) calls.
 			typedef const std::shared_ptr<const _Interface> burst_r; // use if you are about to author a burst of read (const) calls.
-			// *** END WARNING: using the above haphazzardly can & will invalidate the inherent safety of the Proxy pattern. ***
+			// *** END WARNING: using the above haphazardly can & will invalidate the inherent safety of the Proxy pattern. ***
 		};
 		// Non-Member comparison operations allow a proxy to behave like a standard shared_ptr when compared against each other
 		template<typename... L, typename... R>
@@ -1839,9 +1866,9 @@ namespace GW
 			// ensure developers do not send types other than an enum to identify their events
 			static_assert(	std::is_enum<enumT>::value,
 							"Gateware Events{} are required to use an \"enum class\" list to identify themselves!");
-			// ensure developers use only C Style stuctures & basic enumerators for information transfer
+			// ensure developers use only C Style structures & basic enumerators for information transfer
 			static_assert(	std::is_trivially_copyable<dataT>::value,
-							"Enum & Data Types must be fully tranferable with std:memcpy only! Plain Old Data Only!");
+							"Enum & Data Types must be fully transferable with std:memcpy only! Plain Old Data Only!");
 			// Once we know the storable types are safe we record their type and transfer the data
 			enumType = typeid(enumT).hash_code();
 			dataType = typeid(dataT).hash_code();
@@ -1859,7 +1886,7 @@ namespace GW
 		template<class enumT, typename dataT>
 		GReturn Read(enumT& _outEventID, dataT& _outEventData) const
 		{
-			// If you get this complier error you are providing Read() with an incompatible type.
+			// If you get this compiler error you are providing Read() with an incompatible type.
 			// Always use Gxxx::Events and Gxxx::EVENT_DATA to examine an event.
 			static_assert((sizeof(enumT) + sizeof(dataT)) <= G_RAW_DATA_PACKET_SIZE &&
 				std::is_enum<enumT>::value && std::is_trivially_copyable<enumT>::value &&
@@ -1883,13 +1910,13 @@ namespace GW
 				memory_copy(&_outEventData, rawData + sizeof(enumT) + 2, sizeof(dataT));
 			else
 				return GReturn::MEMORY_CORRUPTION; // data size verification failed
-			// if we made it this far everything checked out and transfered successfully.
+			// if we made it this far everything checked out and transferred successfully.
 			return GReturn::SUCCESS;
 		}
 		template<class enumOrDataT>
 		GReturn Read(enumOrDataT& _outEventOrData) const
 		{
-			// If you get this complier error you are providing Read() with an incompatible type.
+			// If you get this compiler error you are providing Read() with an incompatible type.
 			// Always use Gxxx::Events and Gxxx::EVENT_DATA to examine an event.
 			static_assert(sizeof(enumOrDataT) <= G_RAW_DATA_PACKET_SIZE &&
 				std::is_trivially_copyable<enumOrDataT>::value,
@@ -1907,7 +1934,7 @@ namespace GW
 					return GReturn::MEMORY_CORRUPTION;
 			// event data identified
 			else if (dataType == typeid(enumOrDataT).hash_code())
-				if (rawData[0] < (G_EVENT_BLOCK_SIZE - (sizeof(std::size_t) << 1)) && // enoded enum type integrity check
+				if (rawData[0] < (G_EVENT_BLOCK_SIZE - (sizeof(std::size_t) << 1)) && // encoded enum type integrity check
 					sizeof(enumOrDataT) == rawData[rawData[0] + 1]) // jump to type size offset
 					memory_copy(&_outEventOrData, rawData + rawData[0] + 2, sizeof(enumOrDataT)); // transfer enum bits
 				else // data size verification failed
@@ -1921,12 +1948,12 @@ namespace GW
 };
 
 // Creates an identically named typedef in the proxy to represent a public type in the interface
-// These are typically used by Event Generator Proxies for end user typing conveinence
+// These are typically used by Event Generator Proxies for end user typing convenience
 #define GATEWARE_TYPEDEF(interface_type) typedef forceRaw::interface_type interface_type;
 // Returns if a proxy is empty or it is expired if this detection functionality is supported
 // In Visual Studio you can add "/std:c++17 /Zc:__cplusplus" to your C++ command line for partial c++17 support
 #if __cplusplus >= 201703L // This requires c++17 support
-// Determines if an invalid proxy has expired or was never intialized in the first place.
+// Determines if an invalid proxy has expired or was never initialized in the first place.
 #define GATEWARE_EXPIRED(weak_pointer) \
 (!(weak_pointer).owner_before(std::weak_ptr<forceRaw>{}) && \
 !std::weak_ptr<forceRaw>{}.owner_before((weak_pointer))) \
@@ -1950,12 +1977,12 @@ return (_proxy) ? (cast_type(_proxy.get()))->function_name(std::forward<Args>(pa
 #define GATEWARE_FUNCTION(function_name) GATEWARE_PROXY_FUNCTION(function_name, ,auto, )
 #define GATEWARE_CONST_FUNCTION(function_name) GATEWARE_PROXY_FUNCTION(function_name,const,forceConst, )
 // Template Proxy functions convert the base class pointer to its known implementation before
-// Passing the list of arguments to the appropriate routine, conveinent but not particluarly efficient
+// Passing the list of arguments to the appropriate routine, convenient but not particularly efficient
 #define GATEWARE_TEMPLATE_FUNCTION(function_name) \
 GATEWARE_PROXY_FUNCTION(function_name, ,auto,dynamic_cast<forceStatic*>)
 #define GATEWARE_CONST_TEMPLATE_FUNCTION(function_name) \
 GATEWARE_PROXY_FUNCTION(function_name,const,forceConst,dynamic_cast<forceStatic*>)
-// Static functions allow high speed calls with no refrence juggling for things like math libraries.
+// Static functions allow high speed calls with no reference juggling for things like math libraries.
 // Yet they still allow such Proxys to operate like any other Proxy transparently
 #define GATEWARE_STATIC_FUNCTION(function_name) \
 template<typename... Args> \
@@ -2389,6 +2416,70 @@ inline void FlushMacEventLoop()
 }
 #endif // #endif __APPLE__
 #endif // #endif GATEWARE_MACUTILS_H
+
+
+#ifndef GUTILITY_H
+#define GUTILITY_H
+
+#include <locale>
+#include <codecvt>
+
+// unknwn.h is not available on Apple or Linux based machines.
+#if (defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)) || defined(_WIN32)
+#include <unknwn.h>
+#endif
+
+namespace INTERNAL
+{
+	//UINT_MAX is not defined on Mac or Linux.
+	//Internal #define for this.
+#define G_UINT_MAX 0xFFFFFFFF
+
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+#include <stringapiset.h>
+	//Macro to preform string conversions.
+#define G_TO_UTF16(value) utf8_decode(value)
+#define G_TO_UTF8(value) utf8_encode(value)
+
+#endif
+
+	//All variables and functions below are macroed above. This is so the code wrote out
+	//will be the exact same code no matter the system we are writing it for.
+
+	//These will convert utf8 to utf16 and vice versa
+	//This is needed to be done because codecvt has been depricated in c++17
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+	//Convert a wide UTF16 string to an UTF8 string
+	static std::string utf8_encode(const std::wstring& wstr)
+	{
+		if (wstr.empty())
+		{
+			return std::string();
+		}
+		int size = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+		std::string strRet(size, 0);
+		WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strRet[0], size, NULL, NULL);
+		return strRet;
+	}
+
+	//Convert a UTF8 string to a wide UTF16 string
+	static std::wstring utf8_decode(const std::string& str)
+	{
+		if (str.empty())
+		{
+			return std::wstring();
+		}
+		int size = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+		std::wstring wstrRet(size, 0);
+		MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrRet[0], size);
+		return wstrRet;
+	}
+
+#endif
+
+}//end INTERNAL namespace
+
+#endif // #endif GUTILITY_H
 
 
 /************************************************
@@ -3941,7 +4032,7 @@ namespace GW
 	namespace I // Doxygen ignores this namespace.
 	{
 		// Base interface all Gateware interfaces must support at a minimum.
-		// The only purpose of this interface is to identify Gateware Objects, enable run-time polymorphisim.
+		// The only purpose of this interface is to identify Gateware Objects, enable run-time polymorphism.
 		class GInterfaceInterface
 		{
 			// All Gateware API interfaces contain no variables & are pure virtual.
@@ -3982,7 +4073,7 @@ namespace GW {
 #elif defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
 	// Universal implementation of GInterface
 
-// Make the implentation belong to the proper gateware namespace
+// Make the implementation belong to the proper gateware namespace
 // We cannot use "using" here as this is an HPP and supports header only deployments
 namespace GW {
 	namespace I {
@@ -3992,9 +4083,9 @@ namespace GW {
 	{
 		// If we had any internal variables or functions we would define them here.
 	public:
-		// GInterface doesn't do anything... but you can make one as that is consitent with the API
+		// GInterface doesn't do anything... but you can make one as that is consistent with the API
 		// ALL Implementations MUST have a "Create" function. You may pass any arguments you need.
-		// ALL Implementations support only the default constructor, Use "Create" to actually intialize your class.
+		// ALL Implementations support only the default constructor, Use "Create" to actually initialize your class.
 		GReturn Create()
 		{
 			return GReturn::SUCCESS;
@@ -4009,6 +4100,7 @@ namespace GW {
 
 
 #endif
+
 
 
 namespace GW
@@ -4064,7 +4156,7 @@ namespace GW
 // When adding implementations please try to condense redundant file includes where possible.
 // This will reduce size/redundancy when the library is tool compressed into single header form.
 #if !defined(GATEWARE_ENABLE_CORE) || defined(GATEWARE_DISABLE_GTHREADSHARED) || \
-    (defined(GATEWARE_ENABLE_CORE) && !defined(GATEWARE_DISABLE_GTHREADSHARED) && !defined(__APPLE__) && !defined(__linux__) && !defined(_WIN32))
+    (defined(GATEWARE_ENABLE_CORE) && !defined(GATEWARE_DISABLE_GTHREADSHARED) && !defined(__APPLE__) && !defined(__linux__) && !defined(_WIN32) && !defined(WINAPI_FAMILY))
 	// Even if a platform does not support a library a dummy implementation must be present!
 	namespace GW {
 	namespace I {
@@ -4099,42 +4191,42 @@ namespace GW
 // This variant has NO safety mechanisms at all, only use it if you need every last shred of performance and
 // are certain you have no threading logic errors of any kind.
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h> // used for fast locks and synchronus reads
-// Make the implentation belong to the proper gateware namespace
+#include <windows.h> // used for fast locks and synchronous reads
+// Make the implementation belong to the proper gateware namespace
 // We cannot use "using" here as this is an HPP and supports header only deployments
 namespace GW {
 	namespace I {
 
 		// Comments in these files are up to the developer but should not be part of doxygen
 		// The implementation of this class should use the fastest synchronization primitive per-platform
-		// The private inheritance of "GInterfaceImplementation" is not strictly nessacary here but it
+		// The private inheritance of "GInterfaceImplementation" is not strictly necessary here but it
 		// does demonstrate how to reuse Gateware implementation code in future interface implementations. 
 		class GThreadSharedImplementation :	public virtual GThreadSharedInterface, // <-- Always inherit an interface this way
 											private GInterfaceImplementation // <-- Always reuse implementation code like so
 		{
-			// Since we fully support C++11 you may inline intialize variables as needed.
-			SRWLOCK sync = { nullptr }; // used to synchronize reads & writes, initializig this to something other than null/nothing causes issues
+			// Since we fully support C++11 you may inline initialize variables as needed.
+			SRWLOCK sync = { nullptr }; // used to synchronize reads & writes, initializing this to something other than null/nothing causes issues
 		public:
 			// ALL Implementations MUST have a "Create" function. You may pass any arguments you need.
-			// ALL Implementations support only the default constructor, Use "Create" to actually intialize your class.
+			// ALL Implementations support only the default constructor, Use "Create" to actually initialize your class.
 			GReturn Create()
 			{
 				// Init anything you cannot or do not wish to init inline here (c++11)
 				InitializeSRWLock(&sync); // The return of this may be null so we cannot use that for error checking
 				return GReturn::SUCCESS;
 			}
-			// overload utility functions, these will be utilized by derived implmentations of the parent interface
+			// overload utility functions, these will be utilized by derived implementations of the parent interface
 			GReturn LockAsyncRead() const override
 			{
 				// enables const correctness for downstream interfaces
-				// not ideal but forcing Zero const functions for later Asynchronus interfaces is a non-option
+				// not ideal but forcing Zero const functions for later Asynchronous interfaces is a non-option
 				AcquireSRWLockShared(const_cast<PSRWLOCK>(&sync));
 				return GReturn::SUCCESS;
 			}
 			GReturn UnlockAsyncRead() const override
 			{
 				// enables const correctness for downstream interfaces
-				// not ideal but forcing Zero const functions for later Asynchronus interfaces is a non-option
+				// not ideal but forcing Zero const functions for later Asynchronous interfaces is a non-option
 				ReleaseSRWLockShared(const_cast<PSRWLOCK>(&sync));
 				return GReturn::SUCCESS;
 			}
@@ -4144,7 +4236,7 @@ namespace GW {
 				return GReturn::SUCCESS;
 			}
 
-			// it is the end-users resposibility to make sure they lock before they unlock
+			// it is the end-users responsibility to make sure they lock before they unlock
 			// this disables the warning C26110 that is associated with this, so the end-user doesn't see it in Gateware.h
 #pragma warning( push )
 #pragma warning( disable : 26110 )
@@ -4162,7 +4254,7 @@ namespace GW {
  // fast unlimited asynchronus locking, ZERO safety
 		#else	
 			// This files implements read & write locks through a generic mutex.
-// Ideally you should replace this implementation with an optmized platform specific one.
+// Ideally you should replace this implementation with an optimized platform specific one.
 // No error checking is present in this variant to maximize performance in release.
 // **NEW** Updated with c++14 shared mutex.(if available)
 #if __cplusplus >= 201402L // shared_mutex requires c++14 support
@@ -4183,26 +4275,26 @@ namespace GW {
 
 		// Comments in these files are up to the developer but should not be part of doxygen
 		// The implementation of this class should use the fastest synchronization primitive per-platform
-		// The private inheritance of "GInterfaceImplementation" is not strictly nessacary here but it
+		// The private inheritance of "GInterfaceImplementation" is not strictly necessary here but it
 		// does demonstrate how to reuse Gateware implementation code in future interface implementations. 
 		class GThreadSharedImplementation :	public virtual GThreadSharedInterface, // <-- Always inherit an interface this way
 											protected GInterfaceImplementation // <-- Always reuse implementation code like so
 		{
-			// If C++14 support is detected we enable asynchronus reads for improved performance
-			G_LOCK_OBJ async; // hopefully supports aynchronus reads and synchronus writes
+			// If C++14 support is detected we enable asynchronous reads for improved performance
+			G_LOCK_OBJ async; // hopefully supports asynchronous reads and synchronous writes
 		public:
 			// ALL Implementations MUST have a "Create" function. You may pass any arguments you need.
-			// ALL Implementations support only the default constructor, Use "Create" to actually intialize your class.
+			// ALL Implementations support only the default constructor, Use "Create" to actually initialize your class.
 			GReturn Create()
 			{
 				// Init anything you cannot or do not wish to init inline here (c++11)
 				return GReturn::SUCCESS;
 			}
-			// overload utility functions, these will be utilized by derived implmentations of the parent interface
+			// overload utility functions, these will be utilized by derived implementations of the parent interface
 			GReturn LockAsyncRead() const override
 			{
 				// enables const correctness for downstream interfaces
-				// not ideal but forcing Zero const functions for later Asynchronus interfaces is a non-option
+				// not ideal but forcing Zero const functions for later Asynchronous interfaces is a non-option
 				const_cast<G_LOCK_OBJ*>(&async)->G_LOCK_ASYNC();
 				// we have locked down this thread
 				return GReturn::SUCCESS;
@@ -4210,7 +4302,7 @@ namespace GW {
 			GReturn UnlockAsyncRead() const override
 			{
 				// enables const correctness for downstream interfaces
-				// not ideal but forcing Zero const functions for later Asynchronus interfaces is a non-option
+				// not ideal but forcing Zero const functions for later Asynchronous interfaces is a non-option
 				const_cast<G_LOCK_OBJ*>(&async)->G_UNLOCK_ASYNC();
 				return GReturn::SUCCESS;
 			}
@@ -4242,43 +4334,43 @@ namespace GW {
 		#endif
 	#else
 		// This files implements read & write locks through a generic mutex.
-// Ideally you should replace this implementation with an optmized platform specific one.
-// This version currently does not support asynchronus reads, may be updated with c++14 timed mutex.
+// Ideally you should replace this implementation with an optimized platform specific one.
+// This version currently does not support asynchronous reads, may be updated with c++14 timed mutex.
 #include <atomic>
 #include <mutex>
 #include <thread> // used for tracking thread ids to avoid deadlock
-// Make the implentation belong to the proper gateware namespace
+// Make the implementation belong to the proper gateware namespace
 // We cannot use "using" here as this is an HPP and supports header only deployments
 namespace GW {
 	namespace I {
 
 		// Comments in these files are up to the developer but should not be part of doxygen
 		// The implementation of this class should use the fastest synchronization primitive per-platform
-		// The private inheritance of "GInterfaceImplementation" is not strictly nessacary here but it
+		// The private inheritance of "GInterfaceImplementation" is not strictly necessary here but it
 		// does demonstrate how to reuse Gateware implementation code in future interface implementations. 
 		class GThreadSharedImplementation :	public virtual GThreadSharedInterface, // <-- Always inherit an interface this way
 											protected GInterfaceImplementation // <-- Always reuse implementation code like so
 		{
-			// Since we fully support C++11 you may inline intialize variables as needed.
+			// Since we fully support C++11 you may inline initialize variables as needed.
 			std::mutex sync; // used to synchronize reads & writes
 			std::atomic<std::thread::id> locker; // ID of the only thread that has a lock.(used to detect deadlocks)
 			std::atomic_bool mode; // tracking of active mode. false = read, true = write
 		public:
 			// ALL Implementations MUST have a "Create" function. You may pass any arguments you need.
-			// ALL Implementations support only the default constructor, Use "Create" to actually intialize your class.
+			// ALL Implementations support only the default constructor, Use "Create" to actually initialize your class.
 			GReturn Create()
 			{
 				// Init anything you cannot or do not wish to init inline here (c++11)
 				return GReturn::SUCCESS;
 			}
-			// overload utility functions, these will be utilized by derived implmentations of the parent interface
+			// overload utility functions, these will be utilized by derived implementations of the parent interface
 			GReturn LockAsyncRead() const override
 			{
 				// even though the function says async this implementation is synced for now
 				if (locker == std::this_thread::get_id()) 
 					return GReturn::DEADLOCK;
 				// enables const correctness for downstream interfaces
-				// not ideal but forcing Zero const functions for later Asynchronus interfaces is a non-option
+				// not ideal but forcing Zero const functions for later Asynchronous interfaces is a non-option
 				const_cast<std::mutex*>(&sync)->lock();
 				*const_cast<std::atomic<std::thread::id>*>(&locker) = std::this_thread::get_id();
 				*const_cast<std::atomic_bool*>(&mode) = false;
@@ -4291,7 +4383,7 @@ namespace GW {
 				if (locker != std::this_thread::get_id() || mode == true) 
 					return GReturn::FAILURE;
                 // enables const correctness for downstream interfaces
-				// not ideal but forcing Zero const functions for later Asynchronus interfaces is a non-option
+				// not ideal but forcing Zero const functions for later Asynchronous interfaces is a non-option
 				*const_cast<std::atomic<std::thread::id>*>(&locker) = std::thread::id();
 				const_cast<std::mutex*>(&sync)->unlock();
 				return GReturn::SUCCESS;
@@ -4410,7 +4502,7 @@ namespace GW
 } // end GW
 
 #elif defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
-	// Make the implentation belong to the proper gateware namespace
+	// Make the implementation belong to the proper gateware namespace
 // We cannot use "using" here as this is an HPP and supports header only deployments
 namespace GW {
 	namespace I {
@@ -4442,7 +4534,7 @@ namespace GW {
 				if (recursing || G_PASS(result = LockAsyncRead()))
 				{
 					recursing = true; // recursion is allowed on this thread, bypass locks
-					// run logic if available, allowing recurssion on this thread
+					// run logic if available, allowing recursion on this thread
 					if (logic) logic(); // routine called
 					// if this was a recursive call ignore the Unlock since the stack unwind will handle it
 					if (result != GReturn::IGNORED)
@@ -4473,7 +4565,7 @@ namespace GW
 			: public I::GProxy<I::GLogicInterface, I::GLogicImplementation, std::function<void()>>
 		{
 		public: // Only public functions are exposed via Proxy, never protected or private operations
-			// procy functions should be ignored by doxygen
+			// proxy functions should be ignored by doxygen
 			GATEWARE_PROXY_CLASS(GLogic)
 			GATEWARE_FUNCTION(Assign)
 			GATEWARE_CONST_FUNCTION(Invoke)
@@ -4500,7 +4592,7 @@ namespace GW
 		public:
 			// Let the compiler know that we intend to use the base class methods
 			// and also override them with an additional parameters.
-			using GLogicInterface::Assign; // enables "eventless" response if desired
+			using GLogicInterface::Assign; // enables "event-less" response if desired
 			using GLogicInterface::Invoke; // A GResponder Invoke with no GEvent will have a dummy event provided.
 			// new methods (overrides)
 			virtual GReturn Assign(std::function<void(const GEvent&)> _newEventHandler) = 0;
@@ -4551,7 +4643,7 @@ namespace GW
 } // end GW
 
 #elif defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
-	// Make the implentation belong to the proper gateware namespace
+	// Make the implementation belong to the proper gateware namespace
 // We cannot use "using" here as this is an HPP and supports header only deployments
 namespace GW {
 	namespace I {
@@ -4584,7 +4676,7 @@ namespace GW {
 				if (recursing || G_PASS(result = LockAsyncRead()))
 				{
 					recursing = true; // recursion is allowed on this thread, bypass locks
-					// run logic if available, allowing recurssion on this thread
+					// run logic if available, allowing recursion on this thread
 					if (handler) handler(_incomingEvent); // routine called with actual event
 					// if this was a recursive call ignore the Unlock since the stack unwind will handle it
 					if (result != GReturn::IGNORED)
@@ -4613,7 +4705,7 @@ namespace GW {
 				if (recursing || G_PASS(result = LockAsyncRead()))
 				{
 					recursing = true; // recursion is allowed on this thread, bypass locks
-					// run logic if available, allowing recurssion on this thread
+					// run logic if available, allowing recursion on this thread
 					if (handler) handler(GEvent()); // routine called with non-event
 					// if this was a recursive call ignore the Unlock since the stack unwind will handle it
 					if (result != GReturn::IGNORED)
@@ -4832,7 +4924,7 @@ namespace GW {
 				// generate circular queue
 				if ((circularQueue = new GEvent[_cacheSize]) == nullptr)
 					return GReturn::FAILURE; // new[] failed
-				maxEvents = _cacheSize; // store mamximum allowable event data
+				maxEvents = _cacheSize; // store maximum allowable event data
 				return GReturn::SUCCESS;
 			}
 			GReturn Max(unsigned int& _outSize) const override 
@@ -4845,7 +4937,7 @@ namespace GW {
 			// Override from GEventReceiver
 			GReturn Append(const GEvent& _inEvent) override 
 			{
-				if (+LockSyncWrite()) // makin changes
+				if (+LockSyncWrite()) // making changes
 				{
 					if (eventsWaiting >= maxEvents) // are we are full?
 					{
@@ -5039,7 +5131,7 @@ namespace GW
 	namespace I
 	{
 		// The GEventGenerator Interface is capable of notifying end users of various events that occur during runtime.
-		// This interface supports asynchronus addition, removal & notification of observer interfaces
+		// This interface supports asynchronous addition, removal & notification of observer interfaces
 		class GEventGeneratorInterface : public virtual GInterfaceInterface
 		{
 			// All Gateware API interfaces contain no variables & are pure virtual.		
@@ -5051,7 +5143,7 @@ namespace GW
 				NON_EVENT
 			};
 			// For API consistency all Gateware "Event Generators" must have an event struct called "EVENT_DATA"
-			// All contined values must be POD (plain old data) and fit within a GEvent data block
+			// All contained values must be POD (plain old data) and fit within a GEvent data block
 			struct EVENT_DATA
 			{
 				std::nullptr_t noData;
@@ -5115,7 +5207,7 @@ namespace GW
 } // end GW
 
 #elif defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
-	#include <vector> // used to track messagable objects
+	#include <vector> // used to track message-able objects
 
 // define temporary internal defines (GWI = Gateware Internal)
 #define GWI_MAX_TRAVERSAL_STACK 32 
@@ -5151,7 +5243,7 @@ namespace GW {
 					LockSyncWrite();
 				// traversing the container backwards should make removals a bit more efficient
 				int current = static_cast<int>(listeners.size()) - 1 - _offset;
-				// traverse contaniner, append to local array, remove dead proxies
+				// traverse container, append to local array, remove dead proxies
 				while (current >= 0 && numToInvoke < GWI_MAX_TRAVERSAL_STACK)
 				{
 					if (listeners[current].first) {
@@ -5169,7 +5261,7 @@ namespace GW {
 					RecursivePush(_newEvent, _offset + GWI_MAX_TRAVERSAL_STACK);
 				else // if you DON'T end up calling a recursive call, then unlock
 					UnlockSyncWrite();
-				// Traverse local array & Invoke each function & interface combo avaliable.
+				// Traverse local array & Invoke each function & interface combo available.
 				while (numToInvoke)
 				{	// traverse backwards so we get proper FIFO traversal with recursion
 					numToInvoke--;
@@ -5409,7 +5501,7 @@ namespace GW
 } // end GW
 // Required for dummy compilation but does nothing
 namespace internal_gw {
-	// makig this variable volatile should hopefully stop compilers from agressively removing its assigment
+	// making this variable volatile should hopefully stop compilers from aggressively removing its assignment
 	static void(*volatile event_receiver_callback)(const GW::GEvent&, GW::CORE::GInterface&) = nullptr;
 	template<class Proxy>
 	static void event_receiver_logic(const GW::GEvent& _e, GW::CORE::GInterface& _i) {};
@@ -5428,7 +5520,7 @@ namespace internal_gw
 	static void event_receiver_logic(const GW::GEvent& _e, GW::CORE::GInterface& _i)
 	{
 		Proxy r(_i.Mirror()); // mirror for speed where possible & appropriate
-		r.Append(_e); // if an invalid Proxy is requested this will fail to be intialized
+		r.Append(_e); // if an invalid Proxy is requested this will fail to be initialized
 		r.Invoke();
 	};
 } // end internal_gw namespace
@@ -5458,7 +5550,7 @@ namespace GW {
 				{
 					callback = _callback; // nullptr is ok, optional.	
 					// This is how to create a Proxy from "this", ideally we try and avoid doing this.
-					CORE::GInterface me(shared_from_this()); // we create a temporary so only weak access is transfered
+					CORE::GInterface me(shared_from_this()); // we create a temporary so only weak access is transferred
 					// While weak access is not as fast, it grants lifetime control and flexibility to the user.
 					// If you want the most efficiency you should consider calling "Register" directly with a fixed callback.
 					return _listenToMe.Register(me, internal_gw::event_receiver_callback);
@@ -5470,7 +5562,7 @@ namespace GW {
 			}
 			GReturn Append(const GEvent& _inEvent) override
 			{
-				if (+LockSyncWrite()) // makin changes
+				if (+LockSyncWrite()) // making changes
 				{
 					if (eventWaiting) ++missedEvents; // did they miss the last one?
 					lastEvent = _inEvent; // copy new event
@@ -5544,7 +5636,7 @@ namespace GW {
 					callback(); // Invoke internal callback (can be done from multiple threads)
 					return GReturn::SUCCESS;
 				}
-				// No callback attatched, so it cannot be invoked
+				// No callback attached, so it cannot be invoked
 				return GReturn::FAILURE; 
 			}
 			template<class eventType>
@@ -5770,7 +5862,7 @@ namespace GW {
 			}
 			// required to fully implement the "Find" routines
 			// while collapsing the queue is not optimal we go for the closest point to minimize copies
-			bool Erase(unsigned int _offset) // offset from dequqe point
+			bool Erase(unsigned int _offset) // offset from deque point
 			{
 				if (eventsWaiting == 0 || _offset >= eventsWaiting) // should we bother?
 					return false;
@@ -5813,10 +5905,10 @@ namespace GW {
 				{	
 					// generate circular queue
 					circularQueue = new GEvent[_maxSize];
-					maxEvents = _maxSize; // store mamximum allowable event data
+					maxEvents = _maxSize; // store maximum allowable event data
 					callback = _callback; // nullptr is ok, optional.	
 					// This is how to create a Proxy from "this", ideally we try and avoid doing this.
-					CORE::GInterface me(shared_from_this()); // we create a temporary so only weak access is transfered
+					CORE::GInterface me(shared_from_this()); // we create a temporary so only weak access is transferred
 					// While weak access is not as fast, it grants lifetime control and flexibility to the user.
 					// If you want the most efficiency you should consider calling "Register" directly with a fixed callback.
 					return _listenToMe.Register(me, internal_gw::event_receiver_callback);					
@@ -5929,7 +6021,7 @@ namespace GW {
 					callback(); // Invoke internal callback (can be done from multiple threads)
 					return GReturn::SUCCESS;
 				}
-				// No callback attatched, so it cannot be invoked
+				// No callback attached, so it cannot be invoked
 				return GReturn::FAILURE;
 			}
 			// Overload Find templates
@@ -6072,6 +6164,11 @@ namespace GW
 			virtual GReturn GetFilesFromDirectory(char* _outFiles[], unsigned int _numFiles, unsigned int _fileNameSize) = 0;
 			virtual GReturn GetFoldersFromDirectory(unsigned int _numsubDir, unsigned int _subDirNameSize, char* _outsubDir[]) = 0;
 			virtual GReturn GetFileSize(const char* const _file, unsigned int& _outSize) = 0;
+			virtual GReturn GetInstallFolder(unsigned int _dirSize, char* _outDir) = 0;  //IOS: APPNAME.APP - Location of the installed app on the current device, used for items such as app resources 
+			virtual GReturn GetSaveFolder(unsigned int _dirSize, char* _outDir) = 0; // UWP: LOCAL //IOS: DOCUMENTS - Data that exists on the current device and is backed up in the cloud 
+			virtual GReturn GetPreferencesFolder(unsigned int _dirSize, char* _outDir) = 0; // UWP: ROAMING //IOS: LIBRARY - Data that exists on all devices on which the user has installed the app 
+			virtual GReturn GetTempFolder(unsigned int _dirSize, char* _outDir) = 0; // UWP: TEMPORARY //IOS: TEMP - Data that could be removed by the system at any time 
+			virtual GReturn GetCacheFolder(unsigned int _dirSize, char* _outDir) = 0; // UWP: LOCALCACHE //IOS: LIBRARY/CACHES - Persistent data that exists only on the current device 
 			virtual GReturn Seek(unsigned int _seekFrom, int _amount, unsigned int& _outCurrPos) = 0;
 		};
 	}
@@ -7113,12 +7210,684 @@ dirent_set_errno(
 			GReturn Seek(unsigned int _seekFrom, int _amount, unsigned int& _outCurrPos) override {
 				return GReturn::FAILURE;
 			}
+			
+			GReturn GetInstallFolder(unsigned int _dirSize, char* _outDir) override {
+				return GReturn::FAILURE;
+			}
+			
+			GReturn GetSaveFolder(unsigned int _dirSize, char* _outDir) override {
+				return GReturn::FAILURE;
+			}
+			
+			GReturn GetPreferencesFolder(unsigned int _dirSize, char* _outDir) override {
+				return GReturn::FAILURE;
+			}
+			
+			GReturn GetTempFolder(unsigned int _dirSize, char* _outDir) override{
+				return GReturn::FAILURE;
+			}
+			
+			GReturn GetCacheFolder(unsigned int _dirSize, char* _outDir) override {
+				return GReturn::FAILURE;
+			}
 		};
 	}
 }
 
 #elif defined(__APPLE__)
-	#include <fstream>  //file streams
+	#include <TargetConditionals.h>
+    #if TARGET_OS_IOS
+        #include <fstream>  //file streams
+#include <string>  //strings
+#include <atomic>  //atomic variables
+#include <mutex>  //mutex locks
+  //Internal utility functions
+#include <stdio.h>
+
+//dirent.h is not native to Windows and is added to the project
+//The " " are used for include so the compiler knows to look in the
+//project folder first.
+//dirent.h is native in Linux and Mac so the < > are used to include.
+#if defined(__APPLE__) || defined(__linux__)
+
+//Apple and Linux includes.
+#include <dirent.h>
+  //Directory handling.
+ //thread safety.
+#include <sys/stat.h>  //File stats.
+#include <string.h>
+#include <cstring>
+
+//iOS includes
+@import Foundation;
+
+#define DIR_SEPERATOR '/'
+
+#else
+
+#error Gateware libraries are not currently supported for your platform
+
+#endif
+
+//The using statements for specifically what we are using.
+using std::string;
+using std::fstream;
+using std::ios;
+using std::atomic;
+using std::mutex;
+using std::getline;
+
+namespace GW
+{
+    namespace I
+    {
+        class GFileImplementation : public virtual GW::I::GFileInterface, protected GThreadSharedImplementation
+    
+        {
+            DIR* currDirStream;  //Maintains the current directory.
+            fstream file;  //Maintains the current file (if one is open).
+            FILE* binaryFile = NULL; //for binary read and write
+            string currDir;  //A cached directory path for faster fetching.
+            char initialDir[250];
+            atomic<unsigned int> dirSize;  //A cached directory size for faster fetching.
+
+            atomic<unsigned int> refCount;  //Reference counter.
+
+            atomic<unsigned int> mode; //Used to track what open mode the file is in
+
+            mutex lock; //Read/Write lock.
+
+        public:
+            GFileImplementation()
+            {
+                currDirStream = nullptr;
+            };
+            
+            virtual ~GFileImplementation()
+            {
+                SetCurrentWorkingDirectory(initialDir);
+                //Close the current directory.
+                closedir(currDirStream);
+
+                //Close the file stream.
+                CloseFile();
+            };
+
+            GReturn OpenBinaryRead(const char* const _file) override
+            {
+                //Check for invalid arguments.
+                if (_file == nullptr)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Ensure a file is not already open.
+                if (file.is_open())
+                    return GW::GReturn::FAILURE;
+
+                //Open the new file in the currentWorkingDirectory.
+                file.open(currDir + G_TO_UTF16(_file), ios::in | ios::binary);
+
+                //If the file failed to open the function fails.
+                if (!file.is_open())
+                    return GW::GReturn::FILE_NOT_FOUND;
+
+                //Set mode to read
+                mode = ios::in;
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn OpenBinaryWrite(const char* const _file) override
+            {
+
+                //Check for invalid arguments.
+                if (_file == nullptr)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Check for invalid arguments.
+                if (_file == nullptr)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //If the file is currently open we fail.
+                if (file.is_open())
+                    return GW::GReturn::FAILURE;
+
+                //Open the new file.
+                file.open(currDir + G_TO_UTF16(_file), ios::out | ios::binary);
+
+                //If file failed to open we fail.
+                if (!file.is_open())
+                    return GW::GReturn::FILE_NOT_FOUND;
+
+                //Set mode to write
+                mode = ios::out;
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn AppendBinaryWrite(const char* const _file) override
+            {
+                //Check for invalid arguments.
+                if (_file == nullptr)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Close the current file if there is one.
+                if (file.is_open())
+                    return GW::GReturn::FAILURE;
+
+                //Open the new file.
+                file.open(currDir + G_TO_UTF16(_file), ios::out | ios::binary | ios::app | ios::ate);
+
+                //If file failed to open we fail.
+                if (!file.is_open())
+                    return GW::GReturn::FILE_NOT_FOUND;
+
+                //Set mode to write
+                mode = ios::out;
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn OpenTextRead(const char* const _file) override
+            {
+                //Check for invalid arguments.
+                if (_file == nullptr)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Close the current file if there is one.
+                if (file.is_open())
+                    return GW::GReturn::FAILURE;
+
+                //Open the new file.
+                file.open(currDir + G_TO_UTF16(_file), ios::in);
+
+                if (!file.is_open())
+                    return GW::GReturn::FILE_NOT_FOUND;
+
+                //Set mode to read
+                mode = ios::in;
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn OpenTextWrite(const char* const _file) override
+            {
+                //Check for invalid arguments.
+                if (_file == nullptr)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Close the current file if there is one.
+                if (file.is_open())
+                    return GW::GReturn::FAILURE;
+
+                //Open the new file.
+                file.open(currDir + G_TO_UTF16(_file), ios::out);
+
+                if (!file.is_open())
+                    return GW::GReturn::FILE_NOT_FOUND;
+
+                //Set mode to write
+                mode = ios::out;
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn AppendTextWrite(const char* const _file) override
+            {
+                //Check for invalid arguments.
+                if (_file == nullptr)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Close the current file if there is one.
+                if (file.is_open())
+                    return GW::GReturn::FAILURE;
+
+                //Open the new file.
+                file.open(currDir + G_TO_UTF16(_file), ios::out | ios::app | ios::ate);
+
+                if (!file.is_open())
+                    return GW::GReturn::FILE_NOT_FOUND;
+
+                //Set mode to write
+                mode = ios::out;
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn Write(const char* const _inData, unsigned int _numBytes) override
+            {
+                //Check for invalid arguments.
+                if (_inData == nullptr || _numBytes == 0)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Ensure a file is open.
+                if (!file.is_open() && binaryFile == NULL)
+                    return GW::GReturn::FAILURE;
+
+                //Make sure the file is opened for writing
+                if (mode != ios::out)
+                    return GW::GReturn::FAILURE;
+
+                //Lock the write operations.
+                lock.lock();
+
+                file.write(_inData, _numBytes);
+
+                lock.unlock();
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn Read(char* _outData, unsigned int _numBytes) override
+            {
+                if (_numBytes == 0)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Ensure a file is open.
+                if (!file.is_open() && binaryFile == NULL)
+                {
+                    _outData = nullptr;
+                    return GW::GReturn::FAILURE;
+                }
+
+                //Make sure the file is opened for reading
+                if (mode != ios::in)
+                    return GW::GReturn::FAILURE;
+
+                //Lock the read operations.
+                lock.lock();
+
+                file.read(_outData, _numBytes);
+
+                lock.unlock();
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn WriteLine(const char* const _inData) override
+            {
+                //Check for invalid arguments.
+                if (_inData == nullptr)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Ensure a file is open.
+                if (!file.is_open())
+                    return GW::GReturn::FAILURE;
+
+                //Make sure the file is opened for writing
+                if (mode != ios::out)
+                    return GW::GReturn::FAILURE;
+
+                //Transfer the data to a string. #defines make it so the
+                //string is what we need it to be on any system we support.
+                string writeOutString = G_TO_UTF16(_inData);
+
+                //Lock the write operations.
+                lock.lock();
+
+                //Write out the string.
+                file << writeOutString;
+
+                lock.unlock();
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn ReadLine(char* _outData, unsigned int _outDataSize, char _delimiter) override
+            {
+                if (_outData == nullptr || _outDataSize == 0)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Ensure file is open.
+                if (!file.is_open())
+                    return GW::GReturn::FAILURE;
+
+                //Make sure the file is opened for reading
+                if (mode != ios::in)
+                    return GW::GReturn::FAILURE;
+
+                //The string to be read into.
+                string outString;
+
+                //Lock the read operations.
+                lock.lock();
+
+                //Just read in data normally.
+                getline(file, outString, _delimiter);
+
+                //INTERNAL::strlcpy(_outData, _outDataSize, G_TO_UTF8(outString).c_str());
+
+                //Copy the data over to the out parameter.
+                INTERNAL::strcpy_s(_outData, _outDataSize, G_TO_UTF8(outString).c_str());
+
+                lock.unlock();
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn CloseFile() override
+            {
+                //If a file is not open, we can not close it.
+                if (!file.is_open() && binaryFile == NULL)
+                    return GW::GReturn::FAILURE;
+
+                if (binaryFile != NULL)
+                {
+                    fflush(binaryFile);
+                    fclose(binaryFile);
+                    binaryFile = nullptr;
+                }
+                else
+                {
+                    //Flush the file.
+                    file.flush();
+                    //Close the file.
+                    file.close();
+                }
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn FlushFile() override
+            {
+                //If a file is not open we can not flush it.
+                if (!file.is_open() && binaryFile == NULL)
+                    return GW::GReturn::FAILURE;
+
+                if (binaryFile != NULL)
+                    fflush(binaryFile);
+                else
+                {
+                    //flush the file.
+                    file.flush();
+                }
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn SetCurrentWorkingDirectory(const char* const _dir) override
+            {
+                //Check for valid arguments.
+                if (_dir == nullptr)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Get the absolute path.
+                char buffer[PATH_MAX];
+                if (realpath(_dir, buffer) == nullptr)
+                    return GW::GReturn::FAILURE;
+
+                //Ensure the directory exists.
+                struct stat s;
+                if (stat(buffer, &s) != 0)
+                    return GW::GReturn::FILE_NOT_FOUND;
+
+                //Assign the passed in directory to our internal directory storage.
+                currDir = buffer;
+                currDir += DIR_SEPERATOR;
+
+                //If there is an open directory, close it.
+                if (currDirStream != nullptr)
+                    closedir(currDirStream);
+
+                //Open new directory.
+                currDirStream = opendir(currDir.c_str());
+
+                //Check to ensure directory is open.
+                if (currDirStream == nullptr)
+                    return GW::GReturn::FAILURE;
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn GetCurrentWorkingDirectory(char* _dir, unsigned int _dirSize) override
+            {
+                //Check for valid arguments.
+                if (_dir == nullptr || _dirSize == 0)
+                    return GW::GReturn::INVALID_ARGUMENT;
+
+                //Check that a directory is open.
+                if (currDirStream == nullptr)
+                    return GW::GReturn::FAILURE;
+
+                //INTERNAL::strlcpy(_dir, _dirSize, G_TO_UTF8(currDir).c_str());
+                //Copy the current directory to the out parameter.
+                INTERNAL::strcpy_s(_dir, _dirSize, G_TO_UTF8(currDir).c_str());
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn GetDirectorySize(unsigned int& _outSize) override
+            {
+                //Check that there is a current working directory.
+                if (currDirStream == nullptr)
+                    return GW::GReturn::FAILURE;
+
+                struct dirent* file;
+                //Set the directory iterator back to the beginning.
+                rewinddir(currDirStream);
+
+                //Reset the dir size.
+                _outSize = 0;
+
+                //Get the number of files in directory.
+                while ((file = readdir(currDirStream)))
+                {
+                    if (file->d_type == DT_REG)
+                        ++_outSize;
+                }
+
+                //Set the directory iterator back to the beginning.
+                rewinddir(currDirStream);
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn GetSubDirectorySize(unsigned int& _outSize) override
+            {
+                //Check that there is a current working directory.
+                if (currDirStream == nullptr)
+                    return GW::GReturn::FAILURE;
+
+                struct dirent* subDir;
+                //Set the directory iterator back to the beginning.
+                rewinddir(currDirStream);
+
+                //Reset the sub-dir size.
+                _outSize = 0;
+
+                while ((subDir = readdir(currDirStream)))
+                {
+                    if (strcmp(subDir->d_name, ".\0") == 0 ||
+                        strcmp(subDir->d_name, "..\0") == 0)
+                        continue;
+
+                    if (subDir->d_type == DT_DIR)
+                        ++_outSize;
+                }
+
+                //Set the directory iterator back to the beginning.
+                rewinddir(currDirStream);
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn GetFilesFromDirectory(char* _outFiles[], unsigned int _numFiles, unsigned int _fileNameSize) override
+            {
+                //Check that there is a current working directory.
+                if (currDirStream == nullptr)
+                    return GW::GReturn::FAILURE;
+
+                //Set the directory iterator back to the beginning.
+                rewinddir(currDirStream);
+
+                struct dirent* file;
+                unsigned int fileIndex = 0;
+
+                while ((file = readdir(currDirStream)) && fileIndex < _numFiles)
+                {
+                    if (file->d_type == DT_REG)
+                    {
+                        string fileName(file->d_name);
+
+                        //INTERNAL::strlcpy(_outFiles[fileIndex], _fileNameSize, G_TO_UTF8(fileName).c_str());
+                        INTERNAL::strcpy_s(_outFiles[fileIndex], _fileNameSize, G_TO_UTF8(fileName).c_str());
+
+                        ++fileIndex;
+                    }
+                    else
+                        continue;
+                }
+
+                //Set the directory iterator back to the beginning.
+                rewinddir(currDirStream);
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn GetFoldersFromDirectory(unsigned int _numsubDir, unsigned int _subDirNameSize, char* _outsubDir[]) override
+            {
+                //Check that there is a current working directory.
+                if (currDirStream == nullptr)
+                    return GW::GReturn::FAILURE;
+
+                //Set the directory iterator back to the beginning.
+                rewinddir(currDirStream);
+
+                struct dirent* subDir;
+                unsigned int subDirIndex = 0;
+
+                while ((subDir = readdir(currDirStream)) && subDirIndex < _numsubDir)
+                {
+
+                    if (strcmp(subDir->d_name, ".\0") == 0 ||
+                        strcmp(subDir->d_name, "..\0") == 0)
+                        continue;
+
+                    if (subDir->d_type == DT_DIR)
+                    {
+                        string subDirName(subDir->d_name);
+
+                        //INTERNAL::strlcpy(_outsubDir[subDirIndex], _subDirNameSize, G_TO_UTF8(subDirName).c_str());
+                        INTERNAL::strcpy_s(_outsubDir[subDirIndex], _subDirNameSize, G_TO_UTF8(subDirName).c_str());
+
+                        ++subDirIndex;
+                    }
+                    else
+                        continue;
+                }
+
+                //Set the directory iterator back to the beginning.
+                rewinddir(currDirStream);
+
+                return GW::GReturn::SUCCESS;
+            };
+            
+            GReturn GetInstallFolder(unsigned int _dirSize, char* _outDir) override
+            {
+                //Check for valid arguments.
+                if (_outDir == nullptr || _dirSize == 0)
+                    return GReturn::INVALID_ARGUMENT;
+
+                //Copy the directory to the out parameter.
+                std::string tmpPath = [[[NSBundle mainBundle] bundlePath] UTF8String];
+                INTERNAL::strcpy_s(_outDir, _dirSize, tmpPath.c_str());
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetSaveFolder(unsigned int _dirSize, char* _outDir) override
+            {
+                //Check for valid arguments.
+                if (_outDir == nullptr || _dirSize == 0)
+                    return GReturn::INVALID_ARGUMENT;
+
+                //Copy the directory to the out parameter.
+                std::string tmpPath = getenv("HOME");
+                tmpPath.append("/Library");
+                INTERNAL::strcpy_s(_outDir, _dirSize, tmpPath.c_str());
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetPreferencesFolder(unsigned int _dirSize, char* _outDir) override
+            {
+                //Check for valid arguments.
+                if (_outDir == nullptr || _dirSize == 0)
+                    return GReturn::INVALID_ARGUMENT;
+
+                //Copy the directory to the out parameter.
+                std::string tmpPath = getenv("HOME");
+                tmpPath.append("/Documents");
+                INTERNAL::strcpy_s(_outDir, _dirSize, tmpPath.c_str());
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetTempFolder(unsigned int _dirSize, char* _outDir) override
+            {
+                //Check for valid arguments.
+                if (_outDir == nullptr || _dirSize == 0)
+                    return GReturn::INVALID_ARGUMENT;
+
+                //Copy the directory to the out parameter.
+                std::string tmpPath = getenv("HOME");
+                tmpPath.append("/tmp");
+                INTERNAL::strcpy_s(_outDir, _dirSize, tmpPath.c_str());
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetCacheFolder(unsigned int _dirSize, char* _outDir) override
+            {
+                //Check for valid arguments.
+                if (_outDir == nullptr || _dirSize == 0)
+                    return GReturn::INVALID_ARGUMENT;
+
+                //Copy the directory to the out parameter.
+                std::string tmpPath = getenv("HOME");
+                tmpPath.append("/Library/Caches");
+                INTERNAL::strcpy_s(_outDir, _dirSize, tmpPath.c_str());
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetFileSize(const char* const _file, unsigned int& _outSize) override
+            {
+                //Make a full path to the file.
+                string filePath = currDir;
+                filePath += G_TO_UTF16(_file);
+
+                struct stat s;
+                if (stat(filePath.c_str(), &s) != 0)
+                    return GW::GReturn::FILE_NOT_FOUND;
+
+                //Copy the file size to the out parameter.
+                _outSize = (unsigned int)s.st_size;
+
+                return GW::GReturn::SUCCESS;
+            };
+
+            GReturn Init()  //The init function for this class in order to initialize variables.
+            {
+                //Set the current working directory to the directory the program was ran from.
+                string tempDir = [[[NSBundle mainBundle] bundlePath] UTF8String];
+                GW::GReturn rv = SetCurrentWorkingDirectory(tempDir.c_str());
+                if (G_FAIL(rv))
+                    return rv;
+
+                return GW::GReturn::SUCCESS;
+            };
+            
+            GReturn Create()
+            {
+                if (G_FAIL(this->Init()))
+                {
+                    return GW::GReturn::FAILURE;
+                }
+                GetCurrentWorkingDirectory(initialDir, 250);
+                return GW::GReturn::SUCCESS;
+            };
+        };
+    }//end namespace I
+}//end namespace GW
+
+#undef DIR_SEPERATOR
+
+
+
+    #elif TARGET_OS_MAC
+        #include <fstream>  //file streams
 #include <string>  //strings
 #include <atomic>  //atomic variables
 #include <mutex>  //mutex locks
@@ -7845,6 +8614,77 @@ namespace GW
                 else return GReturn::FILE_NOT_FOUND;
             };
 
+            GReturn GetInstallFolder(unsigned int _dirSize, char* _outDir) override //IOS: APPNAME.APP - Location of the installed app on the current device, used for items such as app resources 
+            {
+                //Check for valid arguments.
+                if (_outDir == nullptr || _dirSize == 0)
+                    return GReturn::INVALID_ARGUMENT;
+                //char* retVal = "./";
+
+                SetCurrentWorkingDirectory("./");
+
+                /*//Copy the directory to the out parameter
+                INTERNAL::strcpy_s(_dir, _dirSize, retVal);*/
+
+                return GetCurrentWorkingDirectory(_outDir, _dirSize);
+            }
+
+            GReturn GetSaveFolder(unsigned int _dirSize, char* _outDir) override // UWP: LOCAL //IOS: DOCUMENTS - Data that exists on the current device and is backed up in the cloud 
+            {
+                //Check for valid arguments.
+                if (_outDir == nullptr || _dirSize == 0)
+                    return GReturn::INVALID_ARGUMENT;
+
+                const char* retVal = "./save";
+
+                //Copy the directory to the out parameter
+                snprintf(_outDir, _dirSize, "%s", retVal);
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetPreferencesFolder(unsigned int _dirSize, char* _outDir) override // UWP: ROAMING //IOS: LIBRARY - Data that exists on all devices on which the user has installed the app 
+            {
+                //Check for valid arguments.
+                if (_outDir == nullptr || _dirSize == 0)
+                    return GReturn::INVALID_ARGUMENT;
+
+                const char* retVal = "./preferences";
+
+                //Copy the directory to the out parameter
+                snprintf(_outDir, _dirSize, "%s", retVal);
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetTempFolder(unsigned int _dirSize, char* _outDir) override // UWP: TEMPORARY //IOS: TEMP - Data that could be removed by the system at any time 
+            {
+                //Check for valid arguments.
+                if (_outDir == nullptr || _dirSize == 0)
+                    return GReturn::INVALID_ARGUMENT;
+
+                const char* retVal = "./temp";
+
+                //Copy the directory to the out parameter
+                snprintf(_outDir, _dirSize, "%s", retVal);
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetCacheFolder(unsigned int _dirSize, char* _outDir) override // UWP: LOCALCACHE //IOS: LIBRARY/CACHES - Persistant data that exists only on the current device 
+            {
+                //Check for valid arguments.
+                if (_outDir == nullptr || _dirSize == 0)
+                    return GReturn::INVALID_ARGUMENT;
+
+                const char* retVal = "./cache";
+
+                //Copy the directory to the out parameter
+                snprintf(_outDir, _dirSize, "%s", retVal);
+
+                return GReturn::SUCCESS;
+            }
+
             GReturn Init()  //The init function for this class in order to initialize variables.
             {
                 //Set the current working directory to the directory the program was ran from.
@@ -7879,6 +8719,7 @@ namespace GW
 #undef DIR_SEPERATOR
 
 
+    #endif
 #elif defined(__linux__)
 	#include <fstream>  //file streams
 #include <string>  //strings
@@ -7891,8 +8732,8 @@ namespace GW
 #include <string.h>
 #include <cstring>
 
-#ifndef DIR_SEPERATOR
-#define G_DIR_SEPERATOR '/'
+#ifndef DIR_SEPARATOR
+#define G_DIR_SEPARATOR '/'
 #endif
 
 
@@ -7909,7 +8750,7 @@ namespace GW
 			std::fstream file;  //Maintains the current file (if one is open).
 			FILE* binaryFile = NULL; //for binary read and write
 			std::string currDir;  //A cached directory path for faster fetching.
-            char initialDir[250];
+			char initialDir[250];
 			std::atomic<unsigned int> mode; //Used to track what open mode the file is in
 			std::mutex lock; //Read/Write lock.
 			unsigned int fileSize = 0;
@@ -7918,7 +8759,7 @@ namespace GW
 			{
 				currDirStream = nullptr;
 			}
-			
+
 			~GFileImplementation()
 			{
 				SetCurrentWorkingDirectory(initialDir);
@@ -7927,24 +8768,24 @@ namespace GW
 				//Close the file stream.
 				CloseFile();
 			}
-			
+
 			GReturn Create()
 			{
 				//Set the current working directory to the directory the program was ran from.
-		#if TARGET_OS_IOS || TARGET_OS_SIMULATOR
-			std::string tempDir = getenv("HOME");
-			tempDir += "/Library";
-			GReturn rv = SetCurrentWorkingDirectory(tempDir.c_str());
-			if (G_FAIL(rv))
-				return rv;
-		#else
-			GReturn rv = SetCurrentWorkingDirectory("./");
-			if (G_FAIL(rv))
-				return rv;
-		#endif
-			
-			GetCurrentWorkingDirectory(initialDir, 250);
-			return GReturn::SUCCESS;
+#if TARGET_OS_IOS || TARGET_OS_SIMULATOR
+				std::string tempDir = getenv("HOME");
+				tempDir += "/Library";
+				GReturn rv = SetCurrentWorkingDirectory(tempDir.c_str());
+				if (G_FAIL(rv))
+					return rv;
+#else
+				GReturn rv = SetCurrentWorkingDirectory("./");
+				if (G_FAIL(rv))
+					return rv;
+#endif
+
+				GetCurrentWorkingDirectory(initialDir, 250);
+				return GReturn::SUCCESS;
 			}
 
 			GReturn OpenBinaryRead(const char* const _file) override
@@ -7959,17 +8800,17 @@ namespace GW
 
 				//Open the new file in the currentWorkingDirectory.
 				file.open(currDir + _file, std::ios::in | std::ios::binary);
-				
+
 				//If the file failed to open the function fails.
 				if (!file.is_open())
 					return GReturn::FILE_NOT_FOUND;
 
 				//Set mode to read
 				mode = std::ios::in;
-				
+
 				// get the file size
 				GetFileSize(_file, fileSize);
-				
+
 				return GReturn::SUCCESS;
 			}
 
@@ -7985,17 +8826,17 @@ namespace GW
 
 				//Open the new file.
 				file.open(currDir + _file, std::ios::out | std::ios::binary);
-				
+
 				//If file failed to open we fail.
 				if (!file.is_open())
 					return GReturn::FILE_NOT_FOUND;
 
 				//Set mode to write
 				mode = std::ios::out;
-				
+
 				// get the file size
 				GetFileSize(_file, fileSize);
-				
+
 				return GReturn::SUCCESS;
 			}
 
@@ -8011,17 +8852,17 @@ namespace GW
 
 				//Open the new file.
 				file.open(currDir + _file, std::ios::out | std::ios::binary | std::ios::app | std::ios::ate);
-				
+
 				//If file failed to open we fail.
 				if (!file.is_open())
 					return GReturn::FILE_NOT_FOUND;
 
 				//Set mode to write
 				mode = std::ios::out;
-				
+
 				// get the file size
 				GetFileSize(_file, fileSize);
-				
+
 				return GReturn::SUCCESS;
 			}
 
@@ -8037,16 +8878,16 @@ namespace GW
 
 				//Open the new file.
 				file.open(currDir + _file, std::ios::in);
-				
+
 				if (!file.is_open())
 					return GReturn::FILE_NOT_FOUND;
 
 				//Set mode to read
 				mode = std::ios::in;
-				
+
 				// get the file size
 				GetFileSize(_file, fileSize);
-				
+
 				return GReturn::SUCCESS;
 			}
 
@@ -8062,16 +8903,16 @@ namespace GW
 
 				//Open the new file.
 				file.open(currDir + _file, std::ios::out);
-				
+
 				if (!file.is_open())
 					return GReturn::FILE_NOT_FOUND;
 
 				//Set mode to write
 				mode = std::ios::out;
-				
+
 				// get the file size
 				GetFileSize(_file, fileSize);
-				
+
 				return GReturn::SUCCESS;
 			}
 
@@ -8087,16 +8928,16 @@ namespace GW
 
 				//Open the new file.
 				file.open(currDir + _file, std::ios::out | std::ios::app | std::ios::ate);
-				
+
 				if (!file.is_open())
 					return GReturn::FILE_NOT_FOUND;
 
 				//Set mode to write
 				mode = std::ios::out;
-				
+
 				// get the file size
 				GetFileSize(_file, fileSize);
-				
+
 				return GReturn::SUCCESS;
 			}
 
@@ -8116,12 +8957,12 @@ namespace GW
 
 				//Lock the write operations.
 				lock.lock();
-				
+
 				file.write(_inData, _numBytes);
-				
+
 				// update the file size
 				fileSize += _numBytes;
-				
+
 				lock.unlock();
 				return GReturn::SUCCESS;
 			}
@@ -8184,12 +9025,12 @@ namespace GW
 
 				//Lock the write operations.
 				lock.lock();
-				
+
 				file << writeOutString;
-				
+
 				// update the file size
 				fileSize += static_cast<unsigned int>(writeOutString.length());
-				
+
 				lock.unlock();
 				return GReturn::SUCCESS;
 			}
@@ -8212,10 +9053,10 @@ namespace GW
 
 				//Lock the read operations.
 				lock.lock();
-				
+
 				//Just read in data normally.
 				std::getline(file, outString, _delimiter);
-				
+
 				if (file.eof())
 				{
 					file.clear(); //reset the flag
@@ -8227,12 +9068,12 @@ namespace GW
 						return GReturn::END_OF_FILE;
 					}
 				}
-				
+
 				//Copy the data over to the out parameter.
 				snprintf(_outData, _outDataSize, "%s", outString.c_str());
-				
+
 				lock.unlock();
-				
+
 				return GReturn::SUCCESS;
 			}
 
@@ -8255,10 +9096,10 @@ namespace GW
 					//Close the file.
 					file.close();
 				}
-				
+
 				// update the file size
 				fileSize = 0;
-				
+
 				return GReturn::SUCCESS;
 			}
 
@@ -8298,7 +9139,7 @@ namespace GW
 
 				//Assign the passed in directory to our internal directory storage.
 				currDir = buffer;
-				currDir += G_DIR_SEPERATOR;
+				currDir += G_DIR_SEPARATOR;
 
 				//If there is an open directory, close it.
 				if (currDirStream != nullptr)
@@ -8350,7 +9191,7 @@ namespace GW
 
 				//Set the directory iterator back to the beginning.
 				rewinddir(currDirStream);
-				
+
 				return GReturn::SUCCESS;
 			}
 
@@ -8414,13 +9255,13 @@ namespace GW
 				//Check that there is a current working directory.
 				if (currDirStream == nullptr)
 					return GReturn::FAILURE;
-					
+
 				//Set the directory iterator back to the beginning.
 				rewinddir(currDirStream);
 
 				struct dirent* subDir;
 				unsigned int subDirIndex = 0;
-				
+
 				while ((subDir = readdir(currDirStream)) && subDirIndex < _numsubDir)
 				{
 
@@ -8459,6 +9300,77 @@ namespace GW
 				return GReturn::SUCCESS;
 			}
 
+			GReturn GetInstallFolder(unsigned int _dirSize, char* _outDir) override //IOS: APPNAME.APP - Location of the installed app on the current device, used for items such as app resources 
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+				//char* retVal = "./";
+
+				SetCurrentWorkingDirectory("./");
+
+				/*//Copy the directory to the out parameter
+				INTERNAL::strcpy_s(_dir, _dirSize, retVal);*/
+
+				return GetCurrentWorkingDirectory(_outDir, _dirSize);
+			}
+
+			GReturn GetSaveFolder(unsigned int _dirSize, char* _outDir) override // UWP: LOCAL //IOS: DOCUMENTS - Data that exists on the current device and is backed up in the cloud 
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				const char* retVal = "./save";
+
+				//Copy the directory to the out parameter
+				snprintf(_outDir, _dirSize, "%s", retVal);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetPreferencesFolder(unsigned int _dirSize, char* _outDir) override // UWP: ROAMING //IOS: LIBRARY - Data that exists on all devices on which the user has installed the app 
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				const char* retVal = "./preferences";
+
+				//Copy the directory to the out parameter
+				snprintf(_outDir, _dirSize, "%s", retVal);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetTempFolder(unsigned int _dirSize, char* _outDir) override // UWP: TEMPORARY //IOS: TEMP - Data that could be removed by the system at any time 
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				const char* retVal = "./temp";
+
+				//Copy the directory to the out parameter
+				snprintf(_outDir, _dirSize, "%s", retVal);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetCacheFolder(unsigned int _dirSize, char* _outDir) override // UWP: LOCALCACHE //IOS: LIBRARY/CACHES - Persistant data that exists only on the current device 
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				const char* retVal = "./cache";
+
+				//Copy the directory to the out parameter
+				snprintf(_outDir, _dirSize, "%s", retVal);
+
+				return GReturn::SUCCESS;
+			}
+
 			GReturn Seek(unsigned int _seekFrom, int _amount, unsigned int& _outCurrPos) override {
 				// if text file
 				if (file.is_open()) {
@@ -8471,7 +9383,7 @@ namespace GW
 							// seek to the new position relative to _seekFrom
 							std::streamoff offset = static_cast<unsigned long long>(_seekFrom) + static_cast<long long>(_amount);
 							file.seekg(offset, std::ios_base::beg);
-							
+
 							// set the output to the new current position
 							_outCurrPos = static_cast<unsigned int>(file.tellg());
 
@@ -8479,7 +9391,7 @@ namespace GW
 							lock.unlock();
 
 							return GReturn::SUCCESS;
-						} 
+						}
 						else {
 							// unlock
 							lock.unlock();
@@ -8503,15 +9415,15 @@ namespace GW
 							lock.unlock();
 
 							return GReturn::SUCCESS;
-						} 
+						}
 						else {
 							// unlock
 							lock.unlock();
 							return GReturn::INVALID_ARGUMENT;
 						}
 					}
-					
-				} 
+
+				}
 				// if binary file
 				else if (binaryFile != NULL) {
 					// check where we seek from
@@ -8532,13 +9444,13 @@ namespace GW
 							lock.unlock();
 
 							return GReturn::SUCCESS;
-						} 
+						}
 						else {
 							// unlock
 							lock.unlock();
 							return GReturn::INVALID_ARGUMENT;
 						}
-					} 
+					}
 					else { // seek from the current position
 						// check for invalid arguments
 						// lock
@@ -8557,25 +9469,27 @@ namespace GW
 							lock.unlock();
 
 							return GReturn::SUCCESS;
-						} 
+						}
 						else {
 							// unlock
 							lock.unlock();
 							return GReturn::INVALID_ARGUMENT;
 						}
 					}
-				} 
+				}
 				else return GReturn::FILE_NOT_FOUND;
 			}
 		};
 	}//end namespace I
 }//end namespace GW
 
-#undef DIR_SEPERATOR
+#undef DIR_SEPARATOR
 
 
 #elif defined(_WIN32)
-	#include <fstream>  //file streams
+	#include <winapifamily.h>
+	#if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+		#include <fstream>  //file streams
 #include <string>  //strings
 #include <atomic>  //atomic variables
 #include <mutex>  //mutex locks
@@ -8586,8 +9500,8 @@ namespace GW
 #include <fcntl.h>  //Included for mode change.
 
 
-#ifndef DIR_SEPERATOR
-#define G_DIR_SEPERATOR L'\\'
+#ifndef DIR_SEPARATOR
+#define G_DIR_SEPARATOR L'\\'
 #endif
 
 namespace GW
@@ -8941,7 +9855,7 @@ namespace GW
 				//Lock the read operations.
 				lock.lock();
 
-				//Convert the UTF8 delimeter to UTF16.
+				//Convert the UTF8 delimiter to UTF16.
 				IOString = internal_gw::UTFStringConverter(&_delimiter);
 				const wchar_t delimiter = IOString[0];
 				IOString.erase(IOString.begin()); //remove the delimiter
@@ -9036,7 +9950,7 @@ namespace GW
 
 				//Assign the passed in directory to our internal directory storage.
 				currDir = buffer;
-				currDir += G_DIR_SEPERATOR;
+				currDir += G_DIR_SEPARATOR;
 
 				//If there is an open directory, close it.
 				if (currDirStream != nullptr)
@@ -9223,8 +10137,8 @@ namespace GW
 				//this is handled the same for each platform.
 				//We call stat() and it fills in the passed in function
 				//with the stats of the passed in path.
-				struct _stat s;
-				if (_wstat(filePath.c_str(), &s) != 0)
+				struct _stat64i32 s;
+				if (_wstat64i32(filePath.c_str(), &s) != 0)
 					return GReturn::FILE_NOT_FOUND;
 
 				//Copy the file size to the out parameter.
@@ -9343,6 +10257,79 @@ namespace GW
 				else return GReturn::FILE_NOT_FOUND;
 			}
 
+			GReturn GetInstallFolder(unsigned int _dirSize, char* _outDir) override
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				//char* retVal = "./";
+
+				SetCurrentWorkingDirectory("./");
+
+
+				/*//Copy the directory to the out parameter
+				INTERNAL::strcpy_s(_dir, _dirSize, retVal);*/
+
+				return GetCurrentWorkingDirectory(_outDir, _dirSize);
+			}
+
+			GReturn GetSaveFolder(unsigned int _dirSize, char* _outDir) override
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				const char* retVal = "./save";
+
+				//Copy the directory to the out parameter
+				strcpy_s(_outDir, _dirSize, retVal);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetPreferencesFolder(unsigned int _dirSize, char* _outDir) override
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				const char* retVal = "./preferences";
+
+				//Copy the directory to the out parameter
+				strcpy_s(_outDir, _dirSize, retVal);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetTempFolder(unsigned int _dirSize, char* _outDir) override
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				const char* retVal = "./temp";
+
+				//Copy the directory to the out parameter
+				strcpy_s(_outDir, _dirSize, retVal);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetCacheFolder(unsigned int _dirSize, char* _outDir) override
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				const char* retVal = "./cache";
+
+				//Copy the directory to the out parameter
+				strcpy_s(_outDir, _dirSize, retVal);
+
+				return GReturn::SUCCESS;
+			}
+
 			GReturn LockAsyncRead() const override
 			{
 				return GThreadSharedImplementation::LockAsyncRead();
@@ -9366,9 +10353,1826 @@ namespace GW
 	} // end namespace I
 } // end namespace GW
 
-#undef DIR_SEPERATOR
+#undef DIR_SEPARATOR
+
+	#elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+		#include <fstream>  //file streams
+#include <string>  //strings
+#include <atomic>  //atomic variables
+#include <mutex>  //mutex locks
+#include <stdio.h>
+
+#include <io.h>  //Included for mode change.
+#include <fcntl.h>  //Included for mode change.
+/*
+ * Dirent interface for Microsoft Visual Studio
+ * Version 1.21
+ *
+ * Copyright (C) 2006-2012 Toni Ronkko
+ * This file is part of dirent.  Dirent may be freely distributed
+ * under the MIT license.  For all details and documentation, see
+ * https://github.com/tronkko/dirent
+ */
+#ifndef DIRENT_H
+#define DIRENT_H
+
+/*
+ * Define architecture flags so we don't need to include windows.h.
+ * Avoiding windows.h makes it simpler to use windows sockets in conjunction
+ * with dirent.h.
+ */
+#if !defined(_68K_) && !defined(_MPPC_) && !defined(_X86_) && !defined(_IA64_) && !defined(_AMD64_) && defined(_M_IX86)
+#   define _X86_
+#endif
+#if !defined(_68K_) && !defined(_MPPC_) && !defined(_X86_) && !defined(_IA64_) && !defined(_AMD64_) && defined(_M_AMD64)
+#define _AMD64_
+#endif
+
+#include <stdio.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wchar.h>
+#include <string.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
+
+/* Indicates that d_type field is available in dirent structure */
+#define _DIRENT_HAVE_D_TYPE
+
+/* Indicates that d_namlen field is available in dirent structure */
+#define _DIRENT_HAVE_D_NAMLEN
+
+/* Entries missing from MSVC 6.0 */
+#if !defined(FILE_ATTRIBUTE_DEVICE)
+#   define FILE_ATTRIBUTE_DEVICE 0x40
+#endif
+
+/* File type and permission flags for stat(), general mask */
+#if !defined(S_IFMT)
+#   define S_IFMT _S_IFMT
+#endif
+
+/* Directory bit */
+#if !defined(S_IFDIR)
+#   define S_IFDIR _S_IFDIR
+#endif
+
+/* Character device bit */
+#if !defined(S_IFCHR)
+#   define S_IFCHR _S_IFCHR
+#endif
+
+/* Pipe bit */
+#if !defined(S_IFFIFO)
+#   define S_IFFIFO _S_IFFIFO
+#endif
+
+/* Regular file bit */
+#if !defined(S_IFREG)
+#   define S_IFREG _S_IFREG
+#endif
+
+/* Read permission */
+#if !defined(S_IREAD)
+#   define S_IREAD _S_IREAD
+#endif
+
+/* Write permission */
+#if !defined(S_IWRITE)
+#   define S_IWRITE _S_IWRITE
+#endif
+
+/* Execute permission */
+#if !defined(S_IEXEC)
+#   define S_IEXEC _S_IEXEC
+#endif
+
+/* Pipe */
+#if !defined(S_IFIFO)
+#   define S_IFIFO _S_IFIFO
+#endif
+
+/* Block device */
+#if !defined(S_IFBLK)
+#   define S_IFBLK 0
+#endif
+
+/* Link */
+#if !defined(S_IFLNK)
+#   define S_IFLNK 0
+#endif
+
+/* Socket */
+#if !defined(S_IFSOCK)
+#   define S_IFSOCK 0
+#endif
+
+/* Read user permission */
+#if !defined(S_IRUSR)
+#   define S_IRUSR S_IREAD
+#endif
+
+/* Write user permission */
+#if !defined(S_IWUSR)
+#   define S_IWUSR S_IWRITE
+#endif
+
+/* Execute user permission */
+#if !defined(S_IXUSR)
+#   define S_IXUSR 0
+#endif
+
+/* Read group permission */
+#if !defined(S_IRGRP)
+#   define S_IRGRP 0
+#endif
+
+/* Write group permission */
+#if !defined(S_IWGRP)
+#   define S_IWGRP 0
+#endif
+
+/* Execute group permission */
+#if !defined(S_IXGRP)
+#   define S_IXGRP 0
+#endif
+
+/* Read others permission */
+#if !defined(S_IROTH)
+#   define S_IROTH 0
+#endif
+
+/* Write others permission */
+#if !defined(S_IWOTH)
+#   define S_IWOTH 0
+#endif
+
+/* Execute others permission */
+#if !defined(S_IXOTH)
+#   define S_IXOTH 0
+#endif
+
+/* Maximum length of file name */
+#if !defined(PATH_MAX)
+#   define PATH_MAX MAX_PATH
+#endif
+#if !defined(FILENAME_MAX)
+#   define FILENAME_MAX MAX_PATH
+#endif
+#if !defined(NAME_MAX)
+#   define NAME_MAX FILENAME_MAX
+#endif
+
+/* File type flags for d_type */
+#define DT_UNKNOWN 0
+#define DT_REG S_IFREG
+#define DT_DIR S_IFDIR
+#define DT_FIFO S_IFIFO
+#define DT_SOCK S_IFSOCK
+#define DT_CHR S_IFCHR
+#define DT_BLK S_IFBLK
+#define DT_LNK S_IFLNK
+
+/* Macros for converting between st_mode and d_type */
+#define IFTODT(mode) ((mode) & S_IFMT)
+#define DTTOIF(type) (type)
+
+/*
+ * File type macros.  Note that block devices, sockets and links cannot be
+ * distinguished on Windows and the macros S_ISBLK, S_ISSOCK and S_ISLNK are
+ * only defined for compatibility.  These macros should always return false
+ * on Windows.
+ */
+#if !defined(S_ISFIFO)
+#   define S_ISFIFO(mode) (((mode) & S_IFMT) == S_IFIFO)
+#endif
+#if !defined(S_ISDIR)
+#   define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
+#endif
+#if !defined(S_ISREG)
+#   define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
+#endif
+#if !defined(S_ISLNK)
+#   define S_ISLNK(mode) (((mode) & S_IFMT) == S_IFLNK)
+#endif
+#if !defined(S_ISSOCK)
+#   define S_ISSOCK(mode) (((mode) & S_IFMT) == S_IFSOCK)
+#endif
+#if !defined(S_ISCHR)
+#   define S_ISCHR(mode) (((mode) & S_IFMT) == S_IFCHR)
+#endif
+#if !defined(S_ISBLK)
+#   define S_ISBLK(mode) (((mode) & S_IFMT) == S_IFBLK)
+#endif
+
+/* Return the exact length of d_namlen without zero terminator */
+#define _D_EXACT_NAMLEN(p) ((p)->d_namlen)
+
+/* Return number of bytes needed to store d_namlen */
+#define _D_ALLOC_NAMLEN(p) (PATH_MAX)
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+/* Wide-character version */
+struct _wdirent {
+    /* Always zero */
+    long d_ino;
+
+    /* Structure size */
+    unsigned short d_reclen;
+
+    /* Length of name without \0 */
+    size_t d_namlen;
+
+    /* File type */
+    int d_type;
+
+    /* File name */
+    wchar_t d_name[PATH_MAX];
+};
+typedef struct _wdirent _wdirent;
+
+struct _WDIR {
+    /* Current directory entry */
+    struct _wdirent ent;
+
+    /* Private file data */
+    WIN32_FIND_DATAW data;
+
+    /* True if data is valid */
+    int cached;
+
+    /* Win32 search handle */
+    HANDLE handle;
+
+    /* Initial directory name */
+    wchar_t *patt;
+};
+typedef struct _WDIR _WDIR;
+
+static _WDIR *_wopendir (const wchar_t *dirname);
+static struct _wdirent *_wreaddir (_WDIR *dirp);
+static int _wclosedir (_WDIR *dirp);
+static void _wrewinddir (_WDIR* dirp);
+
+
+/* For compatibility with Symbian */
+#define wdirent _wdirent
+#define WDIR _WDIR
+#define wopendir _wopendir
+#define wreaddir _wreaddir
+#define wclosedir _wclosedir
+#define wrewinddir _wrewinddir
+
+
+/* Multi-byte character versions */
+struct dirent {
+    /* Always zero */
+    long d_ino;
+
+    /* Structure size */
+    unsigned short d_reclen;
+
+    /* Length of name without \0 */
+    size_t d_namlen;
+
+    /* File type */
+    int d_type;
+
+    /* File name */
+    char d_name[PATH_MAX];
+};
+typedef struct dirent dirent;
+
+struct DIR {
+    struct dirent ent;
+    struct _WDIR *wdirp;
+};
+typedef struct DIR DIR;
+
+static DIR *opendir (const char *dirname);
+static struct dirent *readdir (DIR *dirp);
+static int closedir (DIR *dirp);
+static void rewinddir (DIR* dirp);
+
+
+/* Internal utility functions */
+static WIN32_FIND_DATAW *dirent_first (_WDIR *dirp);
+static WIN32_FIND_DATAW *dirent_next (_WDIR *dirp);
+
+static int dirent_mbstowcs_s(
+    size_t *pReturnValue,
+    wchar_t *wcstr,
+    size_t sizeInWords,
+    const char *mbstr,
+    size_t count);
+
+static int dirent_wcstombs_s(
+    size_t *pReturnValue,
+    char *mbstr,
+    size_t sizeInBytes,
+    const wchar_t *wcstr,
+    size_t count);
+
+static void dirent_set_errno (int error);
+
+/*
+ * Open directory stream DIRNAME for read and return a pointer to the
+ * internal working area that is used to retrieve individual directory
+ * entries.
+ */
+static _WDIR*
+_wopendir(
+    const wchar_t *dirname)
+{
+    _WDIR *dirp = NULL;
+    int error;
+
+    /* Must have directory name */
+    if (dirname == NULL  ||  dirname[0] == '\0') {
+        dirent_set_errno (ENOENT);
+        return NULL;
+    }
+
+    /* Allocate new _WDIR structure */
+    dirp = (_WDIR*) malloc (sizeof (struct _WDIR));
+    if (dirp != NULL) {
+        DWORD n;
+
+        /* Reset _WDIR structure */
+        dirp->handle = INVALID_HANDLE_VALUE;
+        dirp->patt = NULL;
+        dirp->cached = 0;
+
+        /* Compute the length of full path plus zero terminator */
+        n = GetFullPathNameW (dirname, 0, NULL, NULL);
+
+        /* Allocate room for absolute directory name and search pattern */
+        dirp->patt = (wchar_t*) malloc (sizeof (wchar_t) * n + 16);
+        if (dirp->patt) {
+
+            /*
+             * Convert relative directory name to an absolute one.  This
+             * allows rewinddir() to function correctly even when current
+             * working directory is changed between opendir() and rewinddir().
+             */
+            n = GetFullPathNameW (dirname, n, dirp->patt, NULL);
+            if (n > 0) {
+                wchar_t *p;
+
+                /* Append search pattern \* to the directory name */
+                p = dirp->patt + n;
+                if (dirp->patt < p) {
+                    switch (p[-1]) {
+                    case '\\':
+                    case '/':
+                    case ':':
+                        /* Directory ends in path separator, e.g. c:\temp\ */
+                        /*NOP*/;
+                        break;
+
+                    default:
+                        /* Directory name doesn't end in path separator */
+                        *p++ = '\\';
+                    }
+                }
+                *p++ = '*';
+                *p = '\0';
+
+                /* Open directory stream and retrieve the first entry */
+                if (dirent_first (dirp)) {
+                    /* Directory stream opened successfully */
+                    error = 0;
+                } else {
+                    /* Cannot retrieve first entry */
+                    error = 1;
+                    dirent_set_errno (ENOENT);
+                }
+
+            } else {
+                /* Cannot retrieve full path name */
+                dirent_set_errno (ENOENT);
+                error = 1;
+            }
+
+        } else {
+            /* Cannot allocate memory for search pattern */
+            error = 1;
+        }
+
+    } else {
+        /* Cannot allocate _WDIR structure */
+        error = 1;
+    }
+
+    /* Clean up in case of error */
+    if (error  &&  dirp) {
+        _wclosedir (dirp);
+        dirp = NULL;
+    }
+
+    return dirp;
+}
+
+/*
+ * Read next directory entry.  The directory entry is returned in dirent
+ * structure in the d_name field.  Individual directory entries returned by
+ * this function include regular files, sub-directories, pseudo-directories
+ * "." and ".." as well as volume labels, hidden files and system files.
+ */
+static struct _wdirent*
+_wreaddir(
+    _WDIR *dirp)
+{
+    WIN32_FIND_DATAW *datap;
+    struct _wdirent *entp;
+
+    /* Read next directory entry */
+    datap = dirent_next (dirp);
+    if (datap) {
+        size_t n;
+        DWORD attr;
+        
+        /* Pointer to directory entry to return */
+        entp = &dirp->ent;
+
+        /* 
+         * Copy file name as wide-character string.  If the file name is too
+         * long to fit in to the destination buffer, then truncate file name
+         * to PATH_MAX characters and zero-terminate the buffer.
+         */
+        n = 0;
+        while (n + 1 < PATH_MAX  &&  datap->cFileName[n] != 0) {
+            entp->d_name[n] = datap->cFileName[n];
+            n++;
+        }
+        dirp->ent.d_name[n] = 0;
+
+        /* Length of file name excluding zero terminator */
+        entp->d_namlen = n;
+
+        /* File type */
+        attr = datap->dwFileAttributes;
+        if ((attr & FILE_ATTRIBUTE_DEVICE) != 0) {
+            entp->d_type = DT_CHR;
+        } else if ((attr & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+            entp->d_type = DT_DIR;
+        } else {
+            entp->d_type = DT_REG;
+        }
+
+        /* Reset dummy fields */
+        entp->d_ino = 0;
+        entp->d_reclen = sizeof (struct _wdirent);
+
+    } else {
+
+        /* Last directory entry read */
+        entp = NULL;
+
+    }
+
+    return entp;
+}
+
+/*
+ * Close directory stream opened by opendir() function.  This invalidates the
+ * DIR structure as well as any directory entry read previously by
+ * _wreaddir().
+ */
+static int
+_wclosedir(
+    _WDIR *dirp)
+{
+    int ok;
+    if (dirp) {
+
+        /* Release search handle */
+        if (dirp->handle != INVALID_HANDLE_VALUE) {
+            FindClose (dirp->handle);
+            dirp->handle = INVALID_HANDLE_VALUE;
+        }
+
+        /* Release search pattern */
+        if (dirp->patt) {
+            free (dirp->patt);
+            dirp->patt = NULL;
+        }
+
+        /* Release directory structure */
+        free (dirp);
+        ok = /*success*/0;
+
+    } else {
+        /* Invalid directory stream */
+        dirent_set_errno (EBADF);
+        ok = /*failure*/-1;
+    }
+    return ok;
+}
+
+/*
+ * Rewind directory stream such that _wreaddir() returns the very first
+ * file name again.
+ */
+static void
+_wrewinddir(
+    _WDIR* dirp)
+{
+    if (dirp) {
+        /* Release existing search handle */
+        if (dirp->handle != INVALID_HANDLE_VALUE) {
+            FindClose (dirp->handle);
+        }
+
+        /* Open new search handle */
+        dirent_first (dirp);
+    }
+}
+
+/* Get first directory entry (internal) */
+static WIN32_FIND_DATAW*
+dirent_first(
+    _WDIR *dirp)
+{
+    WIN32_FIND_DATAW *datap;
+
+    /* Open directory and retrieve the first entry */
+    dirp->handle = FindFirstFileW (dirp->patt, &dirp->data);
+    if (dirp->handle != INVALID_HANDLE_VALUE) {
+
+        /* a directory entry is now waiting in memory */
+        datap = &dirp->data;
+        dirp->cached = 1;
+
+    } else {
+
+        /* Failed to re-open directory: no directory entry in memory */
+        dirp->cached = 0;
+        datap = NULL;
+
+    }
+    return datap;
+}
+
+/* Get next directory entry (internal) */
+static WIN32_FIND_DATAW*
+dirent_next(
+    _WDIR *dirp)
+{
+    WIN32_FIND_DATAW *p;
+
+    /* Get next directory entry */
+    if (dirp->cached != 0) {
+
+        /* A valid directory entry already in memory */
+        p = &dirp->data;
+        dirp->cached = 0;
+
+    } else if (dirp->handle != INVALID_HANDLE_VALUE) {
+
+        /* Get the next directory entry from stream */
+        if (FindNextFileW (dirp->handle, &dirp->data) != FALSE) {
+            /* Got a file */
+            p = &dirp->data;
+        } else {
+            /* The very last entry has been processed or an error occured */
+            FindClose (dirp->handle);
+            dirp->handle = INVALID_HANDLE_VALUE;
+            p = NULL;
+        }
+
+    } else {
+
+        /* End of directory stream reached */
+        p = NULL;
+
+    }
+
+    return p;
+}
+
+/* 
+ * Open directory stream using plain old C-string.
+ */
+static DIR*
+opendir(
+    const char *dirname) 
+{
+    struct DIR *dirp;
+    int error;
+
+    /* Must have directory name */
+    if (dirname == NULL  ||  dirname[0] == '\0') {
+        dirent_set_errno (ENOENT);
+        return NULL;
+    }
+
+    /* Allocate memory for DIR structure */
+    dirp = (DIR*) malloc (sizeof (struct DIR));
+    if (dirp) {
+        wchar_t wname[PATH_MAX];
+        size_t n;
+
+        /* Convert directory name to wide-character string */
+        error = dirent_mbstowcs_s (&n, wname, PATH_MAX, dirname, PATH_MAX);
+        if (!error) {
+
+            /* Open directory stream using wide-character name */
+            dirp->wdirp = _wopendir (wname);
+            if (dirp->wdirp) {
+                /* Directory stream opened */
+                error = 0;
+            } else {
+                /* Failed to open directory stream */
+                error = 1;
+            }
+
+        } else {
+            /* 
+             * Cannot convert file name to wide-character string.  This
+             * occurs if the string contains invalid multi-byte sequences or
+             * the output buffer is too small to contain the resulting
+             * string.
+             */
+            error = 1;
+        }
+
+    } else {
+        /* Cannot allocate DIR structure */
+        error = 1;
+    }
+
+    /* Clean up in case of error */
+    if (error  &&  dirp) {
+        free (dirp);
+        dirp = NULL;
+    }
+
+    return dirp;
+}
+
+/*
+ * Read next directory entry.
+ *
+ * When working with text consoles, please note that file names returned by
+ * readdir() are represented in the default ANSI code page while any output to
+ * console is typically formatted on another code page.  Thus, non-ASCII
+ * characters in file names will not usually display correctly on console.  The
+ * problem can be fixed in two ways: (1) change the character set of console
+ * to 1252 using chcp utility and use Lucida Console font, or (2) use
+ * _cprintf function when writing to console.  The _cprinf() will re-encode
+ * ANSI strings to the console code page so many non-ASCII characters will
+ * display correcly.
+ */
+static struct dirent*
+readdir(
+    DIR *dirp) 
+{
+    WIN32_FIND_DATAW *datap;
+    struct dirent *entp;
+
+    /* Read next directory entry */
+    datap = dirent_next (dirp->wdirp);
+    if (datap) {
+        size_t n;
+        int error;
+
+        /* Attempt to convert file name to multi-byte string */
+        error = dirent_wcstombs_s(
+            &n, dirp->ent.d_name, PATH_MAX, datap->cFileName, PATH_MAX);
+
+        /* 
+         * If the file name cannot be represented by a multi-byte string,
+         * then attempt to use old 8+3 file name.  This allows traditional
+         * Unix-code to access some file names despite of unicode
+         * characters, although file names may seem unfamiliar to the user.
+         *
+         * Be ware that the code below cannot come up with a short file
+         * name unless the file system provides one.  At least
+         * VirtualBox shared folders fail to do this.
+         */
+        if (error  &&  datap->cAlternateFileName[0] != '\0') {
+            error = dirent_wcstombs_s(
+                &n, dirp->ent.d_name, PATH_MAX, 
+                datap->cAlternateFileName, PATH_MAX);
+        }
+
+        if (!error) {
+            DWORD attr;
+
+            /* Initialize directory entry for return */
+            entp = &dirp->ent;
+
+            /* Length of file name excluding zero terminator */
+            entp->d_namlen = n - 1;
+
+            /* File attributes */
+            attr = datap->dwFileAttributes;
+            if ((attr & FILE_ATTRIBUTE_DEVICE) != 0) {
+                entp->d_type = DT_CHR;
+            } else if ((attr & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+                entp->d_type = DT_DIR;
+            } else {
+                entp->d_type = DT_REG;
+            }
+
+            /* Reset dummy fields */
+            entp->d_ino = 0;
+            entp->d_reclen = sizeof (struct dirent);
+
+        } else {
+            /* 
+             * Cannot convert file name to multi-byte string so construct
+             * an errornous directory entry and return that.  Note that
+             * we cannot return NULL as that would stop the processing
+             * of directory entries completely.
+             */
+            entp = &dirp->ent;
+            entp->d_name[0] = '?';
+            entp->d_name[1] = '\0';
+            entp->d_namlen = 1;
+            entp->d_type = DT_UNKNOWN;
+            entp->d_ino = 0;
+            entp->d_reclen = 0;
+        }
+
+    } else {
+        /* No more directory entries */
+        entp = NULL;
+    }
+
+    return entp;
+}
+
+/*
+ * Close directory stream.
+ */
+static int
+closedir(
+    DIR *dirp) 
+{
+    int ok;
+    if (dirp) {
+
+        /* Close wide-character directory stream */
+        ok = _wclosedir (dirp->wdirp);
+        dirp->wdirp = NULL;
+
+        /* Release multi-byte character version */
+        free (dirp);
+
+    } else {
+
+        /* Invalid directory stream */
+        dirent_set_errno (EBADF);
+        ok = /*failure*/-1;
+
+    }
+    return ok;
+}
+
+/*
+ * Rewind directory stream to beginning.
+ */
+static void
+rewinddir(
+    DIR* dirp) 
+{
+    /* Rewind wide-character string directory stream */
+    _wrewinddir (dirp->wdirp);
+}
+
+/* Convert multi-byte string to wide character string */
+static int
+dirent_mbstowcs_s(
+    size_t *pReturnValue,
+    wchar_t *wcstr,
+    size_t sizeInWords,
+    const char *mbstr,
+    size_t count)
+{
+    int error;
+
+#if defined(_MSC_VER)  &&  _MSC_VER >= 1400
+
+    /* Microsoft Visual Studio 2005 or later */
+    error = mbstowcs_s (pReturnValue, wcstr, sizeInWords, mbstr, count);
+
+#else
+
+    /* Older Visual Studio or non-Microsoft compiler */
+    size_t n;
+
+    /* Convert to wide-character string (or count characters) */
+    n = mbstowcs (wcstr, mbstr, sizeInWords);
+    if (!wcstr  ||  n < count) {
+
+        /* Zero-terminate output buffer */
+        if (wcstr  &&  sizeInWords) {
+            if (n >= sizeInWords) {
+                n = sizeInWords - 1;
+            }
+            wcstr[n] = 0;
+        }
+
+        /* Length of resuting multi-byte string WITH zero terminator */
+        if (pReturnValue) {
+            *pReturnValue = n + 1;
+        }
+
+        /* Success */
+        error = 0;
+
+    } else {
+
+        /* Could not convert string */
+        error = 1;
+
+    }
 
 #endif
+
+    return error;
+}
+
+/* Convert wide-character string to multi-byte string */
+static int
+dirent_wcstombs_s(
+    size_t *pReturnValue,
+    char *mbstr,
+    size_t sizeInBytes, /* max size of mbstr */
+    const wchar_t *wcstr,
+    size_t count)
+{
+    int error;
+
+#if defined(_MSC_VER)  &&  _MSC_VER >= 1400
+
+    /* Microsoft Visual Studio 2005 or later */
+    error = wcstombs_s (pReturnValue, mbstr, sizeInBytes, wcstr, count);
+
+#else
+
+    /* Older Visual Studio or non-Microsoft compiler */
+    size_t n;
+
+    /* Convert to multi-byte string (or count the number of bytes needed) */
+    n = wcstombs (mbstr, wcstr, sizeInBytes);
+    if (!mbstr  ||  n < count) {
+
+        /* Zero-terminate output buffer */
+        if (mbstr  &&  sizeInBytes) {
+            if (n >= sizeInBytes) {
+                n = sizeInBytes - 1;
+            }
+            mbstr[n] = '\0';
+        }
+
+        /* Lenght of resulting multi-bytes string WITH zero-terminator */
+        if (pReturnValue) {
+            *pReturnValue = n + 1;
+        }
+
+        /* Success */
+        error = 0;
+
+    } else {
+
+        /* Cannot convert string */
+        error = 1;
+
+    }
+
+#endif
+
+    return error;
+}
+
+/* Set errno variable */
+static void
+dirent_set_errno(
+    int error)
+{
+#if defined(_MSC_VER)  &&  _MSC_VER >= 1400
+
+    /* Microsoft Visual Studio 2005 and later */
+    _set_errno (error);
+
+#else
+
+    /* Non-Microsoft compiler or older Microsoft compiler */
+    errno = error;
+
+#endif
+}
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /*DIRENT_H*/
+
+
+
+
+
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.Storage.h>
+
+#ifndef DIR
+#define DIR _WDIR
+#endif
+#ifndef dirent
+#define dirent _wdirent
+#endif
+#ifndef fstream
+#define fstream wfstream
+#endif
+#ifndef string
+#define string wstring
+#endif
+
+#ifndef opendir
+#define opendir _wopendir
+#endif
+#ifndef readdir
+#define readdir _wreaddir
+#endif
+#ifndef closedir
+#define closedir _wclosedir
+#endif
+#ifndef rewinddir
+#define rewinddir _wrewinddir
+#endif
+
+#ifndef DIR_SEPARATOR
+#define DIR_SEPARATOR L'\\'
+#endif
+
+namespace GW
+{
+	namespace I
+	{
+		class GFileImplementation : public virtual GW::I::GFileInterface,
+			protected GThreadSharedImplementation
+		{
+		private:
+			DIR* currDirStream;  //Maintains the current directory.
+			std::fstream file;  //Maintains the current file (if one is open).
+			FILE* binaryFile = NULL; //for binary read and write
+			char initialDir[250];
+			errno_t err;// for checking file opened in sucure way
+			
+			unsigned int fileSize = 0;
+
+			std::string currDir;  //A cached directory path for faster fetching.
+			std::atomic<unsigned int> mode; //Used to track what open mode the file is in
+			std::mutex lock; //Read/Write lock.
+		public:
+			GFileImplementation()
+			{
+				err = 0;
+				currDirStream = nullptr;
+			}
+			~GFileImplementation()
+			{
+				SetCurrentWorkingDirectory(initialDir);
+				//Close the current directory.
+				closedir(currDirStream);
+				//Close the file stream.
+				CloseFile();
+			}
+
+			GReturn Create()
+			{
+				//Set the current working directory to the directory the program was ran from.
+				GReturn rv = SetCurrentWorkingDirectory("./");
+				if (G_FAIL(rv))
+					return rv;
+
+				GetCurrentWorkingDirectory(initialDir, 250);
+
+				//Create a UTF8 Locale to imbue the fstream with.
+				std::locale utf8Locale(".UTF-8");
+				//Imbue the fstream.
+				utf8Locale = file.imbue(utf8Locale);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn OpenBinaryRead(const char* const _file) override
+			{
+				//Check for invalid arguments.
+				if (_file == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				char tempDir[260];
+				strcpy_s(tempDir, INTERNAL::G_TO_UTF8(currDir).c_str());
+				strcat_s(tempDir, _file);
+
+				//using fopen_s to securely open the file in binary reading mode
+				if ((err = fopen_s(&binaryFile, tempDir, "rb")) != 0)
+				{
+					if (err == 2)
+						return GReturn::FILE_NOT_FOUND;
+					else
+						return GReturn::FAILURE;
+				}
+
+				//Set mode to read
+				mode = std::ios::in;
+
+				// get the file size
+				GetFileSize(_file, fileSize);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn OpenBinaryWrite(const char* const _file) override
+			{
+				//Check for invalid arguments.
+				if (_file == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				char tempDir[260];
+				strcpy_s(tempDir, INTERNAL::G_TO_UTF8(currDir).c_str());
+				strcat_s(tempDir, _file);
+
+				//using fopen_s to securely open the file in binary writing mode
+				if ((err = fopen_s(&binaryFile, tempDir, "wb")) != 0)
+				{
+					if (err == 2)
+						return GReturn::FILE_NOT_FOUND;
+					else
+						return GReturn::FAILURE;
+				}
+
+				//Set mode to write
+				mode = std::ios::out;
+
+				// get the file size
+				GetFileSize(_file, fileSize);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn AppendBinaryWrite(const char* const _file) override
+			{
+				//Check for invalid arguments.
+				if (_file == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				char tempDir[260];
+				strcpy_s(tempDir, INTERNAL::G_TO_UTF8(currDir).c_str());
+				strcat_s(tempDir, _file);
+
+				//using fopen_s to securely open the file in binary appending mode
+				if ((err = fopen_s(&binaryFile, tempDir, "ab")) != 0)
+				{
+					if (err == 2)
+						return GReturn::FILE_NOT_FOUND;
+					else
+						return GReturn::FAILURE;
+				}
+
+				//Set mode to write
+				mode = std::ios::out;
+
+				// get the file size
+				GetFileSize(_file, fileSize);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn OpenTextRead(const char* const _file) override
+			{
+				//Check for invalid arguments.
+				if (_file == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Close the current file if there is one.
+				if (file.is_open())
+					return GReturn::FAILURE;
+
+				//Open the new file.
+				file.open(currDir + INTERNAL::G_TO_UTF16(_file), std::ios::in);
+
+				if (!file.is_open())
+					return GReturn::FILE_NOT_FOUND;
+
+				//Set mode to read
+				mode = std::ios::in;
+
+				// get the file size
+				GetFileSize(_file, fileSize);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn OpenTextWrite(const char* const _file) override
+			{
+				//Check for invalid arguments.
+				if (_file == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Close the current file if there is one.
+				if (file.is_open())
+					return GReturn::FAILURE;
+
+				//Open the new file.
+				file.open(currDir + INTERNAL::G_TO_UTF16(_file), std::ios::out);
+
+				if (!file.is_open())
+					return GReturn::FILE_NOT_FOUND;
+
+				//Set mode to write
+				mode = std::ios::out;
+
+				// get the file size
+				GetFileSize(_file, fileSize);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn AppendTextWrite(const char* const _file) override
+			{
+				//Check for invalid arguments.
+				if (_file == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Close the current file if there is one.
+				if (file.is_open())
+					return GReturn::FAILURE;
+
+				//Open the new file.
+				file.open(currDir + INTERNAL::G_TO_UTF16(_file), std::ios::out | std::ios::app | std::ios::ate);
+
+				if (!file.is_open())
+					return GReturn::FILE_NOT_FOUND;
+
+				//Set mode to write
+				mode = std::ios::out;
+
+				// get the file size
+				GetFileSize(_file, fileSize);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn Write(const char* const _inData, unsigned int _numBytes) override
+			{
+				//Check for invalid arguments.
+				if (_inData == nullptr || _numBytes == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Ensure a file is open.
+				if (!file.is_open() && binaryFile == NULL)
+					return GReturn::FAILURE;
+
+				//Make sure the file is opened for writing
+				if (mode != std::ios::out)
+					return GReturn::FAILURE;
+
+				//Lock the write operations.
+				lock.lock();
+
+				//On windows we need to cast the char* to a wchar_t*.
+				if (binaryFile)
+				{
+					fwrite((void*)_inData, sizeof(char), _numBytes, binaryFile);
+				}
+				else
+					file.write((wchar_t*)_inData, _numBytes);
+
+				// update the file size
+				fileSize += _numBytes;
+
+				lock.unlock();
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn Read(char* _outData, unsigned int _numBytes) override
+			{
+				if (_numBytes == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Ensure a file is open.
+				if (!file.is_open() && binaryFile == NULL)
+				{
+					_outData = nullptr;
+					return GReturn::FAILURE;
+				}
+
+				//Make sure the file is opened for reading
+				if (mode != std::ios::in)
+					return GReturn::FAILURE;
+
+				//Lock the read operations.
+				lock.lock();
+
+				if (binaryFile)
+				{
+					//setting the buffer size(2nd parameter) be as big as reading data size(_numBytes)
+					if (_numBytes <= fileSize)
+						fread_s(_outData, _numBytes, sizeof(char), _numBytes, binaryFile);
+					else
+					{
+						fread_s(_outData, _numBytes, sizeof(char), fileSize, binaryFile);
+						file.clear();
+						lock.unlock();
+						return GReturn::END_OF_FILE;
+					}
+				}
+				else
+				{
+					// this is only a problem on win32
+					if ((_numBytes % 2) == 1) { // check for odd number of bytes to read because utf-16
+						char tmp[2];
+						//On Windows we need to cast the _outData char* to a wchar_t*.
+						file.read((wchar_t*)_outData, _numBytes - 1); // read 1 less bytes into the buffer directly
+						file.read((wchar_t*)tmp, 1); // read the last byte into the tmp
+						_outData[_numBytes - 1] = tmp[0]; // assign the last byte
+					}
+					else {
+						file.read((wchar_t*)_outData, _numBytes);
+					}
+				}
+
+				lock.unlock();
+				if (file.eof())
+					return GReturn::END_OF_FILE;
+
+				return GReturn::SUCCESS;
+
+				//if (_numBytes == 0)
+				//	return GReturn::INVALID_ARGUMENT;
+
+				////Ensure a file is open.
+				//if (!file.is_open() && binaryFile == NULL)
+				//{
+				//	_outData = nullptr;
+				//	return GReturn::FAILURE;
+				//}
+
+				////Make sure the file is opened for reading
+				//if (mode != std::ios::in)
+				//	return GReturn::FAILURE;
+
+				////Lock the read operations.
+				//lock.lock();
+
+				////On Windows we need to cast the char* to a wchar_t*.
+				//if (binaryFile)
+				//{
+				//	//setting the buffer size(2nd parameter) be as big as reading data size(_numBytes)
+				//	fread_s(_outData, _numBytes, sizeof(char), _numBytes, binaryFile);
+				//}
+				//else
+				//	file.read((wchar_t*)_outData, _numBytes);
+
+				//lock.unlock();
+
+				//return GReturn::SUCCESS;
+			}
+
+			GReturn WriteLine(const char* const _inData) override
+			{
+				//Check for invalid arguments.
+				if (_inData == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Ensure a file is open.
+				if (!file.is_open())
+					return GReturn::FAILURE;
+
+				//Make sure the file is opened for writing
+				if (mode != std::ios::out)
+					return GReturn::FAILURE;
+
+				//Transfer the data to a string. #defines make it so the
+				//string is what we need it to be on any system we support.
+				std::string writeOutString = INTERNAL::G_TO_UTF16(_inData);
+
+				//Lock the write operations.
+				lock.lock();
+
+				//Write out the string.
+				file << writeOutString;
+
+				// update the file size
+				fileSize += static_cast<unsigned int>(writeOutString.length());
+
+				lock.unlock();
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn ReadLine(char* _outData, unsigned int _outDataSize, char _delimiter) override
+			{
+				if (_outData == nullptr || _outDataSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Ensure file is open.
+				if (!file.is_open())
+					return GReturn::FAILURE;
+
+				//Make sure the file is opened for reading
+				if (mode != std::ios::in)
+					return GReturn::FAILURE;
+
+				//The string to be read into.
+				std::string outString;
+
+				//Lock the read operations.
+				lock.lock();
+
+				//Convert the UTF8 delimeter to UTF16.
+				const wchar_t delimiter = *INTERNAL::G_TO_UTF16(&_delimiter).c_str();
+
+				//Read the information.
+				std::getline(file, outString, delimiter);
+
+				//Copy the data over to the out parameter.
+				strncpy_s(_outData, _outDataSize, INTERNAL::G_TO_UTF8(outString).c_str(), _TRUNCATE);
+
+				//Copy the data over to the out parameter.
+				strcpy_s(_outData, _outDataSize, INTERNAL::G_TO_UTF8(outString).c_str());
+
+				lock.unlock();
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn CloseFile() override
+			{
+				//If a file is not open, we can not close it.
+				if (!file.is_open() && binaryFile == NULL)
+					return GReturn::FAILURE;
+
+				if (binaryFile != NULL)
+				{
+					fflush(binaryFile);
+					fclose(binaryFile);
+					binaryFile = nullptr;
+				}
+				else
+				{
+					//Flush the file.
+					file.flush();
+					//Close the file.
+					file.close();
+				}
+
+				// update the file size
+				fileSize = 0;
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn FlushFile() override
+			{
+				//If a file is not open we can not flush it.
+				if (!file.is_open() && binaryFile == NULL)
+					return GReturn::FAILURE;
+
+				if (binaryFile != NULL)
+					fflush(binaryFile);
+				else
+				{
+					//flush the file.
+					file.flush();
+				}
+				return GReturn::SUCCESS;
+			}
+
+			GReturn SetCurrentWorkingDirectory(const char* const _dir) override
+			{
+				//Check for valid arguments.
+				if (_dir == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Get the absolute path.
+				wchar_t buffer[MAX_PATH];
+				if (_wfullpath(buffer, INTERNAL::G_TO_UTF16(_dir).c_str(), MAX_PATH) == nullptr)
+					return GReturn::FAILURE;
+
+				//Check to make sure the directory exists.
+				struct _stat s;
+				if (_wstat(buffer, &s) != 0)
+					return GReturn::FILE_NOT_FOUND;
+
+				//Assign the passed in directory to our internal directory storage.
+				currDir = buffer;
+				currDir += DIR_SEPARATOR;
+
+				//If there is an open directory, close it.
+				if (currDirStream != nullptr)
+					closedir(currDirStream);
+
+				//Open new directory.
+				currDirStream = opendir(currDir.c_str());
+
+				//Check to ensure directory is open.
+				if (currDirStream == nullptr)
+					return GReturn::FAILURE;
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetCurrentWorkingDirectory(char* _dir, unsigned int _dirSize) override
+			{
+				//Check for valid arguments.
+				if (_dir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Check that a directory is open.
+				if (currDirStream == nullptr)
+					return GReturn::FAILURE;
+
+				//Copy the current directory to the out parameter.
+				strcpy_s(_dir, _dirSize, INTERNAL::G_TO_UTF8(currDir).c_str());
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetDirectorySize(unsigned int& _outSize) override
+			{
+				//Check that there is a current working directory.
+				if (currDirStream == nullptr)
+					return GReturn::FAILURE;
+
+				struct dirent* file;
+				//Set the directory iterator back to the beginning.
+				rewinddir(currDirStream);
+
+				//Reset the dir size.
+				_outSize = 0;
+
+				// In Windows platform when rewinddir is called, the first 2 dir will be . and ..
+				// We can simply skip them
+				file = readdir(currDirStream);
+				if (file == nullptr)
+					return GReturn::FAILURE;
+				file = readdir(currDirStream);
+				if (file == nullptr)
+					return GReturn::FAILURE;
+
+				//Get the number of files in directory.
+				while ((file = readdir(currDirStream)))
+				{
+					if (file->d_type == DT_REG)
+						++_outSize;
+				}
+
+				//Set the directory iterator back to the beginning.
+				rewinddir(currDirStream);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetSubDirectorySize(unsigned int& _outSize) override
+			{
+				//Check that there is a current working directory.
+				if (currDirStream == nullptr)
+					return GReturn::FAILURE;
+
+				struct dirent* subDir;
+				//Set the directory iterator back to the beginning.
+				rewinddir(currDirStream);
+
+				//Reset the sub-dir size.
+				_outSize = 0;
+
+				// In Windows platform when rewinddir is called, the first 2 dir will be . and ..
+				// We can simply skip them
+				subDir = readdir(currDirStream);
+				if (subDir == nullptr)
+					return GReturn::FAILURE;
+				subDir = readdir(currDirStream);
+				if (subDir == nullptr)
+					return GReturn::FAILURE;
+
+				while ((subDir = readdir(currDirStream)))
+				{
+					if (subDir->d_type == DT_DIR)
+						++_outSize;
+				}
+
+				//Set the directory iterator back to the beginning.
+				rewinddir(currDirStream);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetFilesFromDirectory(char* _outFiles[], unsigned int _numFiles, unsigned int _fileNameSize) override
+			{
+				//Check that there is a current working directory.
+				if (currDirStream == nullptr)
+					return GReturn::FAILURE;
+
+				//Set the directory iterator back to the beginning.
+				rewinddir(currDirStream);
+
+				struct dirent* file;
+				unsigned int fileIndex = 0;
+
+				// In Windows platform when rewinddir is called, the first 2 dir will be . and ..
+				// We can simply skip them
+				file = readdir(currDirStream);
+				if (file == nullptr)
+					return GReturn::FAILURE;
+				file = readdir(currDirStream);
+				if (file == nullptr)
+					return GReturn::FAILURE;
+
+				while ((file = readdir(currDirStream)) && fileIndex < _numFiles)
+				{
+					if (file->d_type == DT_REG)
+					{
+						std::string fileName(file->d_name);
+						strcpy_s(_outFiles[fileIndex], _fileNameSize, INTERNAL::G_TO_UTF8(fileName).c_str());
+						++fileIndex;
+					}
+					else
+						continue;
+				}
+
+				//Set the directory iterator back to the beginning.
+				rewinddir(currDirStream);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetFoldersFromDirectory(unsigned int _numsubDir, unsigned int _subDirNameSize, char* _outsubDir[])
+			{
+				//Check that there is a current working directory.
+				if (currDirStream == nullptr)
+					return GReturn::FAILURE;
+
+				//Set the directory iterator back to the beginning.
+				rewinddir(currDirStream);
+
+				struct dirent* subDir;
+				unsigned int subDirIndex = 0;
+
+				// In Windows platform when rewinddir is called, the first 2 dir will be . and ..
+				// We can simply skip them
+				subDir = readdir(currDirStream);
+				if (subDir == nullptr)
+					return GReturn::FAILURE;
+				subDir = readdir(currDirStream);
+				if (subDir == nullptr)
+					return GReturn::FAILURE;
+
+				while ((subDir = readdir(currDirStream)) && subDirIndex < _numsubDir)
+				{
+					if (subDir->d_type == DT_DIR)
+					{
+						std::string subDirName(subDir->d_name);
+						strcpy_s(_outsubDir[subDirIndex], _subDirNameSize, INTERNAL::G_TO_UTF8(subDirName).c_str());
+						++subDirIndex;
+					}
+					else
+						continue;
+				}
+
+				//Set the directory iterator back to the beginning.
+				rewinddir(currDirStream);
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetFileSize(const char* const _file, unsigned int& _outSize) override
+			{
+				//Make a full path to the file.
+				std::string filePath = currDir;
+				filePath += INTERNAL::G_TO_UTF16(_file);
+
+				//Other than the UTF8 to UTF16 conversion for the windows calls,
+				//this is handled the same for each platform.
+				//We call stat() and it fills in the passed in function
+				//with the stats of the passed in path.
+				struct _stat64i32 s;
+				if (_wstat64i32(filePath.c_str(), &s) != 0)
+					return GReturn::FILE_NOT_FOUND;
+
+				//Copy the file size to the out parameter.
+				_outSize = (unsigned int)s.st_size;
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn Seek(unsigned int _seekFrom, int _amount, unsigned int& _outCurrPos) override
+			{
+				// if text file
+				if (file.is_open()) {
+					// if not seeking from the current position
+					if (_seekFrom != -1) {
+						// check for invalid arguments
+						// lock
+						lock.lock();
+						if (0 <= _seekFrom + _amount && _seekFrom + _amount < fileSize) {
+							// seek to the new position relative to _seekFrom
+							std::streamoff offset = static_cast<unsigned long long>(_seekFrom) + static_cast<long long>(_amount);
+							file.seekg(offset, std::ios_base::beg);
+
+							// set the output to the new current position
+							_outCurrPos = static_cast<unsigned int>(file.tellg());
+
+							// unlock
+							lock.unlock();
+
+							return GReturn::SUCCESS;
+						}
+						else {
+							// unlock
+							lock.unlock();
+							return GReturn::INVALID_ARGUMENT;
+						}
+					}
+					else { // seeking from the current position
+						// check for invalid arguments
+						// lock
+						lock.lock();
+						unsigned int pos = static_cast<unsigned int>(file.tellg());
+						if (0 <= pos + _amount && pos + _amount < fileSize) {
+							// seek to the new position relative to the current position
+							file.seekg(_amount, std::ios_base::cur);
+
+							// set the output to the new current position
+							_outCurrPos = static_cast<unsigned int>(file.tellg());
+
+							// unlock
+							lock.unlock();
+
+							return GReturn::SUCCESS;
+						}
+						else {
+							// unlock
+							lock.unlock();
+							return GReturn::INVALID_ARGUMENT;
+						}
+					}
+
+				}
+				// if binary file
+				else if (binaryFile != NULL) {
+					// check where we seek from
+					if (_seekFrom != -1) {
+						// check for invalid arguments
+						// lock
+						lock.lock();
+						if (0 <= _seekFrom + _amount && _seekFrom + _amount < fileSize) {
+							// seek to the new position relative to _seekFrom
+							fseek(binaryFile, static_cast<unsigned long>(_seekFrom) + static_cast<long>(_amount), SEEK_SET);
+
+							// set the output to the new current position
+							fpos_t pos;
+							fgetpos(binaryFile, &pos);
+							_outCurrPos = static_cast<int>(pos);
+
+							// unlock
+							lock.unlock();
+
+							return GReturn::SUCCESS;
+						}
+						else {
+							// unlock
+							lock.unlock();
+							return GReturn::INVALID_ARGUMENT;
+						}
+					}
+					else { // seek from the current position
+						// check for invalid arguments
+						// lock
+						lock.lock();
+
+						fpos_t pos;
+						fgetpos(binaryFile, &pos);
+						if (0 <= static_cast<unsigned int>(pos) + _amount && static_cast<unsigned int>(pos) + _amount < fileSize) {
+							// seek to the new position relative to the current position
+							fseek(binaryFile, _amount, SEEK_CUR);
+
+							// set the output to the new current position
+							fgetpos(binaryFile, &pos);
+							_outCurrPos = static_cast<unsigned int>(pos);
+
+							// unlock
+							lock.unlock();
+
+							return GReturn::SUCCESS;
+						}
+						else {
+							// unlock
+							lock.unlock();
+							return GReturn::INVALID_ARGUMENT;
+						}
+					}
+				}
+				else return GReturn::FILE_NOT_FOUND;
+			}
+
+			GReturn GetInstallFolder(unsigned int _dirSize, char* _outDir) override
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Copy the directory to the out parameter.
+				strcpy_s(_outDir, _dirSize, winrt::to_string(winrt::Windows::ApplicationModel::Package::Current().InstalledLocation().Path()).c_str());
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetSaveFolder(unsigned int _dirSize, char* _outDir) override
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Copy the directory to the out parameter.
+				strcpy_s(_outDir, _dirSize, winrt::to_string(winrt::Windows::Storage::ApplicationData::Current().LocalFolder().Path()).c_str());
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetPreferencesFolder(unsigned int _dirSize, char* _outDir) override
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Copy the directory to the out parameter.
+				strcpy_s(_outDir, _dirSize, winrt::to_string(winrt::Windows::Storage::ApplicationData::Current().RoamingFolder().Path()).c_str());
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetTempFolder(unsigned int _dirSize, char* _outDir) override
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Copy the directory to the out parameter.
+				strcpy_s(_outDir, _dirSize, winrt::to_string(winrt::Windows::Storage::ApplicationData::Current().TemporaryFolder().Path()).c_str());
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetCacheFolder(unsigned int _dirSize, char* _outDir) override
+			{
+				//Check for valid arguments.
+				if (_outDir == nullptr || _dirSize == 0)
+					return GReturn::INVALID_ARGUMENT;
+
+				//Copy the directory to the out parameter.
+				strcpy_s(_outDir, _dirSize, winrt::to_string(winrt::Windows::Storage::ApplicationData::Current().LocalCacheFolder().Path()).c_str());
+				return GReturn::SUCCESS;
+			}
+
+			GReturn LockAsyncRead() const override
+			{
+				return GThreadSharedImplementation::LockAsyncRead();
+			}
+
+			GReturn UnlockAsyncRead() const override
+			{
+				return GThreadSharedImplementation::UnlockAsyncRead();
+			}
+
+			GReturn LockSyncWrite() override
+			{
+				return GThreadSharedImplementation::LockSyncWrite();
+			}
+
+			GReturn UnlockSyncWrite() override
+			{
+				return GThreadSharedImplementation::UnlockSyncWrite();
+			}
+		};
+	} // end namespace I
+} // end namespace GW
+
+#undef DIR_SEPARATOR
+#undef DIR
+#undef dirent
+#undef fstream
+#undef string
+
+#undef opendir
+#undef readdir
+#undef closedir
+#undef rewinddir
+
+	#endif
+#endif
+///#error MISSING IMPLEMENTATION: This build of Gateware has not been ported to your platform! 
+
 
 
 namespace GW
@@ -9402,6 +12206,11 @@ namespace GW
 			GATEWARE_FUNCTION(GetFoldersFromDirectory)
 			GATEWARE_FUNCTION(GetFileSize)
 			GATEWARE_FUNCTION(Seek)
+			GATEWARE_FUNCTION(GetInstallFolder)
+			GATEWARE_FUNCTION(GetSaveFolder)
+			GATEWARE_FUNCTION(GetPreferencesFolder)
+			GATEWARE_FUNCTION(GetTempFolder)
+			GATEWARE_FUNCTION(GetCacheFolder)
 
 			// This area does not contain actual code, it is only for the benefit of documentation generation.
 		};
@@ -9503,7 +12312,7 @@ namespace GW {
 #ifndef GW_INTERNAL_THREADPOOL
 #define GW_INTERNAL_THREADPOOL
 
- // current implementation used for threadpools
+ // current implementation used for thread-pools
 
 
 // where Gateware keeps it's "invisible" global variables, do not modify outside of Gateware implementations
@@ -9511,7 +12320,7 @@ namespace internal_gw // DEVS: Only allowed on approval, favor static class memb
 {
 	// for variables to be truly global across translation units they must be static WITHIN a function or class.
 	// This allows us to avoid using extern and requiring definition in a user translation unit.
-	static nbsdx::concurrent::ThreadPool<G_MAX_THREAD_POOL_SIZE>& GatewareThreadPool() // avoids a name colission in other units
+	static nbsdx::concurrent::ThreadPool<G_MAX_THREAD_POOL_SIZE>& GatewareThreadPool() // avoids a name collision in other units
 	{
 		// internally this ThreadPool has been adapted to use std::thread::hardware_concurrency() threads 
 		static nbsdx::concurrent::ThreadPool<G_MAX_THREAD_POOL_SIZE> gatewareThreadPool;
@@ -9521,6 +12330,7 @@ namespace internal_gw // DEVS: Only allowed on approval, favor static class memb
 #endif 
 
 
+#include <vector>
 
 // Make the implentation belong to the proper gateware namespace
 // We cannot use "using" here as this is an HPP and supports header only deployments
@@ -9529,7 +12339,7 @@ namespace GW {
 		// Just like GEventReceiver except it can store multiple events in a queue so you can delay processing
 		class GConcurrentImplementation : public virtual GConcurrentInterface
 		{
-			bool supressEvents = false;
+			bool suppressEvents = false;
 			std::atomic_uint tasksProcessing;  
 			std::atomic_uint64_t taskSubmissionIndex;
 			// This is flag is only false when tasksProcessing == 0
@@ -9537,6 +12347,9 @@ namespace GW {
 			std::atomic_flag working = ATOMIC_FLAG_INIT;
 			// HAS A relationship allows for safe lifetime access in external threads
 			CORE::GEventGenerator generator;
+			// prevents DEADLOCKS by tracking threads currently used by this class
+			CORE::GThreadShared vectorlock;
+			std::vector<std::thread::id> runners;
 			// this class creates a message when it falls out of scope (uses shared_ptr)
 			// solves the issue on how to notify when all parallel threads complete
 			struct ScopedEvent {
@@ -9549,9 +12362,31 @@ namespace GW {
 					info.microsecondsElapsed = 
 						std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 					if (+send.Write(Events::PARALLEL_TASK_COMPLETE, info))
-						me.Push(send); // Notify anyone who is listening the Parrallel Task has completed
+						me.Push(send); // Notify anyone who is listening the Parallel Task has completed
 				}
 			};
+			// deadlock detection and prevention functions
+			void deadlockRegisterThread()
+			{
+				vectorlock.LockSyncWrite();
+					runners.push_back(std::this_thread::get_id());
+				vectorlock.UnlockSyncWrite();
+			}
+			void deadlockUnregisterThread()
+			{
+				vectorlock.LockSyncWrite();
+					std::remove(runners.begin(), runners.end(), std::this_thread::get_id());
+				vectorlock.UnlockSyncWrite();
+			}
+			// return true if the current thread is in use (would cause a deadlock)
+			bool deadlockScanCurrentThread()
+			{
+				auto deadlock = runners.end();
+				vectorlock.LockAsyncRead();
+					deadlock = std::find(runners.begin(), runners.end(), std::this_thread::get_id());
+				vectorlock.UnlockAsyncRead();
+				return deadlock != runners.end();
+			}
 			
 		public:
 			// required for HAS-A relationship
@@ -9576,9 +12411,10 @@ namespace GW {
 			// actual implementation starts here
 			GReturn Create(bool _supressEvents)
 			{
-				supressEvents = _supressEvents;
+				suppressEvents = _supressEvents;
 				tasksProcessing = 0;
 				taskSubmissionIndex = 0;
+				vectorlock.Create();
 				return generator.Create();
 			}
 			GReturn BranchSingular(std::function<void()> _singleTask) override
@@ -9588,16 +12424,16 @@ namespace GW {
 				EVENT_DATA einfo = { 0, 0, { 0,1 } };
 				std::chrono::time_point<std::chrono::steady_clock> start;
 				++tasksProcessing; // as soon as a task is submitted it is considered to be processing
-				if (tasksProcessing == 1) // aquire "working" lock until no tasks are processing anymore
+				if (tasksProcessing == 1) // acquire "working" lock until no tasks are processing anymore
 					std::atomic_flag_test_and_set_explicit(&working, std::memory_order_acquire);
 				// send events to end users?
-				if (supressEvents == false)
+				if (suppressEvents == false)
 				{
 					start = std::chrono::steady_clock::now();
 					einfo.taskSubmissionIndex = ++taskSubmissionIndex;
 				}
-				// Safe transfer of event supression state.
-				bool supress = supressEvents;
+				// Safe transfer of event suppression state.
+				bool suppress = suppressEvents;
 				// because "singleTask" below could theoretically invalidate "this" we use a safe handle 
 				CORE::GEventGenerator safe = generator;
 				// We identify each job from this GConcurrent with our memory address.
@@ -9605,11 +12441,12 @@ namespace GW {
 				unsigned long long jobID = reinterpret_cast<unsigned long long>(this);
 				// we need to send by reference due to "tasksProcessing" being a class member.
 				// The task itself & a few other items must be copied as they will fall out of scope.
-				internal_gw::GatewareThreadPool().AddJob([&, _singleTask, supress, safe,
+				internal_gw::GatewareThreadPool().AddJob([&, _singleTask, suppress, safe,
 															einfo, start]() mutable {
+					deadlockRegisterThread();// ensure we don't Converge() on this thread.
 					_singleTask(); // execute job while within the thread pool
 					// send any event that still must be sent
-					if (supress == false)
+					if (suppress == false)
 					{
 						GEvent send; // what people are listening for
 						auto end = std::chrono::steady_clock::now();
@@ -9623,14 +12460,15 @@ namespace GW {
 					CORE::GEventGenerator::burst_w alive = *safe;
 					if (alive)
 					{
+						deadlockUnregisterThread();// this thread is now safe to wait on.
 						--tasksProcessing; // tasks are also considered processing until all event responders have completed
-						if (tasksProcessing == 0) // disable spinlock
+						if (tasksProcessing == 0) // disable spin-lock
 							std::atomic_flag_clear_explicit(&working, std::memory_order_release);
 					}
 				}, jobID); // so we know who owns this job
 				return GReturn::SUCCESS;
 			}
-			// Due to std::function's argressive constructor we had to give this function a unique name
+			// Due to std::function's aggressive constructor we had to give this function a unique name
 			GReturn BranchDynamic(CORE::GLogic _dynamicTask) override 
 			{
 				if (_dynamicTask == nullptr) return GReturn::INVALID_ARGUMENT;
@@ -9665,15 +12503,15 @@ namespace GW {
 					if (output_start < input_start && output_end > input_start)
 						return GReturn::MEMORY_CORRUPTION;
 				}
-				// Safe transfer of event supression state.
-				bool supress = supressEvents;
+				// Safe transfer of event suppression state.
+				bool suppress = suppressEvents;
 				// When the shared object falls completely out of scope we know all threads have completed.
 				std::shared_ptr<ScopedEvent> waitForDeath;
 				// because "parallelTask" below could theoretically invalidate "this" we use a safe handle 
 				CORE::GEventGenerator safe = generator;
-				// error checks done we compute required jobs and submitt to thread pool.
+				// error checks done we compute required jobs and submit to thread pool.
 				EVENT_DATA einfo = { 0, 0, { 0,_arraySize } };
-				if (supressEvents == false)
+				if (suppressEvents == false)
 				{
 					einfo.taskSubmissionIndex = ++taskSubmissionIndex;
 					// allocate a ScopedEvent to handle the last message
@@ -9689,7 +12527,7 @@ namespace GW {
 				{
 					// as soon as a task is submitted it is considered to be processing
 					++tasksProcessing;
-					if (tasksProcessing == 1) // aquire "working" lock until no tasks are processing anymore
+					if (tasksProcessing == 1) // acquire "working" lock until no tasks are processing anymore
 						std::atomic_flag_test_and_set_explicit(&working, std::memory_order_acquire);
 					// include completion event info (fixed for C++11 syntax)
                     einfo.completionRange[0] = i * _maxSection;
@@ -9703,10 +12541,11 @@ namespace GW {
 					// The task itself & a few other items must be copied as they will fall out of scope.
 					internal_gw::GatewareThreadPool().AddJob([&, _parallelTask, _inStride, _inputArray, 
 																_outStride, _outputArray, _userData, 
-																einfo, supress, waitForDeath, safe]() mutable {
+																einfo, suppress, waitForDeath, safe]() mutable {
+						deadlockRegisterThread();// ensure we don't Converge() on this thread.
 						// used for timing individual sections to help find performance bottlenecks.
 						std::chrono::time_point<std::chrono::steady_clock> start;
-						if (supress == false)
+						if (suppress == false)
 							start = std::chrono::steady_clock::now();
 						// traverse using byte pointers to account for unique data strides
 						const unsigned char* in = reinterpret_cast<const unsigned char*>(_inputArray) + static_cast<uint64_t>(einfo.completionRange[0]) * _inStride;
@@ -9718,7 +12557,7 @@ namespace GW {
 								reinterpret_cast<Output*>(out), j, _userData);
 						}
 						// if the user wants to be informed we inform them
-						if (supress == false)
+						if (suppress == false)
 						{
 							GEvent send; // what people are listening for
 							auto end = std::chrono::steady_clock::now();
@@ -9727,15 +12566,16 @@ namespace GW {
 							send.Write(Events::PARALLEL_SECTION_COMPLETE, einfo);
 							safe.Push(send); // Notify anyone who is listening
 						}
-						// manually free "waitForDeath" here so like "BranchSingular" tasksprocessing is inclusive
+						// manually free "waitForDeath" here so like "BranchSingular" tasks processing is inclusive
 						// to any event responders who may be reacting to completed events.
 						waitForDeath.reset(); // drop this copy (will invoke destructor if this is the last one)
 						// increase count, notify listeners and unlock spin if still possible
 						CORE::GEventGenerator::burst_w alive = *safe;
 						if (alive)
 						{
+							deadlockUnregisterThread();// this thread is now safe to wait on.
 							--tasksProcessing; // tasks are considered processing until all responders have reacted
-							if (tasksProcessing == 0) // disable spinlock
+							if (tasksProcessing == 0) // disable spin-lock
 								std::atomic_flag_clear_explicit(&working, std::memory_order_release);
 						}
 					}, jobID); // so we know who owns this job
@@ -9772,15 +12612,15 @@ namespace GW {
 				if (_parallelTask == nullptr) return GReturn::INVALID_ARGUMENT;
 				if (_arraySize == 0) return GReturn::INVALID_ARGUMENT;
 				if (_outDataArray == nullptr) return GReturn::INVALID_ARGUMENT;
-				// Safe transfer of event supression state.
-				bool supress = supressEvents;
+				// Safe transfer of event suppression state.
+				bool suppress = suppressEvents;
 				// When the shared object falls completely out of scope we know all threads have completed.
 				std::shared_ptr<ScopedEvent> waitForDeath;
 				// because "parallelTask" below could theoretically invalidate "this" we use a safe handle 
 				CORE::GEventGenerator safe = generator;
-				// error checks done we compute required jobs and submitt to thread pool.
+				// error checks done we compute required jobs and submit to thread pool.
 				EVENT_DATA einfo = { 0, 0, { 0,_arraySize } };
-				if (supressEvents == false)
+				if (suppressEvents == false)
 				{
 					einfo.taskSubmissionIndex = ++taskSubmissionIndex;
 					// allocate a ScopedEvent to handle the last message
@@ -9797,7 +12637,7 @@ namespace GW {
 				{
 					// as soon as a task is submitted it is considered to be processing
 					++tasksProcessing;
-					if (tasksProcessing == 1) // aquire "working" lock until no tasks are processing anymore
+					if (tasksProcessing == 1) // acquire "working" lock until no tasks are processing anymore
 						std::atomic_flag_test_and_set_explicit(&working, std::memory_order_acquire);
 					// include completion event info (fixed for C++11 syntax)
 					einfo.completionRange[0] = i * autoSection;
@@ -9810,10 +12650,10 @@ namespace GW {
 					// launch job, copy ScopedEvent so it does not fall out of scope until we are done.
 					// The task itself & a few other items must be copied as they will fall out of scope.
 					internal_gw::GatewareThreadPool().AddJob([&, _parallelTask, _outDataArray,
-						einfo, supress, waitForDeath, safe]() mutable {
+						einfo, suppress, waitForDeath, safe]() mutable {
 							// used for timing individual sections to help find performance bottlenecks.
 							std::chrono::time_point<std::chrono::steady_clock> start;
-							if (supress == false)
+							if (suppress == false)
 								start = std::chrono::steady_clock::now();
 							// do the actual work requested
 							for (unsigned int j = einfo.completionRange[0]; 
@@ -9822,7 +12662,7 @@ namespace GW {
 								_parallelTask(_outDataArray[j]);
 							}
 							// if the user wants to be informed we inform them
-							if (supress == false)
+							if (suppress == false)
 							{
 								GEvent send; // what people are listening for
 								auto end = std::chrono::steady_clock::now();
@@ -9831,7 +12671,7 @@ namespace GW {
 								send.Write(Events::PARALLEL_SECTION_COMPLETE, einfo);
 								safe.Push(send); // Notify anyone who is listening
 							}
-							// manually free "waitForDeath" here so like "BranchSingular" tasksprocessing is inclusive
+							// manually free "waitForDeath" here so like "BranchSingular" tasks processing is inclusive
 							// to any event responders who may be reacting to completed events.
 							waitForDeath.reset(); // drop this copy (will invoke destructor if this is the last one)
 							// increase count, notify listeners and unlock spin if still possible
@@ -9839,7 +12679,7 @@ namespace GW {
 							if (alive)
 							{
 								--tasksProcessing; // tasks are considered processing until all responders have reacted
-								if (tasksProcessing == 0) // disable spinlock
+								if (tasksProcessing == 0) // disable spin-lock
 									std::atomic_flag_clear_explicit(&working, std::memory_order_release);
 							}
 						}, jobID); // so we know who owns this job
@@ -9898,6 +12738,11 @@ namespace GW
 			GATEWARE_TEMPLATE_FUNCTION(BranchParallel)
 			GATEWARE_FUNCTION(Converge)
 
+			// reimplemented functions
+			GATEWARE_FUNCTION(Register)
+			GATEWARE_CONST_FUNCTION(Observers)
+			GATEWARE_FUNCTION(Push)
+
 			// This area does not contain actual code, it is only for the benefit of documentation generation.
 		};
 	}
@@ -9938,7 +12783,9 @@ namespace GW
 // When adding implementations please try to condense redundant file includes where possible.
 // This will reduce size/redundancy when the library is tool compressed into single header form.
 #if !defined(GATEWARE_ENABLE_SYSTEM) || defined(GATEWARE_DISABLE_GLOG) || \
-    (defined(GATEWARE_ENABLE_SYSTEM) && !defined(GATEWARE_DISABLE_GLOG) && !defined(__APPLE__) && !defined(__linux__) && !defined(_WIN32))
+    (defined(GATEWARE_ENABLE_SYSTEM) && !defined(GATEWARE_DISABLE_GLOG) && !defined(__APPLE__) && !defined(__linux__) && !defined(_WIN32) && !defined(WINAPI_FAMILY))
+
+
 	// Even if a platform does not support a library a dummy implementation must be present!
 	namespace GW
 {
@@ -10005,7 +12852,6 @@ namespace GW
 #include <iostream>
 #include <condition_variable>
 
-#define MAX_QUEUE_SIZE 20
 #define THREAD_SLEEP_TIME 1
 #define TIME_BUFFER 40
 
@@ -10121,13 +12967,6 @@ namespace GW
 				//Lock the mutex to push the new message.
 				queueLock.lock();
 
-				//Check to see if we are at our max messages.
-				if (logQueue.size() >= MAX_QUEUE_SIZE)
-				{
-					queueLock.unlock();
-					return GW::GReturn::FAILURE;
-				}
-
 				//Push the message to the queue.
 				logQueue.push(logStream.str());
 
@@ -10169,13 +13008,6 @@ namespace GW
 				//Lock the mutex to push the new msg.
 				queueLock.lock();
 
-				//Check to see if we are at our max messages.
-				if (logQueue.size() >= MAX_QUEUE_SIZE)
-				{
-					queueLock.unlock();
-					return GW::GReturn::FAILURE;
-				}
-
 				//Push the message to the queue.
 				logQueue.push(logStream.str());
 
@@ -10211,13 +13043,226 @@ namespace GW
 	} //end namespace I
 } // end namespace GW
 
-#undef MAX_QUEUE_SIZE
 #undef THREAD_SLEEP_TIME
 #undef TIME_BUFFER
 
 
 #elif defined(_WIN32)
-	
+	#include <winapifamily.h>
+	#if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+		
+
+
+
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <queue>
+#include <atomic>
+#include <mutex>
+#include <sstream>
+#include <iostream>
+#include <condition_variable>
+
+#define THREAD_SLEEP_TIME 1
+#define TIME_BUFFER 40
+
+namespace GW
+{
+	namespace I
+	{
+		class GLogImplementation : public virtual GLogInterface,
+			protected GThreadSharedImplementation
+		{
+		private:
+			GW::SYSTEM::GFile logFile;
+			GW::SYSTEM::GConcurrent thread;
+			std::atomic<bool> threadRunning;
+
+			std::condition_variable conditional;
+			std::mutex queueLock;
+			std::queue<std::string> logQueue;
+
+			bool isVerbose = true;
+			bool isConsoleLogged = false;
+
+			unsigned long long GetThreadID()
+			{
+				std::stringstream ss;
+				ss << std::this_thread::get_id();
+				return std::stoull(ss.str());
+			};
+
+			GReturn LauchThread()
+			{
+				isVerbose = true;
+				isConsoleLogged = false;
+				threadRunning = true;
+				thread.Create(false);
+				return thread.BranchSingular([&]() {
+					std::unique_lock<std::mutex> localQueueLock(queueLock);
+					while (threadRunning || logQueue.size() != 0)
+					{
+						//Will lock the mutex when awaken and unlock it when put back to sleep.
+						conditional.wait_for(localQueueLock, std::chrono::seconds(THREAD_SLEEP_TIME));
+						//If there is anything to write.
+						if (logQueue.size() != 0)
+						{
+							while (logQueue.size() != 0)
+							{
+								logFile.WriteLine(logQueue.front().c_str());
+								logQueue.pop();
+
+								logFile.FlushFile();
+							}
+						}
+					}
+				});
+			}
+		public:
+			~GLogImplementation()
+			{
+				threadRunning = false;
+				thread.Converge(0);
+			}
+
+			GReturn Create(const char* const _fileName)
+			{
+				GReturn rv = logFile.Create();
+				if (G_FAIL(rv))
+					return rv;
+
+				rv = logFile.AppendTextWrite(_fileName);
+				if (G_FAIL(rv))
+					return rv;
+
+				return LauchThread();
+			}
+
+			GReturn Create(SYSTEM::GFile _file)
+			{
+				if (!_file)
+					return GReturn::INVALID_ARGUMENT;
+				logFile = _file;
+
+				return LauchThread();
+			}
+
+			GReturn Log(const char* const _log) override
+			{
+				if (_log == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				std::stringstream logStream;
+
+				//Check verbose logging and add the verbose info if on.
+				if (isVerbose)
+				{
+					time_t t = time(0);   //Get time now.
+					char timeBuffer[TIME_BUFFER];
+
+					//Parse the time out to readable time.
+					struct tm buf;
+					localtime_s(&buf, &t);
+					asctime_s(timeBuffer, TIME_BUFFER, &buf);
+
+					//Get rid of new line added by asctime.
+					timeBuffer[strlen(timeBuffer) - 1] = '\0';
+
+					//Create our log string.
+					logStream << "[" << timeBuffer << "] ThreadID[";
+					logStream << GetThreadID() << "]\t";
+				}
+
+				//Add the log and a newline.
+				logStream << _log << "\r\n";
+
+				//Lock the mutex to push the new message.
+				queueLock.lock();
+
+				//Push the message to the queue.
+				logQueue.push(logStream.str());
+
+				if (isConsoleLogged)
+					std::cout << logStream.str();
+				OutputDebugStringW(internal_gw::UTFStringConverter(logStream.str()).c_str());
+				queueLock.unlock();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn LogCategorized(const char* const _category, const char* const _log) override
+			{
+				if (_category == nullptr || _log == nullptr)
+					return GW::GReturn::INVALID_ARGUMENT;
+
+				//The stream that will contain the full message.
+				std::stringstream logStream;
+
+				//Check verbose logging and add the verbose info if on.
+				if (isVerbose)
+				{
+					time_t t = time(0);   //Get time now.
+					char timeBuffer[TIME_BUFFER];
+
+					//Parse time to readable time.
+					struct tm buf;
+					localtime_s(&buf, &t);
+					asctime_s(timeBuffer, TIME_BUFFER, &buf);
+
+					//Get rid of new line added by asctime.
+					timeBuffer[strlen(timeBuffer) - 1] = '\0';
+
+					//Build the string.
+					logStream << "[" << timeBuffer << "] ThreadID[";
+					logStream << GetThreadID() << "]\t";
+				}
+
+				//Add the category and message.
+				logStream << "[" << _category << "]\t" << _log << "\r\n";
+
+				//Lock the mutex to push the new msg.
+				queueLock.lock();
+
+				//Push the message to the queue.
+				logQueue.push(logStream.str());
+
+				if (isConsoleLogged)
+					std::cout << logStream.str();
+				OutputDebugStringW(internal_gw::UTFStringConverter(logStream.str()).c_str());
+				queueLock.unlock();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn EnableVerboseLogging(bool _value) override
+			{
+				isVerbose = _value;
+				return GReturn::SUCCESS;
+			};
+
+			GReturn EnableConsoleLogging(bool _value) override
+			{
+				isConsoleLogged = _value;
+				return GReturn::SUCCESS;
+			};
+
+			GReturn Flush() override
+			{
+				conditional.notify_all();
+				return GReturn::SUCCESS;
+			};
+
+			GReturn LockAsyncRead() const override { return GThreadSharedImplementation::LockAsyncRead(); }
+			GReturn UnlockAsyncRead() const override { return GThreadSharedImplementation::UnlockAsyncRead(); }
+			GReturn LockSyncWrite() override { return GThreadSharedImplementation::LockSyncWrite(); }
+			GReturn UnlockSyncWrite() override { return GThreadSharedImplementation::UnlockSyncWrite(); }
+		};
+	} //end namespace I
+} // end namespace GW
+
+#undef THREAD_SLEEP_TIME
+#undef TIME_BUFFER
+
+	#elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+		
 
 
 
@@ -10284,7 +13329,7 @@ namespace GW
 							}
 						}
 					}
-				});
+					});
 			}
 		public:
 			~GLogImplementation()
@@ -10298,6 +13343,10 @@ namespace GW
 				GReturn rv = logFile.Create();
 				if (G_FAIL(rv))
 					return rv;
+
+				// Because of the strictness of file I/O in UWP, this must be set to a default location where the app can access
+				// If this needs to be somewhere different, use the other Create function
+				logFile.SetCurrentWorkingDirectory(winrt::to_string(winrt::Windows::Storage::ApplicationData::Current().LocalFolder().Path()).c_str());
 
 				rv = logFile.AppendTextWrite(_fileName);
 				if (G_FAIL(rv))
@@ -10359,7 +13408,7 @@ namespace GW
 
 				if (isConsoleLogged)
 					std::cout << logStream.str();
-				OutputDebugStringW(internal_gw::UTFStringConverter(logStream.str()).c_str());
+				OutputDebugStringW(INTERNAL::G_TO_UTF16(logStream.str()).c_str());
 				queueLock.unlock();
 				return GReturn::SUCCESS;
 			}
@@ -10409,7 +13458,7 @@ namespace GW
 
 				if (isConsoleLogged)
 					std::cout << logStream.str();
-				OutputDebugStringW(internal_gw::UTFStringConverter(logStream.str()).c_str());
+				OutputDebugStringW(INTERNAL::G_TO_UTF16(logStream.str()).c_str());
 				queueLock.unlock();
 				return GReturn::SUCCESS;
 			}
@@ -10444,7 +13493,9 @@ namespace GW
 #undef THREAD_SLEEP_TIME
 #undef TIME_BUFFER
 
+	#endif
 #endif
+
 
 
 namespace GW
@@ -10553,7 +13604,7 @@ namespace GW {
 #ifndef GW_INTERNAL_THREADPOOL
 #define GW_INTERNAL_THREADPOOL
 
- // current implementation used for threadpools
+ // current implementation used for thread-pools
 
 
 // where Gateware keeps it's "invisible" global variables, do not modify outside of Gateware implementations
@@ -10561,7 +13612,7 @@ namespace internal_gw // DEVS: Only allowed on approval, favor static class memb
 {
 	// for variables to be truly global across translation units they must be static WITHIN a function or class.
 	// This allows us to avoid using extern and requiring definition in a user translation unit.
-	static nbsdx::concurrent::ThreadPool<G_MAX_THREAD_POOL_SIZE>& GatewareThreadPool() // avoids a name colission in other units
+	static nbsdx::concurrent::ThreadPool<G_MAX_THREAD_POOL_SIZE>& GatewareThreadPool() // avoids a name collision in other units
 	{
 		// internally this ThreadPool has been adapted to use std::thread::hardware_concurrency() threads 
 		static nbsdx::concurrent::ThreadPool<G_MAX_THREAD_POOL_SIZE> gatewareThreadPool;
@@ -10588,7 +13639,7 @@ namespace GW {
             // defines what a daemon actually is
 			typedef std::tuple<std::chrono::time_point<std::chrono::steady_clock>,
 				unsigned long long, CORE::GEventReceiver> Daemon;
-			// Global daemon managment variables, intialized below the class
+			// Global daemon management variables, initialized below the class
 			// responsible for creating and joining/stopping the daemon visitor
 			class GDaemonManager {
 			public:
@@ -10627,7 +13678,7 @@ namespace GW {
 				// have to be detached and There wouldn't be a guaranteed way to allow the thread to exit 
 				// normally at the end of main.
 				std::thread g_daemonVisitor;
-				// routine that manages the daemon set until the last has finshed (defined below)
+				// routine that manages the daemon set until the last has finished (defined below)
 				void processWaitingDaemons()
 				{
 					std::mutex sleeper; // used only for more controlled naps with std::condition_variable 
@@ -10666,7 +13717,7 @@ namespace GW {
 
 							//num_daemons = g_daemons.size(); // how many do we have now?
 							std::sort(g_daemons.begin(), g_daemons.end(), sortWaitingDaemons);
-							for (auto i = g_daemons.begin(); i != g_daemons.end(); ) // iteration is contolled inside
+							for (auto i = g_daemons.begin(); i != g_daemons.end(); ) // iteration is controlled inside
 							{
 								// grab the exact time at loop start
 								std::chrono::time_point<std::chrono::steady_clock> exact = std::chrono::steady_clock::now();
@@ -10695,7 +13746,7 @@ namespace GW {
 									updateNextWake(std::get<0>(*i), nextwake, allow_adj);
 									// weak handle to GEventReceiver which we will invoke
 									auto caller = std::get<2>(*i);
-									// add to threadpool, invoke Daemon routine
+									// add to thread-pool, invoke Daemon routine
 									internal_gw::GatewareThreadPool().AddJob([caller]() {
 										// should be safe and not cause oddness
 										caller.Invoke();
@@ -10708,7 +13759,7 @@ namespace GW {
 									// how much time till this must launch?
 									unsigned long long microleft =
 										std::chrono::duration_cast<std::chrono::microseconds>(exact - std::get<0>(*i)).count();
-									// if a daemon is less than G_DAEMON_LAUNCH_THRESHOLD microseconds from starting we spinlock.
+									// if a daemon is less than G_DAEMON_LAUNCH_THRESHOLD microseconds from starting we spin-lock.
 									if (microleft <= G_DAEMON_LAUNCH_THRESHOLD)
 									{
 										while (std::chrono::steady_clock::now() < std::get<0>(*i))
@@ -10728,7 +13779,7 @@ namespace GW {
 						// reduce by the launch threshold so we have a better possibility of launching on time
 						// if possible we wait for the next launching time span.
 						// If a new daemon is added or a destructor is invoked we will be notified while sleeping.
-						// The suprious wakeup will wake the thread no matter what since it is always safe to do so.
+						// The spurious wakeup will wake the thread no matter what since it is always safe to do so.
 						{
 							std::unique_lock<std::mutex> locker(sleeper);
 							g_managerNotifier.wait_until(locker, nextwake, [&]() { return true; });
@@ -10749,16 +13800,16 @@ namespace GW {
 			{
 				return std::get<0>(_a) < std::get<0>(_b); // compare time points
 			}
-			// daemons are sorted by when they must next run in accending order (oldest first)
+			// daemons are sorted by when they must next run in ascending order (oldest first)
 			
 			// * End Globals, start local variables *
 
 			// used to pause execution of this daemon (disabled during Initialization)
 			std::atomic_bool paused = { true };
-			// flag that controls pauseing and resuming of a daemon
+			// flag that controls pausing and resuming of a daemon
 			std::atomic_flag running = ATOMIC_FLAG_INIT;
 			// keeps track of the current thread running our daemon to avoid possible deadlock
-			std::atomic<std::thread::id> runner; // deafault constructor is a non-thread
+			std::atomic<std::thread::id> runner; // default constructor is a non-thread
 			// the amount of time (milliseconds) between execution events
 			unsigned int period = 0;
 			// tracks the number of complete executions of the daemon
@@ -10793,16 +13844,16 @@ namespace GW {
 					return GReturn::INVALID_ARGUMENT;
 				// If a _delay was supplied we need to unpause this daemon immediately (otherwise start paused)
 				if (_delay > 0)
-					paused = false; // intialized to true by default (for simplified init reasons)
+					paused = false; // initialized to true by default (for simplified init reasons)
                 // make an internal event generator to implement that functionality
                 // this may not be as efficient as private inheritance but allows for
                 // safe message sending if the _daemonOperation is used to delete/replace this proxy
                 generator.Create();
 				period = _targetInterval; // fixed time step between daemon invocations
-				count = 0; // nothing has been excecuted yet
+				count = 0; // nothing has been executed yet
 				// create daemon here
 				daemon.Create(GetDaemonManager().g_daemonNotifier, [&, _daemonOperation]() {
-					// This is called wether we are ready or not.
+					// This is called whether we are ready or not.
 					// Only run code if we are not already running
 					if (std::atomic_flag_test_and_set_explicit(&running, std::memory_order_acquire) == false)
 					{
@@ -10819,7 +13870,7 @@ namespace GW {
 							if (alive)
 							{	// notify anyone listening we have completed
 								unsigned long long c = ++count; // increase & copy count to POD
-								send.Write(Events::OPERATION_COMPLETED, c); // send current count
+								send.Write(Events::OPERATION_COMPLETED, EVENT_DATA{ c }); // send current count
 								alive->Push(send); // a daemon run is not done till eveyone has received it
 								std::atomic_flag_clear_explicit(&running, std::memory_order_release);
 							}
@@ -10888,7 +13939,7 @@ namespace GW {
 				// notify anyone listening a pause has been requested.
 				GEvent send;
 				unsigned long long c = count;
-				send.Write(Events::OPERATIONS_PAUSED, c);
+				send.Write(Events::OPERATIONS_PAUSED, EVENT_DATA{ c });
 				Push(send); // let everyone know who cares
 				// so far so good
 				return GReturn::SUCCESS;
@@ -10902,7 +13953,7 @@ namespace GW {
 				// notify anyone listening a resume has been requested.
 				GEvent send;
 				unsigned long long c = count;
-				send.Write(Events::OPERATIONS_RESUMING, c);
+				send.Write(Events::OPERATIONS_RESUMING, EVENT_DATA{ c });
 				Push(send); // let everyone know who cares
 				return GReturn::SUCCESS;
 			}
@@ -10943,6 +13994,11 @@ namespace GW
 			GATEWARE_FUNCTION(Pause)
 			GATEWARE_FUNCTION(Resume)
 			GATEWARE_CONST_FUNCTION(Counter)
+
+			// reimplemented functions
+			GATEWARE_FUNCTION(Register)
+			GATEWARE_CONST_FUNCTION(Observers)
+			GATEWARE_FUNCTION(Push)
 				
 			// This area does not contain actual code, it is only for the benefit of documentation generation.
 		};
@@ -10966,6 +14022,12 @@ namespace GW
 		public:
 			enum class Events
 			{
+				SUSPEND, 
+				RESUME, 
+				LEAVING_BACKGROUND, 
+				ENTERED_BACKGROUND, 
+				NOTIFY,
+				NON_EVENT,
 				MINIMIZE,
 				MAXIMIZE,
 				RESIZE,
@@ -11152,7 +14214,500 @@ namespace GW
 
 
 #elif defined(__APPLE__)
-    #ifdef __OBJC__
+    #include <TargetConditionals.h>
+    #if TARGET_OS_IOS
+        #ifdef __OBJC__
+@import Foundation;
+@import UIKit;
+#endif
+
+#include <thread>
+#include <string.h>
+
+
+
+
+
+namespace GW
+{
+    namespace I
+    {
+        class GWindowImplementation : public virtual GWindowInterface,
+            private GEventGeneratorImplementation
+        {
+        private:
+            
+            __block GWindowImplementation* selfReference;
+            __block GEvent gEvent;
+            GW::I::GWindowInterface::EVENT_DATA eventData;
+
+            __block UIViewController* currentWindowViewController;
+            __block UIWindow* window;
+            
+            // Needed for unsubscribing from events later.
+            NSMutableArray<id>* tokens;
+            unsigned int tokenCount;
+            
+            GReturn SetupNotifications()
+            {
+                NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+                tokens = [NSMutableArray<id> array];
+                tokenCount = 0;
+                // Event Support
+                // SUSPEND,             YES
+                // RESUME,              YES
+                // LEAVING_BACKGROUND,  YES
+                // ENTERED_BACKGROUND,  YES
+                // NOTIFY,              NO  (Used in the graphics surfaces.)
+                // NON_EVENT,           NO  (Not an event.)
+                // MINIMIZE,            NO  (Would be implemented with UIWindowDidBecomeHiddenNotification.)
+                // MAXIMIZE,            NO  (Would be implemented with UIWindowDidBecomeVisibleNotification.)
+                // RESIZE,              NO  (As far as I know, this is not possible with the NSNotificationCenter system.)
+                // RESIZE,              NO  (As far as I know, this is not possible with the NSNotificationCenter system.)
+                // DISPLAY_CLOSED,      NO  (Linux only)
+                // EVENTS_PROCESSED,    YES (Just to keep parity, doesn't mean anything in iOS.)
+                // DESTROY,             YES
+                
+                
+                // SUSPEND Event
+                tokenCount++;
+                [tokens addObject: [notificationCenter addObserverForName:UIApplicationWillResignActiveNotification
+                                                object:nil
+                                                 queue:[NSOperationQueue mainQueue]
+                                            usingBlock:^(NSNotification * note) {
+                 
+                 // This notification sends your UIApplication object with it.
+                 UIApplication* application = note.object;
+                 
+                 // Nabs the top-most window which for most users will be the only window,
+                 // and for most other users will be the only window they care about.
+                 UIWindow* window = [[application windows] lastObject];
+                 
+                 GW::I::GWindowInterface::EVENT_DATA eventData;
+                 eventData.eventFlags = GW::I::GWindowInterface::Events::SUSPEND;
+                 eventData.windowX = window.bounds.origin.x;
+                 eventData.windowY = window.bounds.origin.y;
+                 eventData.width   = window.bounds.size.width;
+                 eventData.height  = window.bounds.size.height;
+                 eventData.windowHandle = (__bridge void*) window;
+                 
+                 gEvent.Write(eventData.eventFlags, eventData);
+                 selfReference->Push(gEvent);
+                 }]];
+                
+                // RESUME Event
+                tokenCount++;
+                [tokens addObject: [notificationCenter addObserverForName:UIApplicationDidBecomeActiveNotification
+                                                object:nil
+                                                 queue:[NSOperationQueue mainQueue]
+                                            usingBlock:^(NSNotification * note) {
+                 
+                 // This notification sends your UIApplication object with it.
+                 UIApplication* application = note.object;
+                 
+                 // Nabs the top-most window which for most users will be the only window,
+                 // and for most other users will be the only window they care about.
+                 UIWindow* window = [[application windows] lastObject];
+                 
+                 GW::I::GWindowInterface::EVENT_DATA eventData;
+                 eventData.eventFlags = GW::I::GWindowInterface::Events::RESUME;
+                 eventData.windowX = window.bounds.origin.x;
+                 eventData.windowY = window.bounds.origin.y;
+                 eventData.width   = window.bounds.size.width;
+                 eventData.height  = window.bounds.size.height;
+                 eventData.windowHandle = (__bridge void*) window;
+                 
+                 gEvent.Write(eventData.eventFlags, eventData);
+                 selfReference->Push(gEvent);
+                 }]];
+                
+                
+                // LEAVING_BACKGROUND Event
+                tokenCount++;
+                [tokens addObject: [notificationCenter addObserverForName:UIApplicationWillEnterForegroundNotification
+                                                object:nil
+                                                 queue:[NSOperationQueue mainQueue]
+                                            usingBlock:^(NSNotification * note) {
+                 
+                 // This notification sends your UIApplication object with it.
+                 UIApplication* application = note.object;
+                 
+                 // Nabs the top-most window which for most users will be the only window,
+                 // and for most other users will be the only window they care about.
+                 UIWindow* window = [[application windows] lastObject];
+                 
+                 GW::I::GWindowInterface::EVENT_DATA eventData;
+                 eventData.eventFlags = GW::I::GWindowInterface::Events::LEAVING_BACKGROUND;
+                 eventData.windowX = window.bounds.origin.x;
+                 eventData.windowY = window.bounds.origin.y;
+                 eventData.width   = window.bounds.size.width;
+                 eventData.height  = window.bounds.size.height;
+                 eventData.windowHandle = (__bridge void*) window;
+                 
+                 gEvent.Write(eventData.eventFlags, eventData);
+                 selfReference->Push(gEvent);
+                 }]];
+                
+                // ENTERED_BACKGROUND Event
+                tokenCount++;
+                [tokens addObject: [notificationCenter addObserverForName:UIApplicationDidEnterBackgroundNotification
+                                                object:nil
+                                                 queue:[NSOperationQueue mainQueue]
+                                            usingBlock:^(NSNotification * note) {
+                 
+                 // This notification sends your UIApplication object with it.
+                 UIApplication* application = note.object;
+                 
+                 // Nabs the top-most window which for most users will be the only window,
+                 // and for most other users will be the only window they care about.
+                 UIWindow* window = [[application windows] lastObject];
+                 
+                 GW::I::GWindowInterface::EVENT_DATA eventData;
+                 eventData.eventFlags = GW::I::GWindowInterface::Events::ENTERED_BACKGROUND;
+                 eventData.windowX = window.bounds.origin.x;
+                 eventData.windowY = window.bounds.origin.y;
+                 eventData.width   = window.bounds.size.width;
+                 eventData.height  = window.bounds.size.height;
+                 eventData.windowHandle = (__bridge void*) window;
+                 
+                 gEvent.Write(eventData.eventFlags, eventData);
+                 selfReference->Push(gEvent);
+                 }]];
+                
+                
+                // DESTROY Event
+                // This likely won't be called. Usually SUSPEND will be called.
+                tokenCount++;
+                [tokens addObject: [notificationCenter addObserverForName:UIApplicationWillTerminateNotification
+                                                object:nil
+                                                 queue:[NSOperationQueue mainQueue]
+                                            usingBlock:^(NSNotification * note) {
+                 // This notification sends your UIApplication object with it.
+                 UIApplication* application = note.object;
+                 
+                 // Nabs the top-most window which for most users will be the only window,
+                 // and for most other users will be the only window they care about.
+                 UIWindow* window = [[application windows] lastObject];
+                                    
+                 GW::I::GWindowInterface::EVENT_DATA eventData;
+                 eventData.eventFlags = GW::I::GWindowInterface::Events::DESTROY;
+                 eventData.windowX = window.bounds.origin.x;
+                 eventData.windowY = window.bounds.origin.y;
+                 eventData.width   = window.bounds.size.width;
+                 eventData.height  = window.bounds.size.height;
+                 eventData.windowHandle = (__bridge void*) window;
+                 
+                 gEvent.Write(eventData.eventFlags, eventData);
+                 selfReference->Push(gEvent);
+                 }]];
+                
+                return GReturn::SUCCESS;
+            }
+
+        public:
+            ~GWindowImplementation()
+            {
+                // Our UIViewController pointer can just be released here.
+                // No dynamic memory should be held by this class.
+                if (currentWindowViewController)
+                {
+                    currentWindowViewController = nil;
+                }
+                
+                // Unsubscribe from all of our notifications
+                NSNotificationCenter* nc = [NSNotificationCenter defaultCenter];
+                for (unsigned int i = 0; i < tokenCount; ++i)
+                {
+                    [nc removeObserver: [tokens objectAtIndex: i]];
+                }
+            }
+
+            GReturn Create(int _x, int _y, int _width, int _height, SYSTEM::GWindowStyle _style)
+            {
+                // iOS doesn't use any of the parameters, the app window is always fullscreen.
+                
+                // This saves the current window, which is usually the only window on iOS, unless the end-user
+                // creates another, in which GWindow will get the top-most window.
+                // If the user wishes to get another window with GWindow, they would have to set the window they want
+                // as the top window and call Create on their GWindow instance.
+                RUN_ON_UI_THREAD(^{
+                    
+                    currentWindowViewController = [[[[UIApplication sharedApplication] windows] lastObject] rootViewController];
+                    window = [[currentWindowViewController view] window];
+                    
+                });
+                // For use within blocks.
+                selfReference = this;
+                return SetupNotifications();
+            }
+
+            GReturn ProcessWindowEvents() override
+            {
+                // Return Failure if the app as terminated
+                if (eventData.eventFlags == Events::DESTROY)
+                    return GReturn::FAILURE;
+                
+                eventData.eventFlags = Events::EVENTS_PROCESSED;
+                gEvent.Write(eventData.eventFlags, eventData);
+                Push(gEvent);
+
+                // Always return success to keep parity.
+                return GReturn::SUCCESS;
+            }
+
+            GReturn ReconfigureWindow(int _x, int _y, int _width, int _height, GW::SYSTEM::GWindowStyle _style) override
+            {
+                // Although this could be done, we choose not to support this at the moment.
+                // Most mobile apps and games are fullscreen and handling many views with different sizes and automatic layouts
+                // will probably be out of the scope of many devs making games. As such we don't support reconfig-ing windows.
+                
+                return GReturn::FEATURE_UNSUPPORTED;
+            }
+
+            GReturn SetWindowName(const char* _newName) override
+            {
+                // Renaming a window is only available on Mac Catalyst, which we don't support at this time.
+                return GReturn::FEATURE_UNSUPPORTED;
+            }
+
+			GReturn SetIcon(int _width, int _height, const unsigned int* _argbPixels) override
+            {
+                // This must be done in the app bundle at compile time.
+                
+                // [[UIApplication sharedApplication] setAlternateIconName: NSString* name
+                //                                       completionHandler: ((^)(NSError* error)) completionHandler]
+                // This icon must be in the application bundle, but if you have multiple then you can switch between them at runtime.
+                // This probably won't be supported for a while (if at all...) but the information is here.
+                
+                return GReturn::FEATURE_UNSUPPORTED;
+            }
+
+            GReturn MoveWindow(int _x, int _y) override
+            {
+                // See Reconfigure Window.
+                return GReturn::FEATURE_UNSUPPORTED;
+            }
+
+            GReturn ResizeWindow(int _width, int _height) override
+            {
+                // See Reconfigure Window.
+                return GReturn::FEATURE_UNSUPPORTED;
+            }
+
+            GReturn Maximize() override
+            {
+                // See Reconfigure Window.
+                return GReturn::FEATURE_UNSUPPORTED;
+            }
+
+            GReturn Minimize() override
+            {
+                // See Reconfigure Window.
+                return GReturn::FEATURE_UNSUPPORTED;
+            }
+
+            GReturn ChangeWindowStyle(GW::SYSTEM::GWindowStyle _style) override
+            {
+                // See Reconfigure Window.
+                return GReturn::FEATURE_UNSUPPORTED;
+            }
+
+            GReturn GetWidth(unsigned int& _outWidth) const override
+            {
+                // Get the width of the current window.
+                __block CGRect screenBounds;
+                
+                RUN_ON_UI_THREAD(^{
+                    
+                    // Gets the scaling applied to the screen on retina devices.
+                    CGRect scaledBounds = [[currentWindowViewController view] bounds];
+                    scaledBounds.size.width  *= [[currentWindowViewController view] contentScaleFactor];
+                    screenBounds = scaledBounds;
+                    
+                });
+                
+                _outWidth = screenBounds.size.width;
+                
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetHeight(unsigned int& _outHeight) const override
+            {
+                // Get the height of the current window.
+                __block CGRect screenBounds;
+                
+                RUN_ON_UI_THREAD(^{
+                    
+                    // Gets the scaling applied to the screen on retina devices.
+                    CGRect scaledBounds = [[currentWindowViewController view] bounds];
+                    scaledBounds.size.height  *= [[currentWindowViewController view] contentScaleFactor];
+                    screenBounds = scaledBounds;
+                    
+                });
+                
+                _outHeight = screenBounds.size.height;
+                
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetClientWidth(unsigned int& _outClientWidth) const override
+            {
+                // This usually returned the safe area, but for graphics surfaces this would be preferred on desktop, as such we will make
+                // it have parity with desktop platforms. May need to have "safe area" or "ui area" function in the future for displays
+                // that are not perfectly rectangular, like modern phone screens.
+                
+                // Gets the width of the current window.
+                GetWidth(_outClientWidth);
+                
+                // This is the code that would have the safe area insets applied.
+                // Get the insets on the current view.
+                //__block UIEdgeInsets insets;
+                //RUN_ON_UI_THREAD(^{
+                    
+                //    insets = [[currentWindowViewController view] safeAreaInsets];
+                    
+                //});
+                
+                // Subtracts the insets from the window width.
+                //_outClientWidth -= (insets.right + insets.left);
+                
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetClientHeight(unsigned int& _outClientHeight) const override
+            {
+                // This usually returned the safe area, but for graphics surfaces this would be preferred on desktop, as such we will make
+                // it have parity with desktop platforms. May need to have "safe area" or "ui area" function in the future for displays
+                // that are not perfectly rectangular, like modern phone screens.
+                
+                // Gets the height of the current window.
+                GetWidth(_outClientHeight);
+                
+                // This is the code that would have the safe area insets applied.
+                // Get the insets on the current view.
+                //__block UIEdgeInsets insets;
+                //RUN_ON_UI_THREAD(^{
+                    
+                //    insets = [[currentWindowViewController view] safeAreaInsets];
+                    
+                //});
+                
+                // Subtracts the insets from the window height.
+                //_outClientHeight -= (insets.top + insets.bottom);
+                
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetX(unsigned int& _outX) const override
+            {
+                // Gets the origin of the topmost window.
+                __block CGRect screenBounds;
+                
+                RUN_ON_UI_THREAD(^{
+                    
+                    screenBounds = [window bounds];
+                    
+                });
+                
+                _outX = screenBounds.origin.x;
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetY(unsigned int& _outY) const override
+            {
+                // Gets the origin of the topmost window.
+                __block CGRect screenBounds;
+                
+                RUN_ON_UI_THREAD(^{
+                    
+                    screenBounds = [window bounds];
+                    
+                });
+                
+                _outY = screenBounds.origin.y;
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetClientTopLeft(unsigned int& _outX, unsigned int& _outY) const override
+            {
+                // This usually returned the safe area, but for graphics surfaces this would be preferred on desktop, as such we will make
+                // it have parity with desktop platforms. May need to have "safe area" or "ui area" function in the future for displays
+                // that are not perfectly rectangular, like modern phone screens.
+                
+                // Gets the top-left of the safe area, which may not be the printable area on iOS,
+                // depends on what iPhone you are running this on.
+                //__block UIEdgeInsets insets;
+                //RUN_ON_UI_THREAD(^{
+                    
+                //    insets = [[currentWindowViewController view] safeAreaInsets];
+                    
+                //});
+                
+                // Get the top left window coordinates.
+                GetX(_outX);
+                GetY(_outY);
+                
+                // Add the corresponding coordinates for the safe area.
+                //_outX += insets.left;
+                //_outY += insets.top;
+                
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetWindowHandle(GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE& _outUniversalWindowHandle) const override
+            {
+                if (!window)
+                {
+                    return GReturn::FAILURE;
+                }
+                _outUniversalWindowHandle.window = (__bridge void *) window;
+                return GReturn::SUCCESS;
+            }
+
+            GReturn IsFullscreen(bool& _outIsFullscreen) const override
+            {
+                // //This could be written like
+                // if (windowSize < physicalScreenSize)
+                //  return isFullscreen = false;
+                // //But this isn't really ever used in Gateware as we make every view fullscreen.
+                
+                // We are never not fullscreen.
+                _outIsFullscreen = TRUE;
+                return GReturn::SUCCESS;
+            }
+
+            GReturn IsFocus(bool& _outIsFocus) const override
+            {
+                // If the app is open then it is he focus.
+                // Also iOS filters input anyway.
+                // Needs more testing.
+                _outIsFocus = true;
+                return GReturn::SUCCESS;
+            }
+
+            GReturn Register(CORE::GInterface _observer, void(*_callback)(const GEvent&, CORE::GInterface&)) override
+            {
+                return GEventGeneratorImplementation::Register(_observer, _callback);
+            }
+
+            GReturn Observers(unsigned int& _outCount) const override
+            {
+                return GEventGeneratorImplementation::Observers(_outCount);
+            }
+
+            GReturn Push(const GEvent& _newEvent) override
+            {
+                return GEventGeneratorImplementation::Push(_newEvent);
+            }
+        };
+    }
+}
+
+
+    #elif TARGET_OS_MAC
+        #ifdef __OBJC__
 @import Foundation;
 @import Cocoa;
 @import AppKit;
@@ -11284,19 +14839,61 @@ namespace internal_gw
 static_assert(sizeof(void*) == 8, "Gateware supports x64 platforms only.");
 
 // The Major version is auto-generated based on the current year.
-#define GATEWARE_MAJOR 22
+#define GATEWARE_MAJOR 24
 // The Minor version is auto-generated based on the current day of the year.
-#define GATEWARE_MINOR 296
+#define GATEWARE_MINOR 47
 // The Patch version is auto-generated based on the current UTC hour of the day.
-#define GATEWARE_PATCH 20
+#define GATEWARE_PATCH 21
 // Pulled directly from GIT  
 #define GATEWARE_BRANCH "master"
 // Pulled directly from GIT
-#define GATEWARE_COMMIT_HASH 0x636b27d
+#define GATEWARE_COMMIT_HASH 0x6acdab6
 // Standard Window Title Bar
-#define GATEWARE_VERSION_STRING "Gateware v22.296.20"
+#define GATEWARE_VERSION_STRING "Gateware v24.47.21"
 // Window Title Bar displayed in DEBUG builds
-#define GATEWARE_VERSION_STRING_LONG "Gateware v22.296.20 (master) [636b27d]"
+#define GATEWARE_VERSION_STRING_LONG "Gateware v24.47.21 (master) [6acdab6]"
+
+// Distinguishes the platform Gateware is compiling for
+//// This file contains defines for platform-specific code
+// Authors: Jacob Morales
+#ifndef GENVIRONMENT_HPP
+#define GENVIRONMENT_HPP
+
+#if defined(__APPLE__)
+
+    #include <TargetConditionals.h>
+
+    #if TARGET_OS_IOS
+
+        #define GATEWARE_ENV_APP
+
+    #elif TARGET_OS_MAC
+
+        #define GATEWARE_ENV_DESKTOP
+
+    #endif //TARGET_OS_MAC/IOS
+
+#elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+    #include <gamingdeviceinformation.h>
+
+    #define GATEWARE_ENV_APP
+
+#elif defined(__linux__) || defined(_WIN32)
+
+    #define GATEWARE_ENV_DESKTOP
+
+#else
+
+    #define GATEWARE_ENV_UNKNOWN
+
+#endif //__APPLE__
+
+
+
+#endif //GENVIRONMENT_HPP
+
+
 
 #endif
 
@@ -11425,12 +15022,12 @@ namespace GW
                 if (gWindowStyle == SYSTEM::GWindowStyle::FULLSCREENBORDERED || gWindowStyle == SYSTEM::GWindowStyle::FULLSCREENBORDERLESS)
                 {
                     [window toggleFullScreen : nil] ;
-                    FlushMacEventLoop();
+                    GWINDOW_FLUSH_MAC_EVENTS_SEVERAL_TIMES();
                 }
                 else if (gWindowStyle == SYSTEM::GWindowStyle::MINIMIZED)
                 {
                     [window miniaturize : nil] ;
-                    FlushMacEventLoop();
+                    GWINDOW_FLUSH_MAC_EVENTS_SEVERAL_TIMES();
 
                     [pool drain] ;
 
@@ -12073,7 +15670,7 @@ namespace GW
                             
                             [window miniaturize : nil] ;
                             
-                            FlushMacEventLoop();
+                            GWINDOW_FLUSH_MAC_EVENTS_SEVERAL_TIMES();
                         });
                     }
 
@@ -12639,6 +16236,7 @@ namespace internal_gw
 #undef GWINDOW_FLUSH_MAC_EVENTS_SEVERAL_TIMES
 
 
+    #endif
 #elif defined(__linux__)
     #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -12658,19 +16256,61 @@ namespace internal_gw
 static_assert(sizeof(void*) == 8, "Gateware supports x64 platforms only.");
 
 // The Major version is auto-generated based on the current year.
-#define GATEWARE_MAJOR 22
+#define GATEWARE_MAJOR 24
 // The Minor version is auto-generated based on the current day of the year.
-#define GATEWARE_MINOR 296
+#define GATEWARE_MINOR 47
 // The Patch version is auto-generated based on the current UTC hour of the day.
-#define GATEWARE_PATCH 20
+#define GATEWARE_PATCH 21
 // Pulled directly from GIT  
 #define GATEWARE_BRANCH "master"
 // Pulled directly from GIT
-#define GATEWARE_COMMIT_HASH 0x636b27d
+#define GATEWARE_COMMIT_HASH 0x6acdab6
 // Standard Window Title Bar
-#define GATEWARE_VERSION_STRING "Gateware v22.296.20"
+#define GATEWARE_VERSION_STRING "Gateware v24.47.21"
 // Window Title Bar displayed in DEBUG builds
-#define GATEWARE_VERSION_STRING_LONG "Gateware v22.296.20 (master) [636b27d]"
+#define GATEWARE_VERSION_STRING_LONG "Gateware v24.47.21 (master) [6acdab6]"
+
+// Distinguishes the platform Gateware is compiling for
+//// This file contains defines for platform-specific code
+// Authors: Jacob Morales
+#ifndef GENVIRONMENT_HPP
+#define GENVIRONMENT_HPP
+
+#if defined(__APPLE__)
+
+    #include <TargetConditionals.h>
+
+    #if TARGET_OS_IOS
+
+        #define GATEWARE_ENV_APP
+
+    #elif TARGET_OS_MAC
+
+        #define GATEWARE_ENV_DESKTOP
+
+    #endif //TARGET_OS_MAC/IOS
+
+#elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+    #include <gamingdeviceinformation.h>
+
+    #define GATEWARE_ENV_APP
+
+#elif defined(__linux__) || defined(_WIN32)
+
+    #define GATEWARE_ENV_DESKTOP
+
+#else
+
+    #define GATEWARE_ENV_UNKNOWN
+
+#endif //__APPLE__
+
+
+
+#endif //GENVIRONMENT_HPP
+
+
 
 #endif
 
@@ -12743,6 +16383,11 @@ namespace GW
 			Atom prop_extents;
 			Atom prop_close;
 			Atom wmDeleteMessage;
+
+			// This is an extremely light level bitmask specific for GWindow events involving the minimizing of a
+			// maximized window.
+			unsigned char m_eventBitmask = 0x0;
+			unsigned char m_bitPosition = 0;
 
 			struct Hint
 			{
@@ -13404,7 +17049,7 @@ namespace GW
 				return true;
 			}
 			
-			// Compares previous window properties with those passed into the funtion and returns true if any are different.
+			// Compares previous window properties with those passed into the function and returns true if any are different.
 			bool IsWindowDifferent(int& _frameX, int& _frameY, unsigned int& _clientWidth, unsigned int& _clientHeight) const
 			{
 #if defined(GWINDOW_DEBUG_LINUX_OUTPUT_ISWINDOWDIFFERENT)
@@ -13498,7 +17143,7 @@ namespace GW
 			
 			// Reserved space is the area occupied by the things like the taskbar or dock. Therefore, unreserved
 			// space is where our window is primarily within. This function provides the screen coordinates and
-			// size of the unresereved space. It returns true, if the operation was successful.
+			// size of the unreserved space. It returns true, if the operation was successful.
 			bool GetUnreservedSpace(int& _x, int& _y, unsigned int& _width, unsigned int& _height) const
 			{
 				if (!windowIsRunning || !display || !window)
@@ -13654,59 +17299,82 @@ namespace GW
 						
 						if (status == Success && propRet && nitems > 0)
 						{
-							// TODO: We are not reporting events for when the window is maximized and 
-							//		 then minimize by the user's mouse click. X11 does report the
-							//		 event with a type of PropertyNotify. However, in my tests prop
-							//		 is given a value of prop_hMax, prop_vMax, or prop_full which 
-							//		 can all be mistaken for Maximize events with our current logic.
-							//		 Prop can also be 362 which I believe is an event for reporting
-							//		 the user clicks something on the window frame. For the record, 
-							//		 X11 is a headache.
 							Atom prop = reinterpret_cast<Atom*>(propRet)[0];
 							XFree(propRet);
 							
 							int windowFrameX, windowFrameY, windowClientX, windowClientY;
 							unsigned int windowFrameWidth, windowFrameHeight, windowClientWidth, windowClientHeight;
-								
+
 							if (!GetWindowPositionAndSize(windowFrameX, windowFrameY, windowFrameWidth, windowFrameHeight, 
 														  windowClientX, windowClientY, windowClientWidth, windowClientHeight))
 								break;
-								
-							if (!IsWindowDifferent(windowFrameX, windowFrameY, windowClientWidth, windowClientHeight) && 
-								prop != prop_hidden && xEvent.xclient.message_type != prop_hidden) // Don't break if we're minimizing.
-								break;
-							
-							if ((prop == prop_hidden && m_prevEvent != Events::MINIMIZE) || xEvent.xclient.message_type == prop_hidden) // Minimize button pressed.
-								eventData.eventFlags = Events::MINIMIZE;
-							else if (prop == 362 || // This seems to be received whenever the user clicking on any window frame button.
-									prop == prop_full || // Received the the frame fills the unreserved screen space.
-									prop == prop_hMax || // Received the horizontal area of the frame fills the unreserved screen space.
-									prop == prop_vMax) // Received the vertical area of the frame fills the unreserved screen space.
+
+							bool isWindowTheSame = !IsWindowDifferent(windowFrameX, windowFrameY, windowClientWidth, windowClientHeight);
+
+							/*
+							 * The following logic is to handle the case where the user clicks the maximize button
+							 * and then the minimize button. X11 will report a burst of 2-3 events with prop_vMax as the
+							 * value of prop. We have to process these bursts in chunks to properly determine if the event
+							 * occurring is a maximize or minimize event. We do this by using a bitmask and a bit position
+							 * to determine if the events are a maximize or minimize event. If the bitmask is 0x3 or 0x7
+							 * then we know the user clicked the maximize or minimize button, thus triggering this event.
+							 * The bitmask is reset to 0 after the event is triggered. This bitmask is required to properly
+							 * get this event seen and processed, else the event will be missed and the window will not
+							 * report a maximized or minimized event.
+							 */
+							if (isWindowTheSame && ((prop == prop_vMax) && (m_prevEvent == Events::MINIMIZE || m_prevEvent == Events::MAXIMIZE)))
 							{
-								int unreservedX, unreservedY;
-								unsigned int unreservedWidth, unreservedHeight;
-								GetUnreservedSpace(unreservedX, unreservedY, unreservedWidth, unreservedHeight);
-								
-								if (windowFrameX == unreservedX && windowFrameY == unreservedY && windowFrameWidth == unreservedWidth && windowFrameHeight == unreservedHeight)
-									eventData.eventFlags = Events::MAXIMIZE;
-								else if (prop == 362)
+								if (m_eventBitmask == 0x3 || m_eventBitmask == 0x7)
 								{
-									if (prevHeight != windowClientHeight || prevWidth != windowClientWidth)
-										eventData.eventFlags = Events::RESIZE;
-									else if (prevX != windowFrameX || prevY != windowFrameY)
-										eventData.eventFlags = Events::MOVE;
+									if (m_prevEvent == Events::MINIMIZE)
+										eventData.eventFlags = Events::MAXIMIZE;
 									else
-										break;
+										eventData.eventFlags = Events::MINIMIZE;
+									m_eventBitmask = 0;
+									m_bitPosition = 0;
 								}
 								else
-									eventData.eventFlags = Events::MAXIMIZE;
+								{
+									m_eventBitmask |= static_cast<char>(1) << m_bitPosition;
+									++m_bitPosition;
+								}
 							}
-							else if (prevHeight != windowClientHeight || prevWidth != windowClientWidth)
-								eventData.eventFlags = Events::RESIZE;
-							else if (prevX != windowFrameX || prevY != windowFrameY)
-								eventData.eventFlags = Events::MOVE;
+							else if (isWindowTheSame && prop != prop_hidden && xEvent.xclient.message_type != prop_hidden) // Don't break if we're minimizing.
+								break;
 							else
-								break; // Should never reach this point based on the above checks.
+							{
+								if ((prop == prop_hidden && m_prevEvent != Events::MINIMIZE) || xEvent.xclient.message_type == prop_hidden) // Minimize button pressed.
+									eventData.eventFlags = Events::MINIMIZE;
+								else if (prop == 362 || // This seems to be received whenever the user clicking on any window frame button.
+										prop == prop_full || // Received the the frame fills the unreserved screen space.
+										prop == prop_hMax || // Received the horizontal area of the frame fills the unreserved screen space.
+										prop == prop_vMax) // Received the vertical area of the frame fills the unreserved screen space.
+								{
+									int unreservedX, unreservedY;
+									unsigned int unreservedWidth, unreservedHeight;
+									GetUnreservedSpace(unreservedX, unreservedY, unreservedWidth, unreservedHeight);
+
+									if (windowFrameX == unreservedX && windowFrameY == unreservedY && windowFrameWidth == unreservedWidth && windowFrameHeight == unreservedHeight)
+										eventData.eventFlags = Events::MAXIMIZE;
+									else if (prop == 362)
+									{
+										if (prevHeight != windowClientHeight || prevWidth != windowClientWidth)
+											eventData.eventFlags = Events::RESIZE;
+										else if (prevX != windowFrameX || prevY != windowFrameY)
+											eventData.eventFlags = Events::MOVE;
+										else
+											break;
+									}
+									else
+										eventData.eventFlags = Events::MAXIMIZE;
+								}
+								else if (prevHeight != windowClientHeight || prevWidth != windowClientWidth)
+									eventData.eventFlags = Events::RESIZE;
+								else if (prevX != windowFrameX || prevY != windowFrameY)
+									eventData.eventFlags = Events::MOVE;
+								else
+									break; // Should never reach this point based on the above checks.
+							}
 
 							eventData.width = windowFrameWidth;
 							eventData.height = windowFrameHeight;
@@ -13769,7 +17437,7 @@ namespace GW
 					case ClientMessage:
 					{
 						// Primarily used for transferring selection data,
-						// also might be used in a private interclient
+						// also might be used in a private inter-client
 						// protocol
 						if (xEvent.xclient.message_type == prop_hidden)
 						{
@@ -14078,11 +17746,10 @@ namespace GW
 					return GReturn::FAILURE;
 				
 				const int convertedLength = 2 + _width * _height;
-				unsigned long convertedPixels[convertedLength] = { 
-					static_cast<unsigned long>(_width), 
-					static_cast<unsigned long>(_height) 
-				}; // The pixels array of the icon is prepended with the icon size.
-				
+				std::unique_ptr<unsigned long[]> convertedPixels(new unsigned long[convertedLength]);
+				convertedPixels[0] = static_cast<unsigned long>(_width);
+				convertedPixels[1] = static_cast<unsigned long>(_height);
+
 				for (int i = 2; i < convertedLength; ++i)
 					convertedPixels[i] = static_cast<unsigned long>(_argbPixels[i - 2]);
 				
@@ -14091,7 +17758,7 @@ namespace GW
 					m_iconPixelsCount = convertedLength;
 					m_iconPixels = new unsigned long[m_iconPixelsCount];
 					
-					memcpy(m_iconPixels, convertedPixels, sizeof(unsigned long) * m_iconPixelsCount);
+					memcpy(m_iconPixels, convertedPixels.get(), sizeof(unsigned long) * m_iconPixelsCount);
 				}
 				else
 				{
@@ -14140,7 +17807,7 @@ namespace GW
 				// The window system will choose the icon whose size is closest to the icon display area. 
 				// Icons will automatically be stretched or squashed as needed.
 				XChangeProperty(display, window, netWMIcon, cardinal, 32, PropModeReplace, (const unsigned char*)m_iconPixels, m_iconPixelsCount);
-				
+
 				return GReturn::SUCCESS;
 			}
 
@@ -14409,7 +18076,9 @@ namespace GW
 
 
 #elif defined(_WIN32)
-    #define WIN32_LEAN_AND_MEAN
+    #include <winapifamily.h>
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <string>
 
@@ -14423,19 +18092,61 @@ namespace GW
 static_assert(sizeof(void*) == 8, "Gateware supports x64 platforms only.");
 
 // The Major version is auto-generated based on the current year.
-#define GATEWARE_MAJOR 22
+#define GATEWARE_MAJOR 24
 // The Minor version is auto-generated based on the current day of the year.
-#define GATEWARE_MINOR 296
+#define GATEWARE_MINOR 47
 // The Patch version is auto-generated based on the current UTC hour of the day.
-#define GATEWARE_PATCH 20
+#define GATEWARE_PATCH 21
 // Pulled directly from GIT  
 #define GATEWARE_BRANCH "master"
 // Pulled directly from GIT
-#define GATEWARE_COMMIT_HASH 0x636b27d
+#define GATEWARE_COMMIT_HASH 0x6acdab6
 // Standard Window Title Bar
-#define GATEWARE_VERSION_STRING "Gateware v22.296.20"
+#define GATEWARE_VERSION_STRING "Gateware v24.47.21"
 // Window Title Bar displayed in DEBUG builds
-#define GATEWARE_VERSION_STRING_LONG "Gateware v22.296.20 (master) [636b27d]"
+#define GATEWARE_VERSION_STRING_LONG "Gateware v24.47.21 (master) [6acdab6]"
+
+// Distinguishes the platform Gateware is compiling for
+//// This file contains defines for platform-specific code
+// Authors: Jacob Morales
+#ifndef GENVIRONMENT_HPP
+#define GENVIRONMENT_HPP
+
+#if defined(__APPLE__)
+
+    #include <TargetConditionals.h>
+
+    #if TARGET_OS_IOS
+
+        #define GATEWARE_ENV_APP
+
+    #elif TARGET_OS_MAC
+
+        #define GATEWARE_ENV_DESKTOP
+
+    #endif //TARGET_OS_MAC/IOS
+
+#elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+    #include <gamingdeviceinformation.h>
+
+    #define GATEWARE_ENV_APP
+
+#elif defined(__linux__) || defined(_WIN32)
+
+    #define GATEWARE_ENV_DESKTOP
+
+#else
+
+    #define GATEWARE_ENV_UNKNOWN
+
+#endif //__APPLE__
+
+
+
+#endif //GENVIRONMENT_HPP
+
+
 
 #endif
 
@@ -14751,10 +18462,7 @@ namespace GW
 
 			GReturn ProcessWindowEvents() override
 			{
-				if (!wndHandle)
-					return GReturn::FAILURE;
-
-				if (destroyEventIsSentByWndProc)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				MSG msg;
@@ -14777,7 +18485,7 @@ namespace GW
 
 			GReturn ReconfigureWindow(int _x, int _y, int _width, int _height, SYSTEM::GWindowStyle _style) override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				SYSTEM::GWindowStyle previousStyle = m_WindowStyle;
@@ -14922,7 +18630,7 @@ namespace GW
 				if (_newName == nullptr)
 					return GReturn::INVALID_ARGUMENT;
 
-				if (wndHandle == nullptr)
+				if (wndHandle == nullptr || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				return ::SetWindowTextW(wndHandle, internal_gw::UTFStringConverter(_newName).c_str()) ? GReturn::SUCCESS : GReturn::FAILURE;
@@ -14930,7 +18638,7 @@ namespace GW
 
 			GReturn SetIcon(int _width, int _height, const unsigned int* _argbPixels) override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				if (_argbPixels == nullptr)
@@ -15007,7 +18715,7 @@ namespace GW
 
 			GReturn MoveWindow(int _x, int _y) override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return  GReturn::FAILURE;
 
 				DWORD windowsStyle = GetWindowsStyle(m_WindowStyle);
@@ -15024,7 +18732,7 @@ namespace GW
 
 			GReturn ResizeWindow(int _width, int _height) override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return  GReturn::FAILURE;
 
 				DWORD windowsStyle = GetWindowsStyle(m_WindowStyle);
@@ -15062,7 +18770,7 @@ namespace GW
 
 			GReturn GetWidth(unsigned int& _outWidth) const override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return  GReturn::FAILURE;
 
 				RECT windowRect;
@@ -15073,7 +18781,7 @@ namespace GW
 
 			GReturn GetHeight(unsigned int& _outHeight) const override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				RECT windowRect;
@@ -15084,7 +18792,7 @@ namespace GW
 
 			GReturn GetClientWidth(unsigned int& _outClientWidth) const override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				RECT clientRect;
@@ -15095,7 +18803,7 @@ namespace GW
 
 			GReturn GetClientHeight(unsigned int& _outClientHeight) const override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				RECT clientRect;
@@ -15106,7 +18814,7 @@ namespace GW
 
 			GReturn GetX(unsigned int& _outX) const override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				RECT windowRect;
@@ -15117,7 +18825,7 @@ namespace GW
 
 			GReturn GetY(unsigned int& _outY) const override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				RECT windowRect;
@@ -15128,7 +18836,7 @@ namespace GW
 
 			GReturn GetClientTopLeft(unsigned int& _outX, unsigned int& _outY) const override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				POINT clientAreaTopLeft = { 0, 0 };
@@ -15144,7 +18852,7 @@ namespace GW
 
 			GReturn GetWindowHandle(SYSTEM::UNIVERSAL_WINDOW_HANDLE& _outUniversalWindowHandle) const override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				_outUniversalWindowHandle.window = wndHandle;
@@ -15154,7 +18862,7 @@ namespace GW
 
 			GReturn IsFullscreen(bool& _outIsFullscreen) const override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 
 				unsigned int height = 0;
@@ -15187,7 +18895,7 @@ namespace GW
 
 			GReturn IsFocus(bool& _outIsFocus) const override
 			{
-				if (!wndHandle)
+				if (!wndHandle || destroyEventIsSentByWndProc)
 					return GReturn::FAILURE;
 				// determine if HWND is the foreground window
 				_outIsFocus = (wndHandle == GetForegroundWindow());
@@ -15197,7 +18905,630 @@ namespace GW
 	}
 }
 
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        #define WIN32_LEAN_AND_MEAN
+
+
+
+
+
+#include <gamingdeviceinformation.h>
+
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.UI.Core.h>
+#include <winrt/Windows.UI.ViewManagement.h>
+#include <winrt/Windows.Graphics.Display.h>
+
+namespace GW
+{
+	namespace I
+	{
+		class GWindowImplementation : public virtual GWindowInterface,
+			private virtual GEventGeneratorImplementation
+		{
+		private:
+			CORE::GThreadShared threadShare;
+			int m_WindowX;
+			int m_WindowY;
+			int m_WindowWidth;
+			int m_WindowHeight;
+			SYSTEM::GWindowStyle m_WindowStyle;
+
+			// event tokens
+			winrt::event_token m_sizeChanged;
+			winrt::event_token m_destroyed;
+			winrt::event_token m_suspended;
+			winrt::event_token m_resumed;
+			winrt::event_token m_enteredBackground;
+			winrt::event_token m_leavingBackground;
+			winrt::event_token m_isFocus;
+
+			bool m_isInFocus = true;
+
+			// This should only be used if there is only one view
+			winrt::Windows::Foundation::IAsyncAction CallOnMainViewUiThreadAsync(winrt::Windows::UI::Core::DispatchedHandler handler) const
+			{
+				co_await winrt::Windows::ApplicationModel::Core::CoreApplication::MainView().CoreWindow().Dispatcher().RunAsync(winrt::Windows::UI::Core::CoreDispatcherPriority::Normal, handler);
+			}
+
+			void SetInteralData(int _x, int _y, int _width, int _height, SYSTEM::GWindowStyle _style)
+			{
+				m_WindowWidth = _width;
+				m_WindowHeight = _height;
+				m_WindowX = _x;
+				m_WindowY = _y;
+				m_WindowStyle = _style;
+			}
+
+			GReturn OpenWindow()
+			{
+				return GReturn::REDUNDANT;
+			}
+		public:
+			~GWindowImplementation()
+			{
+				// revoke events
+				auto process = CallOnMainViewUiThreadAsync([this]()
+					{
+						auto window = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+
+						window.SizeChanged(m_sizeChanged);
+						winrt::Windows::ApplicationModel::Core::CoreApplication::Resuming(m_resumed);
+						winrt::Windows::ApplicationModel::Core::CoreApplication::Suspending(m_suspended);
+						winrt::Windows::ApplicationModel::Core::CoreApplication::EnteredBackground(m_enteredBackground);
+						winrt::Windows::ApplicationModel::Core::CoreApplication::LeavingBackground(m_leavingBackground);
+						winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread().VisibilityChanged(m_isFocus);
+
+						GEvent exitingEvent;
+						EVENT_DATA eventData;
+
+						eventData.eventFlags = Events::DESTROY;
+						/*eventData.height = winRect.Height;
+						eventData.width = winRect.Width;
+						eventData.windowX = winRect.X;
+						eventData.windowY = winRect.Y;
+						eventData.windowHandle = nullptr;*/
+
+						exitingEvent.Write(eventData.eventFlags, eventData);
+						this->Push(exitingEvent);
+					}); process.get();
+			}
+
+			GReturn Create(int _x, int _y, int _width, int _height, SYSTEM::GWindowStyle _style)
+			{
+				threadShare.Create();
+
+				this->SetInteralData(_x, _y, _width, _height, _style);
+
+				// subscribe events to delegates
+				// call on main thread
+				auto process = CallOnMainViewUiThreadAsync([this, &_style]() mutable
+					{
+						auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+						auto window = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+
+						winrt::Windows::Foundation::Size size = { 1920, 1080 };
+						view.PreferredLaunchViewSize(size);
+
+						// Event::RESIZE
+						this->m_sizeChanged = window.SizeChanged([this, &_style]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::WindowSizeChangedEventArgs const& args)
+							{
+								auto win = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+								winrt::Windows::Foundation::Rect winRect = win.Bounds();
+								GEvent gEvent;
+								EVENT_DATA eventData;
+								
+								eventData.eventFlags = Events::RESIZE;
+								eventData.height = args.Size().Height;
+								eventData.width = args.Size().Width;
+								eventData.windowX = winRect.X;
+								eventData.windowY = winRect.Y;
+								eventData.windowHandle = nullptr;
+
+								//update member variables
+								// thread lock safety
+								threadShare.LockSyncWrite();
+								this->m_WindowWidth = args.Size().Height;
+								this->m_WindowHeight = args.Size().Width;
+								// unlock thread
+								threadShare.UnlockSyncWrite();
+
+								gEvent.Write(eventData.eventFlags, eventData);
+								
+								this->Push(gEvent);
+								
+								this->SetInteralData(0, 0, winRect.Width, winRect.Height, _style);
+							});
+
+
+						// Event::SUSPEND
+						this->m_suspended = winrt::Windows::ApplicationModel::Core::CoreApplication::Suspending([this]
+						(winrt::Windows::Foundation::IInspectable const&,
+							winrt::Windows::ApplicationModel::SuspendingEventArgs const& args)
+							{
+								winrt::Windows::ApplicationModel::SuspendingDeferral deferral = args.SuspendingOperation().GetDeferral();
+
+								auto win = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+								winrt::Windows::Foundation::Rect winRect = win.Bounds();
+								GEvent suspendEvent;
+								EVENT_DATA eventData;
+
+								eventData.eventFlags = Events::SUSPEND;
+								eventData.height = winRect.Height;
+								eventData.width = winRect.Width;
+								eventData.windowX = winRect.X;
+								eventData.windowY = winRect.Y;
+								eventData.windowHandle = nullptr;
+
+								suspendEvent.Write(eventData.eventFlags, eventData);
+								
+								this->Push(suspendEvent);
+								
+								deferral.Complete();
+							});
+
+						// Event::RESUME
+						this->m_resumed = winrt::Windows::ApplicationModel::Core::CoreApplication::Resuming([this]
+						(winrt::Windows::Foundation::IInspectable const&,
+							winrt::Windows::Foundation::IInspectable const&)
+							{
+								auto win = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+								
+								winrt::Windows::Foundation::Rect winRect = win.Bounds();
+								GEvent resumeEvent;
+								EVENT_DATA eventData;
+
+								eventData.eventFlags = Events::RESUME;
+								eventData.height = winRect.Height;
+								eventData.width = winRect.Width;
+								eventData.windowX = winRect.X;
+								eventData.windowY = winRect.Y;
+								eventData.windowHandle = nullptr;
+
+								resumeEvent.Write(eventData.eventFlags, eventData);
+								this->Push(resumeEvent);
+							});
+
+						// Event::ENTERED_BACKGROUND
+						this->m_enteredBackground = winrt::Windows::ApplicationModel::Core::CoreApplication::EnteredBackground([this]
+						(winrt::Windows::Foundation::IInspectable const&,
+							winrt::Windows::ApplicationModel::EnteredBackgroundEventArgs const&)
+							{
+								auto win = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+								winrt::Windows::Foundation::Rect winRect = win.Bounds();
+								GEvent enteredBackgroundEvent;
+								EVENT_DATA eventData;
+
+								eventData.eventFlags = Events::ENTERED_BACKGROUND;
+								eventData.height = winRect.Height;
+								eventData.width = winRect.Width;
+								eventData.windowX = winRect.X;
+								eventData.windowY = winRect.Y;
+								eventData.windowHandle = nullptr;
+
+								enteredBackgroundEvent.Write(eventData.eventFlags, eventData);
+								this->Push(enteredBackgroundEvent);
+							});
+
+						// Event::LEAVING_BACKGROUND
+						this->m_leavingBackground = winrt::Windows::ApplicationModel::Core::CoreApplication::LeavingBackground([this]
+						(winrt::Windows::Foundation::IInspectable const&,
+							winrt::Windows::ApplicationModel::LeavingBackgroundEventArgs const&)
+							{
+								auto win = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+								winrt::Windows::Foundation::Rect winRect = win.Bounds();
+								GEvent leavingBackgroundEvent;
+								EVENT_DATA eventData;
+
+								eventData.eventFlags = Events::LEAVING_BACKGROUND;
+								eventData.height = winRect.Height;
+								eventData.width = winRect.Width;
+								eventData.windowX = winRect.X;
+								eventData.windowY = winRect.Y;
+								eventData.windowHandle = nullptr;
+
+								leavingBackgroundEvent.Write(eventData.eventFlags, eventData);
+								this->Push(leavingBackgroundEvent);
+							});
+
+						// isFocus event
+						this->m_isFocus = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread().VisibilityChanged([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::VisibilityChangedEventArgs const& args)
+							{
+								if (args.Visible())
+								{
+									m_isInFocus = true;
+								}
+								else
+								{
+									m_isInFocus = false;
+								}
+							});
+					}); process.get();
+
+					
+
+
+				GAMING_DEVICE_MODEL_INFORMATION info = {};
+				GetGamingDeviceModelInformation(&info);
+				if (info.vendorId == GAMING_DEVICE_VENDOR_ID_MICROSOFT)
+				{
+					switch (info.deviceId)
+					{
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE:
+
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_S:
+						ResizeWindow(1920, 1080);
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_X:
+
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_X_DEVKIT:
+						ResizeWindow(3840, 2160);
+						return this->ChangeWindowStyle(SYSTEM::GWindowStyle::FULLSCREENBORDERLESS);
+					default:
+						break;
+					}
+				}
+				else
+				{
+					if (-this->ResizeWindow(_width, _height))
+					{
+						return GReturn::FAILURE;
+					}
+					return this->ChangeWindowStyle(_style);
+				}
+				return GReturn::SUCCESS;
+			}
+
+			// Always returns success to keep parity with other platforms
+			GReturn ProcessWindowEvents() override
+			{
+				GEvent processEvent;
+				EVENT_DATA eventData;
+
+				eventData.eventFlags = Events::EVENTS_PROCESSED;
+				processEvent.Write(eventData.eventFlags, eventData);
+				Push(processEvent);
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn ReconfigureWindow(int _x, int _y, int _width, int _height, SYSTEM::GWindowStyle _style) override
+			{
+				SYSTEM::GWindowStyle previousStyle = m_WindowStyle;
+				SetInteralData(_x, _y, _width, _height, _style);
+
+				switch (m_WindowStyle)
+				{
+				case SYSTEM::GWindowStyle::WINDOWEDBORDERED:
+				{
+					auto process = CallOnMainViewUiThreadAsync([]()
+						{
+							auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+							if (view.IsFullScreenMode())
+							{
+								view.GetForCurrentView().ExitFullScreenMode();
+							}
+							auto titleBar = winrt::Windows::ApplicationModel::Core::CoreApplication::GetCurrentView().TitleBar();
+							titleBar.ExtendViewIntoTitleBar(false);
+						}); process.get();
+					ResizeWindow(_width, _height);
+
+					SetInteralData(_x, _y, _width, _height, SYSTEM::GWindowStyle::WINDOWEDBORDERED);
+					break;
+				}
+
+				case SYSTEM::GWindowStyle::WINDOWEDBORDERLESS:
+				{
+					// technically works, still has the main 3 navigation buttons up top though,
+					// unsure of what that will do if you are displaying a full image on client area.
+					auto process = CallOnMainViewUiThreadAsync([]()
+						{
+							auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+							if (view.IsFullScreenMode())
+							{
+								view.GetForCurrentView().ExitFullScreenMode();
+							}
+							auto titleBar = winrt::Windows::ApplicationModel::Core::CoreApplication::GetCurrentView().TitleBar();
+							titleBar.ExtendViewIntoTitleBar(true);
+						}); process.get();
+
+					ResizeWindow(_width, _height);
+
+					SetInteralData(_x, _y, _width, _height, SYSTEM::GWindowStyle::WINDOWEDBORDERLESS);
+					break;
+				}
+
+				// might be possible, but needed to move on to other libraries before graduation
+				case SYSTEM::GWindowStyle::WINDOWEDLOCKED:
+				{
+					return GReturn::FEATURE_UNSUPPORTED;
+					break;
+				}
+
+				// working to the best of my ability as of right now
+				case SYSTEM::GWindowStyle::FULLSCREENBORDERED:
+				{
+					int x = 0, y = 0;
+
+					auto process = CallOnMainViewUiThreadAsync([&x, &y]()
+						{
+							//auto win = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+							auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+							auto di = winrt::Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
+							auto size = winrt::Windows::Foundation::Size(di.ScreenWidthInRawPixels(), di.ScreenHeightInRawPixels());
+							// this is done to give room for the task bar in the window
+							size.Height -= 100;
+							size.Width -= 100;
+							if (!view.TryResizeView(size))
+								GReturn::FAILURE;
+
+							auto sizeWin = view.VisibleBounds();
+							x = sizeWin.Width;
+							y = sizeWin.Height;
+
+						}); process.get();
+
+					SetInteralData(0, 0, x, y, SYSTEM::GWindowStyle::FULLSCREENBORDERED);
+					break;
+				}
+
+				case SYSTEM::GWindowStyle::FULLSCREENBORDERLESS:
+				{
+					int x = 0, y = 0;
+					auto process = CallOnMainViewUiThreadAsync([&x, &y]()
+						{
+							auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+							if (!view.TryEnterFullScreenMode())
+							{
+								return GReturn::FAILURE;
+							}
+
+							auto di = winrt::Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
+							auto size = winrt::Windows::Foundation::Size(di.ScreenWidthInRawPixels(), di.ScreenHeightInRawPixels());
+
+							x = size.Width;
+							y = size.Height;
+						}); process.get();
+					SetInteralData(0, 0, x, y, SYSTEM::GWindowStyle::FULLSCREENBORDERLESS);
+					break;
+				}
+				
+				// might be possible, but needed to move on to other libraries before graduation
+				case SYSTEM::GWindowStyle::MINIMIZED:
+				{
+					GReturn::FEATURE_UNSUPPORTED;
+				}
+				break;
+				}
+				return  GReturn::SUCCESS;
+			}
+
+			// Appends this to the Display name set in the manifest file.
+			GReturn SetWindowName(const char* _newName) override
+			{
+				if (_newName == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				auto process = CallOnMainViewUiThreadAsync([&_newName]()
+					{
+						auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+						view.Title(INTERNAL::utf8_decode(std::string(_newName)));
+					}); process.get();
+				return GReturn::SUCCESS;
+			}
+
+			// might be possible, but needed to move on to other libraries before graduation
+			GReturn SetIcon(int _width, int _height, const unsigned int* _argbPixels) override
+			{
+				return GReturn::FEATURE_UNSUPPORTED;
+			}
+
+			// might be possible, but needed to move on to other libraries before graduation
+			GReturn MoveWindow(int _x, int _y) override
+			{
+				return GReturn::FEATURE_UNSUPPORTED;
+			}
+
+			// Currently this changes the whole window size, not the client
+			// That will need to be changed in the future.
+			GReturn ResizeWindow(int _width, int _height) override
+			{
+				SetInteralData(m_WindowX, m_WindowY, _width, _height, m_WindowStyle);
+				bool sizeWorked = false;
+				GAMING_DEVICE_MODEL_INFORMATION info = {};
+				GetGamingDeviceModelInformation(&info);
+				if (info.vendorId == GAMING_DEVICE_VENDOR_ID_MICROSOFT)
+				{
+					switch (info.deviceId)
+					{
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE:
+						
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_S:
+						
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_X:
+						
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_X_DEVKIT:
+						return GReturn::FEATURE_UNSUPPORTED;
+					default:
+						break;
+					}
+				}
+				auto process = CallOnMainViewUiThreadAsync([&_width, &_height, &sizeWorked]()
+					{
+						auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+						//auto titleBarHeight = winrt::Windows::ApplicationModel::Core::CoreApplication::GetCurrentView().TitleBar().Height();
+						// if resizing window and in fullscreen mode, exit fullscreen mode first
+						if (view.IsFullScreenMode())
+						{
+							view.ExitFullScreenMode();
+						}
+
+						auto size = winrt::Windows::Foundation::Size(_width, _height);
+						if (view.TryResizeView(size))
+						{
+							// resize worked
+							sizeWorked = true;
+
+						}
+					}); process.get();
+				
+				// if failing on desktop and you don't think it should, check to make sure you are not going below the allowed size for the app window - that can be found in GApp_uwp
+				return sizeWorked ? GReturn::SUCCESS : GReturn::FAILURE;
+			}
+
+			GReturn Maximize() override
+			{
+				if (m_WindowStyle == SYSTEM::GWindowStyle::WINDOWEDBORDERED ||
+					!m_isInFocus ||
+					m_WindowStyle == SYSTEM::GWindowStyle::WINDOWEDLOCKED)
+					return ChangeWindowStyle(SYSTEM::GWindowStyle::FULLSCREENBORDERED);
+				else if (m_WindowStyle == SYSTEM::GWindowStyle::WINDOWEDBORDERLESS)
+					return ChangeWindowStyle(SYSTEM::GWindowStyle::FULLSCREENBORDERLESS);
+				return GReturn::REDUNDANT;
+			}
+
+			GReturn Minimize() override
+			{
+				//return ChangeWindowStyle(SYSTEM::GWindowStyle::MINIMIZED);
+				return GReturn::FEATURE_UNSUPPORTED;
+			}
+
+			GReturn ChangeWindowStyle(SYSTEM::GWindowStyle _style) override
+			{
+				return ReconfigureWindow(m_WindowX, m_WindowY, m_WindowWidth, m_WindowHeight, _style);
+			}
+
+			GReturn GetWidth(unsigned int& _outWidth) const override
+			{
+				auto process = CallOnMainViewUiThreadAsync([&_outWidth]() mutable
+					{
+						auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+						auto size = view.VisibleBounds();
+						_outWidth = size.Width;
+					}); process.get();
+				//_outWidth = m_WindowWidth;
+				return  GReturn::SUCCESS;
+			}
+
+			GReturn GetHeight(unsigned int& _outHeight) const override
+			{
+				auto process = CallOnMainViewUiThreadAsync([&_outHeight]() mutable
+					{
+						auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+						auto size = view.VisibleBounds();
+						_outHeight = size.Height;
+					}); process.get();
+				//_outHeight = m_WindowHeight;
+				return  GReturn::SUCCESS;
+			}
+
+			GReturn GetClientWidth(unsigned int& _outClientWidth) const override
+			{
+				threadShare.LockAsyncRead();
+				int retVal = m_WindowWidth;
+				threadShare.UnlockAsyncRead();
+				_outClientWidth = retVal;
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetClientHeight(unsigned int& _outClientHeight) const override
+			{
+				threadShare.LockAsyncRead();
+				int retVal = m_WindowHeight;
+				threadShare.UnlockAsyncRead();
+				_outClientHeight = retVal;
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetX(unsigned int& _outX) const override
+			{
+				auto process = CallOnMainViewUiThreadAsync([&_outX]() mutable
+					{
+						auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+						auto size = view.VisibleBounds();
+						_outX = size.X;
+					}); process.get();
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetY(unsigned int& _outY) const override
+			{
+				auto process = CallOnMainViewUiThreadAsync([&_outY]() mutable
+					{
+						auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+						auto size = view.VisibleBounds();
+						_outY = size.Y;
+					}); process.get();
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetClientTopLeft(unsigned int& _outX, unsigned int& _outY) const override
+			{
+				auto process = CallOnMainViewUiThreadAsync([&_outX, &_outY]() mutable
+					{
+						// run on UI thread
+						winrt::agile_ref<winrt::Windows::UI::Core::CoreWindow> win;
+						win = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+						winrt::Windows::Foundation::Rect windowRect;
+						windowRect = win.get().Bounds();
+						_outX = windowRect.X;
+						_outY = windowRect.Y;
+					}); process.get();
+
+				return GReturn::SUCCESS;
+			}
+
+			// returns the CoreWindow
+			// whe return value can be transferred back into a CoreWindow if on main thread
+			GReturn GetWindowHandle(SYSTEM::UNIVERSAL_WINDOW_HANDLE& _outUniversalWindowHandle) const override
+			{
+				auto process = CallOnMainViewUiThreadAsync([&_outUniversalWindowHandle]() mutable
+					{
+						static winrt::Windows::UI::Core::CoreWindow coreWindow = nullptr;
+						// run on UI thread
+						coreWindow = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+						_outUniversalWindowHandle.window = &coreWindow;
+						_outUniversalWindowHandle.display = nullptr;
+					}); process.get();
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn IsFullscreen(bool& _outIsFullscreen) const override
+			{
+				auto process = CallOnMainViewUiThreadAsync([&_outIsFullscreen]() mutable
+					{
+						auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+						_outIsFullscreen = view.IsFullScreenMode();
+					}); process.get();
+
+				return GReturn::SUCCESS;
+			}
+
+			GReturn IsFocus(bool& _outIsFocus) const override
+			{
+				_outIsFocus = m_isFocus ? true : false;
+				return m_isInFocus ? GReturn::SUCCESS : GReturn::FAILURE;
+			}
+
+			GReturn Register(CORE::GInterface _observer, void(*_callback)(const GEvent&, CORE::GInterface&)) override { return GEventGeneratorImplementation::Register(_observer, _callback); }
+			GReturn Observers(unsigned int& _outCount) const override { return GEventGeneratorImplementation::Observers(_outCount); }
+			GReturn Push(const GEvent& _newEvent) override { return GEventGeneratorImplementation::Push(_newEvent); }
+		};
+	}
+}
+
+    #endif
 #endif
+
 
 
 namespace GW
@@ -15243,6 +19574,440 @@ namespace GW
 	};
 }
 #endif // GWINDOW_H
+
+
+#ifndef GAPP_H
+#define GAPP_H
+
+
+
+#include <functional> // required for GEventReceiver
+
+namespace GW
+{
+	namespace I
+	{
+		class GAppInterface : public virtual GInterfaceInterface
+		{
+		public:
+			// if your looking for application events create a GWindow.
+
+			// static functions
+			static GReturn PreviousExecutionStateWasTerminated(bool& _outWasTerminated) { return GReturn::NO_IMPLEMENTATION; };
+		};
+	}// end I namespace
+}//end GW namespace
+
+// Implementaion for GApp.h
+// *IMPORTANT* End users of Gateware may ignore the contents of these files if they please.(Developers Only)
+// File not included in Doxygen, these files will be compiled directly into associated header file when deployed
+// Developers: Do NOT assume the contents of this file are within the scope of the related interface's namespace
+// Developers: These are NOT cpp files do not use "using namespace" or unprotected global variables (prefer static members)
+// Developers: If you MUST use a non-static global, use the "internal_gw" namespace to store them. (only on approval)
+
+// Gateware platform specific implementations are seperated into different files to keep things clean and flexible
+// As new platforms come online or are deprecated (or upgraded) we can modify their selection through this file
+// When adding implementations please try to condense redundant file includes where possible.
+// This will reduce size/redundancy when the library is tool compressed into single header form.
+#if !defined(GATEWARE_ENABLE_SYSTEM) || defined(GATEWARE_DISABLE_GAPP)
+	namespace GW
+{
+	namespace I
+	{
+		// this function is unique to the GApp
+		class GAppImplementation : public GAppInterface
+		{
+		public:
+			GReturn Create(std::function<int()> _desktopMainFunction)
+			{
+				// Desktop environments should not support the App execution of main
+				// otherwise main would run twice.
+				return GReturn::INTERFACE_UNSUPPORTED;
+			}
+
+			static GReturn PreviousExecutionStateWasTerminated(bool& _outWasTerminated)
+			{
+				return GReturn::INTERFACE_UNSUPPORTED;
+			}
+		};
+	}
+}
+
+#elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+	#include <iostream>
+#include <vector>
+#include <sstream>
+#include <windows.h>
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.ApplicationModel.Activation.h>
+#include <winrt/Windows.UI.Core.h>
+#include <winrt/Windows.UI.ViewManagement.h>
+
+namespace internal_gw
+{
+	struct GAPP_GLOBAL
+	{
+		std::mutex sleeper;
+		std::condition_variable started;
+		bool g_previouslyTerminated;
+	};
+	static GAPP_GLOBAL& GAppGlobal()
+	{
+		static GAPP_GLOBAL appData;
+		return appData;
+	}
+}
+
+namespace GW
+{
+	namespace I
+	{
+		// Allows C++/WinRT UWP application to run normally
+		struct WinRTApp : winrt::implements<WinRTApp,
+			winrt::Windows::ApplicationModel::Core::IFrameworkViewSource,
+			winrt::Windows::ApplicationModel::Core::IFrameworkView>
+		{
+			winrt::Windows::ApplicationModel::Core::IFrameworkView CreateView() {
+				return *this;
+			}
+			void Initialize(winrt::Windows::ApplicationModel::Core::CoreApplicationView const& applicationView)
+			{
+				applicationView.Activated({ this, &WinRTApp::OnActivated });
+			}
+			void Load(winrt::hstring const&) {}
+			void Uninitialize() {}
+			void Run() // run & manage the UWP window until main has ended
+			{
+				// window events & details are detected and posted by the GWindow library
+				winrt::Windows::UI::Core::CoreWindow window =
+					winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+				// set min window size to lowest possible value to allow user the freedom to set it as small as they can
+				winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView().SetPreferredMinSize(
+					winrt::Windows::Foundation::Size(192, 48));
+				//window.Activate();
+				winrt::Windows::UI::Core::CoreDispatcher dispatcher = window.Dispatcher();
+				// notifies conditional of app start to prevent desktop main from running before the app initializes.
+				internal_gw::GAppGlobal().started.notify_all();
+				dispatcher.ProcessEvents(
+					winrt::Windows::UI::Core::CoreProcessEventsOption::ProcessUntilQuit);
+			}
+			void SetWindow(winrt::Windows::UI::Core::CoreWindow const& window)
+			{
+				winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView().
+					PreferredLaunchWindowingMode(winrt::Windows::UI::ViewManagement::ApplicationViewWindowingMode::PreferredLaunchViewSize);
+				
+				auto navigation = winrt::Windows::UI::Core::SystemNavigationManager::GetForCurrentView();
+
+				// UWP on Xbox One triggers a back request whenever the B button is pressed
+				// which can result in the app being suspended if unhandled
+				navigation.BackRequested([](winrt::Windows::Foundation::IInspectable const&,
+					winrt::Windows::UI::Core::BackRequestedEventArgs const& args)
+					{
+						args.Handled(true);
+					});
+			}
+			void OnActivated(winrt::Windows::ApplicationModel::Core::CoreApplicationView const& view,
+				winrt::Windows::ApplicationModel::Activation::IActivatedEventArgs const& args)
+			{
+				auto window = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+				window.Activate();
+
+				// fixes weird issue where title bar is absent at app launch dispute what window style is chosen
+				view.TitleBar().ExtendViewIntoTitleBar(false);
+
+				if (args.PreviousExecutionState() == winrt::Windows::ApplicationModel::Activation::ApplicationExecutionState::Terminated)
+				{
+					internal_gw::GAppGlobal().g_previouslyTerminated = true;
+				}
+			}
+		};
+		// This class needs to be credited to the original post and made gateware compliant
+		// https://web.archive.org/web/20140825203329/http://blog.tomaka17.com/2011/07/redirecting-cerr-and-clog-to-outputdebugstring/ link to class
+		template<typename TChar, typename TTraits = std::char_traits<TChar>>
+		class OutputDebugStringBuf : public std::basic_stringbuf<TChar, TTraits>
+		{
+		public:
+			typedef std::basic_stringbuf<TChar, TTraits> BaseClass;
+
+			explicit OutputDebugStringBuf() : _buffer(256)
+			{
+				setg(nullptr, nullptr, nullptr);
+				setp(_buffer.data(), _buffer.data(), _buffer.data() + _buffer.size());
+			}
+
+			static_assert(std::is_same<TChar, char>::value || std::is_same<TChar, wchar_t>::value,
+				"OutputDebugStringBuf only supports char and wchar_t types");
+
+			int sync() override try {
+				MessageOutputer<TChar, TTraits>()(pbase(), pptr());
+				setp(_buffer.data(), _buffer.data(), _buffer.data() + _buffer.size());;
+				return 0;
+			}
+			catch (...) {
+				return -1;
+			}
+			typename BaseClass::int_type overflow(typename BaseClass::int_type c = TTraits::eof()) override
+			{
+				auto syncRet = sync();
+				if (c != TTraits::eof())
+				{
+					_buffer[0] = c;
+					setp(_buffer.data(), _buffer.data() + 1, _buffer.data() + _buffer.size());
+				}
+				return syncRet == -1 ? TTraits::eof() : 0;
+			}
+
+		private:
+			std::vector<TChar> _buffer;
+			template<typename TChar, typename TTraits>
+			struct MessageOutputer;
+			template<>
+			struct MessageOutputer<char, std::char_traits<char>>
+			{
+				template<typename TIterator>
+				void operator()(TIterator begin, TIterator end) const
+				{
+					std::string s(begin, end);
+					OutputDebugStringA(s.c_str());
+				}
+			};
+			template<>
+			struct MessageOutputer<wchar_t, std::char_traits<wchar_t>> {
+				template<typename TIterator>
+				void operator()(TIterator begin, TIterator end) const {
+					std::wstring s(begin, end);
+					OutputDebugStringW(s.c_str());
+				}
+			};
+		};
+		// this function is unique to the GApp
+		class GAppImplementation : public GAppInterface
+		{
+			GW::SYSTEM::GConcurrent run; // make global perhaps
+		public:
+			GReturn Create(std::function<int()> _desktopMainFunction)
+			{
+				GReturn result = GReturn::FAILURE;
+				// ensure we have a valid main function and GConcurrent library
+				if (_desktopMainFunction == nullptr || -run.Create(true))
+					return result;
+				// redirects cout to the output
+				static OutputDebugStringBuf<char> outputDebugBufChar;
+				std::cout.rdbuf(&outputDebugBufChar);
+				 // pass below function by value
+				result = run.BranchSingular([_desktopMainFunction] {
+					// block execution of main function until UWP app has successfully started
+					{
+						std::unique_lock<std::mutex> locker(internal_gw::GAppGlobal().sleeper);
+						internal_gw::GAppGlobal().started.wait(locker);
+					}
+					
+					int ret = _desktopMainFunction(); // run the unified code base
+					std::cout << "GApp: desktop main() routine returned " << ret << std::endl;
+					// send a close message so our app window know to close down
+					winrt::Windows::ApplicationModel::Core::CoreApplication::Exit();
+					});
+				return result; // did it work?
+			}
+
+			static GReturn PreviousExecutionStateWasTerminated(bool& _outWasTerminated)
+			{
+				_outWasTerminated = internal_gw::GAppGlobal().g_previouslyTerminated;
+
+				return GReturn::SUCCESS;
+			}
+
+			// in case we need to debug program shutdown
+			~GAppImplementation() {	run.Converge(0); }
+		};
+	}
+}
+// If you are providing your own wWinMain then be sure to:
+// #define GATEWARE_DISABLE_GAPP // before including gateware.h
+int wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
+{
+	winrt::Windows::ApplicationModel::Core::CoreApplication::Run(
+		winrt::make<GW::I::WinRTApp>());
+	return 0;
+}
+
+
+#elif defined(__APPLE__)
+    #include <TargetConditionals.h>
+    #if TARGET_OS_IOS
+        #include <iostream>
+#import <UIKit/UIKit.h>
+
+namespace internal_gw
+{
+    struct GAPP_GLOBAL
+    {
+        std::mutex sleeper;
+        std::condition_variable started;
+        bool lateStart;
+    };
+    static GAPP_GLOBAL& GAppGlobal()
+    {
+        static GAPP_GLOBAL appData;
+        return appData;
+    }
+}
+
+
+namespace GW
+{
+    namespace I
+    {
+        // this function is unique to the GApp
+        class GAppImplementation : public GAppInterface
+        {
+            GW::SYSTEM::GConcurrent run; // make global perhaps
+        public:
+            GReturn Create(std::function<int()> _desktopMainFunction)
+            {
+                GReturn result = GReturn::FAILURE;
+                // ensure we have a valid main function and GConcurrent library
+                if (_desktopMainFunction == nullptr || -run.Create(true))
+                    return result;
+                // pass below function by value
+                result = run.BranchSingular([_desktopMainFunction] {
+                    
+                    {
+                        std::unique_lock<std::mutex> uni(internal_gw::GAppGlobal().sleeper);
+                        internal_gw::GAppGlobal().started.wait(uni, []{ return internal_gw::GAppGlobal().lateStart; });
+                    }
+                    // NOTE: may need to block main until the app launches completely.
+                    // This is likely the cause of false thread exceptions caused sporadically.
+                    int ret = _desktopMainFunction(); // run the unified code base
+                    std::cout << "GApp: desktop main() routine returned " << ret << std::endl;
+                    // send a close message so our app window know to close down
+                });
+                return result; // did it work?
+            }
+            // in case we need to debug program shutdown
+            ~GAppImplementation() {    run.Converge(0); }
+        };
+    }
+}
+
+// This main is nearly identical to the sample main given in any of the iOS XCode templates 
+int main(int argc, char * argv[])
+{
+    NSString * appDelegateClassName;
+    @autoreleasepool
+    {
+        //UIApplication
+        //UISceneDelegate* uisd = [UISceneDelegate mainScene];
+        
+        // Setup code that might create autoreleased objects goes here.
+        appDelegateClassName = NSStringFromClass([UIResponder<UIApplicationDelegate> class]);
+        
+        
+        
+        // This code taken straight from the addObserverForName topic on Apple Developer.
+        NSNotificationCenter * center = [NSNotificationCenter defaultCenter];
+        id __block token = [center addObserverForName:UIApplicationDidFinishLaunchingNotification
+                                               object:nil
+                                                queue:[NSOperationQueue mainQueue]
+                                           usingBlock:^(NSNotification *note)
+                            {
+                                internal_gw::GAppGlobal().lateStart = true;
+                                internal_gw::GAppGlobal().started.notify_all();
+                                [center removeObserver:token];
+                            }];
+        
+        return UIApplicationMain(argc, argv, nil, appDelegateClassName);
+    }
+}
+
+// This define is here because iOS apps run off of 'standard' "int main(int, char**)"
+// Due to this, end users would find that their main doesn't account for running the UIApplicationMain, which actually runs the app.
+// As such we have defined main ourselves and 'overridden' the function 'main' with the following define.
+// GApp's main runs first then whatever main is in the GApp constructor gets called after GApp is created.
+#define main Gateware_main
+
+
+
+
+    #elif TARGET_OS_MAC
+        namespace GW
+{
+	namespace I
+	{
+		// this function is unique to the GApp
+		class GAppImplementation : public GAppInterface
+		{
+		public:
+			GReturn Create(std::function<int()> _desktopMainFunction)
+			{
+				// Desktop environments should not support the App execution of main
+				// otherwise main would run twice.
+				return GReturn::INTERFACE_UNSUPPORTED;
+			}
+
+			static GReturn PreviousExecutionStateWasTerminated(bool& _outWasTerminated)
+			{
+				return GReturn::INTERFACE_UNSUPPORTED;
+			}
+		};
+	}
+}
+
+    #endif
+#else
+	// Even if a platform does not support a library a dummy implementation must be present!
+	namespace GW
+{
+	namespace I
+	{
+		// this function is unique to the GApp
+		class GAppImplementation : public GAppInterface
+		{
+		public:
+			GReturn Create(std::function<int()> _desktopMainFunction)
+			{
+				// Desktop environments should not support the App execution of main
+				// otherwise main would run twice.
+				return GReturn::INTERFACE_UNSUPPORTED;
+			}
+
+			static GReturn PreviousExecutionStateWasTerminated(bool& _outWasTerminated)
+			{
+				return GReturn::INTERFACE_UNSUPPORTED;
+			}
+		};
+	}
+}
+
+#endif 
+
+
+
+namespace GW
+{
+	namespace SYSTEM
+	{
+		class GApp final : public I::GProxy<I::GAppInterface, 
+											I::GAppImplementation, 
+											std::function<int()>>
+		{
+			// All Gateware API interfaces contain no variables & are pure virtual.
+		public:
+			GATEWARE_PROXY_CLASS(GApp)
+
+			GApp(int(*_desktopMainFunction)()) { Create(_desktopMainFunction); }
+			GApp(int(*_desktopMainFunction)(int, char*[])) { 
+				Create(std::bind(_desktopMainFunction,0,nullptr)); 
+			}
+
+			GATEWARE_STATIC_FUNCTION(PreviousExecutionStateWasTerminated)
+			
+			// This area does not contain actual code, it is only for the benefit of documentation generation.
+		}; // end GApp class
+	} // end SYSTEM namespace
+} // end GW namespace
+#endif // #endif GAPP_H
+
 
 #ifndef GMATRIX_H
 #define GMATRIX_H
@@ -15339,8 +20104,8 @@ namespace GW
 			static GReturn TranslateGlobalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatrix) { return GReturn::NO_IMPLEMENTATION; }
 			static GReturn TranslateLocalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatrix) { return GReturn::NO_IMPLEMENTATION; }
 
-			static GReturn ScaleGlobalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatirx) { return GReturn::NO_IMPLEMENTATION; }
-			static GReturn ScaleLocalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatirx) { return GReturn::NO_IMPLEMENTATION; }
+			static GReturn ScaleGlobalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatrix) { return GReturn::NO_IMPLEMENTATION; }
+			static GReturn ScaleLocalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatrix) { return GReturn::NO_IMPLEMENTATION; }
 
 			static GReturn LerpD(GW::MATH::GMATRIXD _matrix1, GW::MATH::GMATRIXD _matrix2, double _ratio, GW::MATH::GMATRIXD& _outMatrix) { return GReturn::NO_IMPLEMENTATION; }
 
@@ -15467,8 +20232,8 @@ namespace GW
 			static GReturn TranslateGlobalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatrix) { return GReturn::FAILURE; }
 			static GReturn TranslateLocalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatrix) { return GReturn::FAILURE; }
 
-			static GReturn ScaleGlobalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatirx) { return GReturn::FAILURE; }
-			static GReturn ScaleLocalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatirx) { return GReturn::FAILURE; }
+			static GReturn ScaleGlobalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatrix) { return GReturn::FAILURE; }
+			static GReturn ScaleLocalD(GW::MATH::GMATRIXD _matrix, GW::MATH::GVECTORD _vector, GW::MATH::GMATRIXD& _outMatrix) { return GReturn::FAILURE; }
 
 			static GReturn LerpD(GW::MATH::GMATRIXD _matrix1, GW::MATH::GMATRIXD _matrix2, double _ratio, GW::MATH::GMATRIXD& _outMatrix) { return GReturn::FAILURE; }
 
@@ -17064,6 +21829,7 @@ namespace GW
 #endif
 
 
+
 namespace GW
 {
 	namespace MATH
@@ -17465,7 +22231,7 @@ namespace GW
 				float magnitude = 0.0f, reciprocalMagnitude = 0.0f;
 				MagnitudeF(_vector, magnitude);
 
-				if (magnitude != 0.0f)
+				if (G_WITHIN_STANDARD_DEVIATION_F(magnitude, 0) == false)
 				{
 					reciprocalMagnitude = 1.0f / magnitude;
 					returnCode = GReturn::SUCCESS;
@@ -17686,6 +22452,7 @@ namespace GW
 #endif
 
 
+
 namespace GW
 {
 	namespace MATH
@@ -17730,6 +22497,7 @@ namespace GW
 	}
 }
 #endif // GVECTOR_H
+
 
 #ifndef GQUATERNION_H
 #define GQUATERNION_H
@@ -17892,7 +22660,7 @@ namespace GW
 			{
 				return GReturn::FAILURE;
 			}
-			static GReturn SetByVectorAngleD(MATH::GVECTORD _vector, double _radain, MATH::GQUATERNIOND& _outQuaternion)
+			static GReturn SetByVectorAngleD(MATH::GVECTORD _vector, double _radian, MATH::GQUATERNIOND& _outQuaternion)
 			{
 				return GReturn::FAILURE;
 			}
@@ -18462,6 +23230,7 @@ namespace GW
 }
 
 #endif
+
 
 
 namespace GW
@@ -21163,7 +25932,7 @@ namespace GW
 					triangle_normal,
 					triangle_area);
 
-				_outResult = (G_ABS(triangle_area) < 0.000001f) ? GCollisionCheck::NO_COLLISION : GCollisionCheck::COLLISION;
+				_outResult = (G_ABS(triangle_area) < G_COLLISION_THRESHOLD_F) ? GCollisionCheck::NO_COLLISION : GCollisionCheck::COLLISION;
 
 				return GReturn::SUCCESS;
 			}
@@ -21208,7 +25977,7 @@ namespace GW
 						difference_ba,
 						winding);
 
-					if(G_ABS(winding) < 0.000001f)
+					if(G_ABS(winding) < G_COLLISION_THRESHOLD_F)
 					{
 						return 0;
 					}
@@ -21320,7 +26089,7 @@ namespace GW
 					sq_length);
 
 				// If line degenerates to point
-				if(sq_length <= 0.000001f)
+				if(sq_length <= G_COLLISION_THRESHOLD_F)
 				{
 					_outPoint = line_a;
 					return GReturn::SUCCESS;
@@ -21411,13 +26180,13 @@ namespace GW
 				int use_cases = 0x00;
 
 				// First line degenerates to a point.
-				if(sq_length1 <= 0.000001f)
+				if(sq_length1 <= G_COLLISION_THRESHOLD_F)
 				{
 					use_cases |= 0x01;
 				}
 
 				// Second line degenerates to a point.
-				if(sq_length2 <= 0.000001f)
+				if(sq_length2 <= G_COLLISION_THRESHOLD_F)
 				{
 					use_cases |= 0x02;
 				}
@@ -21559,7 +26328,7 @@ namespace GW
 					sq_length);
 
 				// If line degenerates to point
-				if(sq_length <= 0.000001f)
+				if(sq_length <= G_COLLISION_THRESHOLD_F)
 				{
 					_outPoint = line_a;
 					return GReturn::SUCCESS;
@@ -21621,7 +26390,7 @@ namespace GW
 					dot2);
 
 				// p is closest to vertex a
-				if(dot1 <= 0.000001f && dot2 <= 0.000001f)
+				if(dot1 <= G_COLLISION_THRESHOLD_F && dot2 <= G_COLLISION_THRESHOLD_F)
 				{
 					_outPoint = a;
 					return GReturn::SUCCESS;
@@ -21646,16 +26415,17 @@ namespace GW
 					dot4);
 
 				// p is closest to vertex b
-				if(dot3 >= 0.000001f && dot4 <= dot3)
+				if(dot3 >= G_COLLISION_THRESHOLD_F && dot4 <= dot3)
 				{
 					_outPoint = b;
 					return GReturn::SUCCESS;
 				}
 
-				float vc = dot1 * dot4 - dot3 * dot2;
+                float vc = dot1 * dot4;
+                vc -= dot3 * dot2; // split improves accuracy on ARM
 
 				// p is closest to edge ab
-				if(vc <= 0.000001f && dot1 >= 0.000001f && dot3 <= 0.000001f)
+				if(vc <= G_COLLISION_THRESHOLD_F && dot1 >= G_COLLISION_THRESHOLD_F && dot3 <= G_COLLISION_THRESHOLD_F)
 				{
 					float interval = dot1 / (dot1 - dot3);
 
@@ -21691,15 +26461,17 @@ namespace GW
 					dot6);
 
 				// p is closest to vertex c
-				if(dot5 >= 0.000001f && dot6 <= dot5)
+				if(dot5 >= G_COLLISION_THRESHOLD_F && dot6 <= dot5)
 				{
 					_outPoint = c;
 					return GReturn::SUCCESS;
 				}
 
-				float vb = dot6 * dot2 - dot1 * dot5;
+                float vb = dot6 * dot2;
+                vb -= dot1 * dot5; // split improves accuracy on ARM
+                
 				// p is closest to edge ac
-				if(vb <= 0.000001f && dot2 >= 0.000001f && dot5 <= 0.000001f)
+				if(vb <= G_COLLISION_THRESHOLD_F && dot2 >= G_COLLISION_THRESHOLD_F && dot5 <= G_COLLISION_THRESHOLD_F)
 				{
 					float interval = dot2 / (dot2 - dot5);
 
@@ -21716,9 +26488,11 @@ namespace GW
 					return GReturn::SUCCESS;
 				}
 
-				float va = dot3 * dot5 - dot6 * dot4;
+                float va = dot3 * dot5;
+                va -= dot6 * dot4; // split improves accuracy on ARM
+                
 				// p is closest to edge bc
-				if(va <= 0.000001f && (dot4 - dot3) >= 0.000001f && (dot6 - dot5) >= 0.000001f)
+				if(va <= G_COLLISION_THRESHOLD_F && (dot4 - dot3) >= G_COLLISION_THRESHOLD_F && (dot6 - dot5) >= G_COLLISION_THRESHOLD_F)
 				{
 					float h = dot4 - dot3;
 					float interval = h / (h + dot6 - dot5);
@@ -21855,9 +26629,9 @@ namespace GW
 						_aabb.max.data[i]);
 				}
 
-				if(G_ABS(_queryPoint.x - _outPoint.x) < 0.000001f &&
-				   G_ABS(_queryPoint.y - _outPoint.y) < 0.000001f &&
-				   G_ABS(_queryPoint.z - _outPoint.z) < 0.000001f)
+				if(G_ABS(_queryPoint.x - _outPoint.x) < G_COLLISION_THRESHOLD_F &&
+				   G_ABS(_queryPoint.y - _outPoint.y) < G_COLLISION_THRESHOLD_F &&
+				   G_ABS(_queryPoint.z - _outPoint.z) < G_COLLISION_THRESHOLD_F)
 				{
 					return GReturn::FAILURE;
 				}
@@ -21925,9 +26699,9 @@ namespace GW
 						_outPoint);
 				}
 
-				if(G_ABS(_queryPoint.x - _outPoint.x) < 0.000001f &&
-				   G_ABS(_queryPoint.y - _outPoint.y) < 0.000001f &&
-				   G_ABS(_queryPoint.z - _outPoint.z) < 0.000001f)
+				if(G_ABS(_queryPoint.x - _outPoint.x) < G_COLLISION_THRESHOLD_F &&
+				   G_ABS(_queryPoint.y - _outPoint.y) < G_COLLISION_THRESHOLD_F &&
+				   G_ABS(_queryPoint.z - _outPoint.z) < G_COLLISION_THRESHOLD_F)
 				{
 					return GReturn::FAILURE;
 				}
@@ -22215,9 +26989,9 @@ namespace GW
 					return GReturn::SUCCESS;
 				}
 
-				if(G_ABS(difference_pa.x - _ray.direction.x) < 0.000001f &&
-				   G_ABS(difference_pa.y - _ray.direction.y) < 0.000001f &&
-				   G_ABS(difference_pa.z - _ray.direction.z) < 0.000001f)
+				if(G_ABS(difference_pa.x - _ray.direction.x) < G_COLLISION_THRESHOLD_F &&
+				   G_ABS(difference_pa.y - _ray.direction.y) < G_COLLISION_THRESHOLD_F &&
+				   G_ABS(difference_pa.z - _ray.direction.z) < G_COLLISION_THRESHOLD_F)
 				{
 					_outResult = GCollisionCheck::COLLISION;
 				}
@@ -22250,7 +27024,9 @@ namespace GW
 					// Compute plane already handles fail case of degenerate triangle.
 					BarycentricF(_triangle.a, _triangle.b, _triangle.c, _point, barycentric);
 
-					_outResult = (barycentric.y >= 0.0f && barycentric.z >= 0.0f && (barycentric.y + barycentric.z) <= 1.0f) ?
+					_outResult = (G_GREATER_OR_EQUAL_STANDARD_F(barycentric.y, 0.0f) &&
+                                  G_GREATER_OR_EQUAL_STANDARD_F(barycentric.z, 0.0f) &&
+                                  G_LESSER_OR_EQUAL_STANDARD_F(barycentric.y + barycentric.z, 1.0f)) ?
 						GCollisionCheck::COLLISION :
 						GCollisionCheck::NO_COLLISION;
 
@@ -22272,11 +27048,11 @@ namespace GW
 					distance);
 				distance = distance - _plane.distance;
 
-				if(distance < -0.000001f)
+				if(distance < -G_COLLISION_THRESHOLD_F)
 				{
 					_outResult = GCollisionCheck::BELOW;
 				}
-				else if(G_ABS(distance) <= 0.000001f)
+				else if(G_ABS(distance) <= G_COLLISION_THRESHOLD_F)
 				{
 					_outResult = GCollisionCheck::COLLISION;
 				}
@@ -22331,9 +27107,9 @@ namespace GW
 
 			static GReturn TestPointToAABBF(const MATH::GVECTORF _point, const MATH::GAABBCEF _aabb, GCollisionCheck& _outResult)
 			{
-				if(G_ABS(_aabb.center.x - _point.x) - _aabb.extent.x > 0.000001f ||
-				   G_ABS(_aabb.center.y - _point.y) - _aabb.extent.y > 0.000001f ||
-				   G_ABS(_aabb.center.z - _point.z) - _aabb.extent.z > 0.000001f)
+				if(G_ABS(_aabb.center.x - _point.x) - _aabb.extent.x > G_COLLISION_THRESHOLD_F ||
+				   G_ABS(_aabb.center.y - _point.y) - _aabb.extent.y > G_COLLISION_THRESHOLD_F ||
+				   G_ABS(_aabb.center.z - _point.z) - _aabb.extent.z > G_COLLISION_THRESHOLD_F)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 				}
@@ -22354,9 +27130,9 @@ namespace GW
 					_point,
 					closest_point);
 
-				if(G_ABS(closest_point.x - _point.x) > 0.000001f ||
-				   G_ABS(closest_point.y - _point.y) > 0.000001f ||
-				   G_ABS(closest_point.z - _point.z) > 0.000001f)
+				if(G_ABS(closest_point.x - _point.x) > G_COLLISION_THRESHOLD_F ||
+				   G_ABS(closest_point.y - _point.y) > G_COLLISION_THRESHOLD_F ||
+				   G_ABS(closest_point.z - _point.z) > G_COLLISION_THRESHOLD_F)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 				}
@@ -22379,9 +27155,9 @@ namespace GW
 					closest_point1,
 					closest_point2);
 
-				if(G_ABS(closest_point1.x - closest_point2.x) > 0.000001f ||
-				   G_ABS(closest_point1.y - closest_point2.y) > 0.000001f ||
-				   G_ABS(closest_point1.z - closest_point2.z) > 0.000001f)
+				if(G_ABS(closest_point1.x - closest_point2.x) > G_COLLISION_THRESHOLD_F ||
+				   G_ABS(closest_point1.y - closest_point2.y) > G_COLLISION_THRESHOLD_F ||
+				   G_ABS(closest_point1.z - closest_point2.z) > G_COLLISION_THRESHOLD_F)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 				}
@@ -22566,7 +27342,7 @@ namespace GW
 					_line.start.xyz(),
 					num);
 
-				if(G_ABS(denom) < 0.000001f)
+				if(G_ABS(denom) < G_COLLISION_THRESHOLD_F)
 				{
 					// Coplanar
 					_outResult = GCollisionCheck::NO_COLLISION;
@@ -22680,9 +27456,9 @@ namespace GW
 					}
 				}
 
-				axis.x += 0.000001f;
-				axis.y += 0.000001f;
-				axis.z += 0.000001f;
+				axis.x += G_COLLISION_THRESHOLD_F;
+				axis.y += G_COLLISION_THRESHOLD_F;
+				axis.z += G_COLLISION_THRESHOLD_F;
 
 				if(G_ABS(origin.y * line_mid_length.z - origin.z * line_mid_length.y) >
 				   extent.y* axis.z + extent.z * axis.y)
@@ -22831,7 +27607,7 @@ namespace GW
 					det);
 
 				// Ray is parallel to or points away from triangle
-				if(G_ABS(det) < 0.000001f)
+				if(G_ABS(det) < G_COLLISION_THRESHOLD_F)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
@@ -22852,7 +27628,7 @@ namespace GW
 					barycentric.y);
 				barycentric.y *= denom;
 
-				if(barycentric.y < 0.0f)
+				if(barycentric.y < -G_COLLISION_THRESHOLD_F)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
@@ -22870,7 +27646,7 @@ namespace GW
 					barycentric.z);
 				barycentric.z *= denom;
 
-				if(barycentric.z < 0.0f || barycentric.y + barycentric.z > 1.0f)
+				if(barycentric.z < -G_COLLISION_THRESHOLD_F || barycentric.y + barycentric.z > 1.0f)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
@@ -22894,7 +27670,7 @@ namespace GW
 					_ray.direction.xyz(),
 					denom);
 
-				if(G_ABS(denom) < 0.000001f)
+				if(G_ABS(denom) < G_COLLISION_THRESHOLD_F)
 				{
 					// Ray is parallel
 					_outResult = GCollisionCheck::NO_COLLISION;
@@ -24867,7 +29643,7 @@ namespace GW
 					cross,
 					dot);
 
-				_outResult = (dot < 0.000001f) ?
+				_outResult = (dot < G_COLLISION_THRESHOLD_F) ?
 					GCollisionCheck::NO_COLLISION :
 					GCollisionCheck::COLLISION;
 
@@ -25202,9 +29978,9 @@ namespace GW
 					}
 				}
 
-				axis.x += 0.000001f;
-				axis.y += 0.000001f;
-				axis.z += 0.000001f;
+				axis.x += G_COLLISION_THRESHOLD_F;
+				axis.y += G_COLLISION_THRESHOLD_F;
+				axis.z += G_COLLISION_THRESHOLD_F;
 
 				if(G_ABS(o.y * line_mid_length.z - o.z * line_mid_length.y) >
 				   extent.y* axis.z + extent.z * axis.y)
@@ -25422,7 +30198,7 @@ namespace GW
 					for(int j = 0; j < 3; j++)
 					{
 						abs_rotation[i][j] =
-							G_ABS(rotation[i][j]) + 0.000001f;
+							G_ABS(rotation[i][j]) + G_COLLISION_THRESHOLD_F;
 					}
 				}
 
@@ -25815,7 +30591,7 @@ namespace GW
 					difference_ba,
 					denom);
 
-				if(G_ABS(denom) < 0.000001f)
+				if(G_ABS(denom) < G_COLLISION_THRESHOLD_F)
 				{
 					// Coplanar
 					_outResult = GCollisionCheck::NO_COLLISION;
@@ -26203,7 +30979,7 @@ namespace GW
 					det);
 
 				// Ray is parallel to or points away from triangle
-				if(G_ABS(det) < 0.000001f)
+				if(G_ABS(det) < G_COLLISION_THRESHOLD_F)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
@@ -26224,7 +31000,7 @@ namespace GW
 					barycentric.y);
 				barycentric.y *= denom;
 
-				if(barycentric.y < 0.0f)
+				if(barycentric.y < -G_COLLISION_THRESHOLD_F)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
@@ -26242,7 +31018,7 @@ namespace GW
 					barycentric.z);
 				barycentric.z *= denom;
 
-				if(barycentric.z < 0.0f || barycentric.y + barycentric.z > 1.0f)
+				if(barycentric.z < -G_COLLISION_THRESHOLD_F || barycentric.y + barycentric.z > 1.0f)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
@@ -26292,7 +31068,7 @@ namespace GW
 					_ray.direction.xyz(),
 					denom);
 
-				if(G_ABS(denom) < 0.000001f)
+				if(G_ABS(denom) < G_COLLISION_THRESHOLD_F)
 				{
 					// Coplanar
 					_outResult = GCollisionCheck::NO_COLLISION;
@@ -26748,9 +31524,9 @@ namespace GW
 				}
 
 				// Point is inside AABB so clamp to closest face
-				if(G_ABS(_sphere.x - _outContactClosest2.x) < 0.000001f ||
-				   G_ABS(_sphere.y - _outContactClosest2.y) < 0.000001f ||
-				   G_ABS(_sphere.z - _outContactClosest2.z) < 0.000001f)
+				if(G_ABS(_sphere.x - _outContactClosest2.x) < G_COLLISION_THRESHOLD_F ||
+				   G_ABS(_sphere.y - _outContactClosest2.y) < G_COLLISION_THRESHOLD_F ||
+				   G_ABS(_sphere.z - _outContactClosest2.z) < G_COLLISION_THRESHOLD_F)
 				{
 					GW::MATH::GVECTORF translation = {};
 					float low = static_cast<float>(0xffffffff);
@@ -27364,7 +32140,7 @@ namespace GW
 			//		for(int j = 0; j < 3; j++)
 			//		{
 			//			abs_rotation[i][j] =
-			//				G_ABS(rotation[i][j]) + 0.000001f;
+			//				G_ABS(rotation[i][j]) + G_COLLISION_THRESHOLD_F;
 			//		}
 			//	}
 
@@ -27759,7 +32535,7 @@ namespace GW
 			//			_outDirection,
 			//			_outDistance);
 			//	}
-			//	_outDistance += 0.000001f;
+			//	_outDistance += G_COLLISION_THRESHOLD_F;
 
 			//	GW::MATH::GVector::ScaleF(
 			//		_outDirection,
@@ -27854,7 +32630,7 @@ namespace GW
 					difference_pa,
 					_outDistance);
 
-				if(G_ABS(interval2) >= 0.000001f)
+				if(G_ABS(interval2) >= G_COLLISION_THRESHOLD_F)
 				{
 					_outDistance -= interval1 * interval1 / interval2;
 				}
@@ -28034,7 +32810,7 @@ namespace GW
 				float z = G_ABS(triangle_n.z);
 
 				// Degenerate triangle
-				if(x + y + z < 0.000001f)
+				if(x + y + z < G_COLLISION_THRESHOLD_F)
 				{
 					return GReturn::FAILURE;
 				}
@@ -28228,7 +33004,7 @@ namespace GW
 					triangle_normal,
 					triangle_area);
 
-				_outResult = (G_ABS(triangle_area) < 1.192092896e-07) ? GCollisionCheck::NO_COLLISION : GCollisionCheck::COLLISION;
+				_outResult = (G_ABS(triangle_area) < G_COLLISION_THRESHOLD_D) ? GCollisionCheck::NO_COLLISION : GCollisionCheck::COLLISION;
 
 				return GReturn::SUCCESS;
 			}
@@ -28273,7 +33049,7 @@ namespace GW
 						difference_ba,
 						winding);
 
-					if(G_ABS(winding) < 0.000001f)
+					if(G_ABS(winding) < G_COLLISION_THRESHOLD_F)
 					{
 						return 0;
 					}
@@ -28384,7 +33160,7 @@ namespace GW
 					sq_length);
 
 				// If line degenerates to point
-				if(sq_length <= 1.192092896e-07)
+				if(sq_length <= G_COLLISION_THRESHOLD_D)
 				{
 					_outPoint = line_a;
 					return GReturn::SUCCESS;
@@ -28474,13 +33250,13 @@ namespace GW
 				int use_cases = 0x00;
 
 				// First line degenerates to a point.
-				if(sq_length1 <= 1.192092896e-07)
+				if(sq_length1 <= G_COLLISION_THRESHOLD_D)
 				{
 					use_cases |= 0x01;
 				}
 
 				// Second line degenerates to a point.
-				if(sq_length2 <= 1.192092896e-07)
+				if(sq_length2 <= G_COLLISION_THRESHOLD_D)
 				{
 					use_cases |= 0x02;
 				}
@@ -28621,7 +33397,7 @@ namespace GW
 					sq_length);
 
 				// If line degenerates to point
-				if(sq_length <= 1.192092896e-07)
+				if(sq_length <= G_COLLISION_THRESHOLD_D)
 				{
 					_outPoint = line_a;
 					return GReturn::SUCCESS;
@@ -28682,7 +33458,7 @@ namespace GW
 					dot2);
 
 				// p is closest to vertex a
-				if(dot1 <= 1.192092896e-07 && dot2 <= 1.192092896e-07)
+				if(dot1 <= G_COLLISION_THRESHOLD_D && dot2 <= G_COLLISION_THRESHOLD_D)
 				{
 					_outPoint = a;
 					return GReturn::SUCCESS;
@@ -28707,7 +33483,7 @@ namespace GW
 					dot4);
 
 				// p is closest to vertex b
-				if(dot3 >= 1.192092896e-07 && dot4 <= dot3)
+				if(dot3 >= G_COLLISION_THRESHOLD_D && dot4 <= dot3)
 				{
 					_outPoint = b;
 					return GReturn::SUCCESS;
@@ -28716,7 +33492,7 @@ namespace GW
 				double vc = dot1 * dot4 - dot3 * dot2;
 
 				// p is closest to edge ab
-				if(vc <= 1.192092896e-07 && dot1 >= 1.192092896e-07 && dot3 <= 1.192092896e-07)
+				if(vc <= G_COLLISION_THRESHOLD_D && dot1 >= G_COLLISION_THRESHOLD_D && dot3 <= G_COLLISION_THRESHOLD_D)
 				{
 					double interval = dot1 / (dot1 - dot3);
 
@@ -28752,7 +33528,7 @@ namespace GW
 					dot6);
 
 				// p is closest to vertex c
-				if(dot5 >= 1.192092896e-07 && dot6 <= dot5)
+				if(dot5 >= G_COLLISION_THRESHOLD_D && dot6 <= dot5)
 				{
 					_outPoint = c;
 					return GReturn::SUCCESS;
@@ -28760,7 +33536,7 @@ namespace GW
 
 				double vb = dot6 * dot2 - dot1 * dot5;
 				// p is closest to edge ac
-				if(vb <= 1.192092896e-07 && dot2 >= 1.192092896e-07 && dot5 <= 1.192092896e-07)
+				if(vb <= G_COLLISION_THRESHOLD_D && dot2 >= G_COLLISION_THRESHOLD_D && dot5 <= G_COLLISION_THRESHOLD_D)
 				{
 					double interval = dot2 / (dot2 - dot5);
 
@@ -28779,7 +33555,7 @@ namespace GW
 
 				double va = dot3 * dot5 - dot6 * dot4;
 				// p is closest to edge bc
-				if(va <= 1.192092896e-07 && (dot4 - dot3) >= 1.192092896e-07 && (dot6 - dot5) >= 1.192092896e-07)
+				if(va <= G_COLLISION_THRESHOLD_D && (dot4 - dot3) >= G_COLLISION_THRESHOLD_D && (dot6 - dot5) >= G_COLLISION_THRESHOLD_D)
 				{
 					double h = dot4 - dot3;
 					double interval = h / (h + dot6 - dot5);
@@ -28912,9 +33688,9 @@ namespace GW
 						_aabb.max.data[i]);
 				}
 
-				if(G_ABS(_queryPoint.x - _outPoint.x) < 1.192092896e-07 &&
-				   G_ABS(_queryPoint.y - _outPoint.y) < 1.192092896e-07 &&
-				   G_ABS(_queryPoint.z - _outPoint.z) < 1.192092896e-07)
+				if(G_ABS(_queryPoint.x - _outPoint.x) < G_COLLISION_THRESHOLD_D &&
+				   G_ABS(_queryPoint.y - _outPoint.y) < G_COLLISION_THRESHOLD_D &&
+				   G_ABS(_queryPoint.z - _outPoint.z) < G_COLLISION_THRESHOLD_D)
 				{
 					return GReturn::FAILURE;
 				}
@@ -28981,9 +33757,9 @@ namespace GW
 						_outPoint);
 				}
 
-				if(G_ABS(_queryPoint.x - _outPoint.x) < 1.192092896e-07 &&
-				   G_ABS(_queryPoint.y - _outPoint.y) < 1.192092896e-07 &&
-				   G_ABS(_queryPoint.z - _outPoint.z) < 1.192092896e-07)
+				if(G_ABS(_queryPoint.x - _outPoint.x) < G_COLLISION_THRESHOLD_D &&
+				   G_ABS(_queryPoint.y - _outPoint.y) < G_COLLISION_THRESHOLD_D &&
+				   G_ABS(_queryPoint.z - _outPoint.z) < G_COLLISION_THRESHOLD_D)
 				{
 					return GReturn::FAILURE;
 				}
@@ -29270,9 +34046,9 @@ namespace GW
 					return GReturn::SUCCESS;
 				}
 
-				if(G_ABS(difference_pa.x - _ray.direction.x) < 1.192092896e-07 &&
-				   G_ABS(difference_pa.y - _ray.direction.y) < 1.192092896e-07 &&
-				   G_ABS(difference_pa.z - _ray.direction.z) < 1.192092896e-07)
+				if(G_ABS(difference_pa.x - _ray.direction.x) < G_COLLISION_THRESHOLD_D &&
+				   G_ABS(difference_pa.y - _ray.direction.y) < G_COLLISION_THRESHOLD_D &&
+				   G_ABS(difference_pa.z - _ray.direction.z) < G_COLLISION_THRESHOLD_D)
 				{
 					_outResult = GCollisionCheck::COLLISION;
 				}
@@ -29303,10 +34079,12 @@ namespace GW
 					MATH::GVECTORD barycentric = {};
 					// Compute plane already handles fail case of degenerate triangle.
 					BarycentricD(_triangle.a, _triangle.b, _triangle.c, _point, barycentric);
-
-					_outResult = (barycentric.y >= 0.0 && barycentric.z >= 0.0 && (barycentric.y + barycentric.z) <= 1.0) ?
-						GCollisionCheck::COLLISION :
-						GCollisionCheck::NO_COLLISION;
+                    
+                    _outResult = (G_GREATER_OR_EQUAL_STANDARD_D(barycentric.y, 0.0) &&
+                                  G_GREATER_OR_EQUAL_STANDARD_D(barycentric.z, 0.0) &&
+                                  G_LESSER_OR_EQUAL_STANDARD_D(barycentric.y + barycentric.z, 1.0)) ?
+                        GCollisionCheck::COLLISION :
+                        GCollisionCheck::NO_COLLISION;
 
 					if(_outBarycentric)
 					{
@@ -29326,18 +34104,9 @@ namespace GW
 					distance);
 				distance = distance - _plane.distance;
 
-				if(distance < -1.192092896e-07)
-				{
-					_outResult = GCollisionCheck::BELOW;
-				}
-				else if(G_ABS(distance) <= 1.192092896e-07)
-				{
-					_outResult = GCollisionCheck::COLLISION;
-				}
-				else
-				{
-					_outResult = GCollisionCheck::ABOVE;
-				}
+                _outResult = (distance > 0.0) ? GCollisionCheck::ABOVE : GCollisionCheck::BELOW;
+                if (G_ABS(distance) < G_COLLISION_THRESHOLD_D)
+                    _outResult = GCollisionCheck::COLLISION;
 
 				return GReturn::SUCCESS;
 			}
@@ -29385,9 +34154,9 @@ namespace GW
 
 			static GReturn TestPointToAABBD(const MATH::GVECTORD _point, const MATH::GAABBCED _aabb, GCollisionCheck& _outResult)
 			{
-				if(G_ABS(_aabb.center.x - _point.x) - _aabb.extent.x > 1.192092896e-07 ||
-				   G_ABS(_aabb.center.y - _point.y) - _aabb.extent.y > 1.192092896e-07 ||
-				   G_ABS(_aabb.center.z - _point.z) - _aabb.extent.z > 1.192092896e-07)
+				if(G_ABS(_aabb.center.x - _point.x) - _aabb.extent.x > G_COLLISION_THRESHOLD_D ||
+				   G_ABS(_aabb.center.y - _point.y) - _aabb.extent.y > G_COLLISION_THRESHOLD_D ||
+				   G_ABS(_aabb.center.z - _point.z) - _aabb.extent.z > G_COLLISION_THRESHOLD_D)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 				}
@@ -29408,9 +34177,9 @@ namespace GW
 					_point,
 					closest_point);
 
-				if(G_ABS(closest_point.x - _point.x) > 1.192092896e-07 ||
-				   G_ABS(closest_point.y - _point.y) > 1.192092896e-07 ||
-				   G_ABS(closest_point.z - _point.z) > 1.192092896e-07)
+				if(G_ABS(closest_point.x - _point.x) > G_COLLISION_THRESHOLD_D ||
+				   G_ABS(closest_point.y - _point.y) > G_COLLISION_THRESHOLD_D ||
+				   G_ABS(closest_point.z - _point.z) > G_COLLISION_THRESHOLD_D)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 				}
@@ -29433,9 +34202,9 @@ namespace GW
 					closest_point1,
 					closest_point2);
 
-				if(G_ABS(closest_point1.x - closest_point2.x) > 1.192092896e-07 ||
-				   G_ABS(closest_point1.y - closest_point2.y) > 1.192092896e-07 ||
-				   G_ABS(closest_point1.z - closest_point2.z) > 1.192092896e-07)
+				if(G_ABS(closest_point1.x - closest_point2.x) > G_COLLISION_THRESHOLD_D ||
+				   G_ABS(closest_point1.y - closest_point2.y) > G_COLLISION_THRESHOLD_D ||
+				   G_ABS(closest_point1.z - closest_point2.z) > G_COLLISION_THRESHOLD_D)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 				}
@@ -29619,7 +34388,7 @@ namespace GW
 					_line.start.xyz(),
 					num);
 
-				if(G_ABS(denom) < 1.192092896e-07)
+				if(G_ABS(denom) < G_COLLISION_THRESHOLD_D)
 				{
 					// Coplanar
 					_outResult = GCollisionCheck::NO_COLLISION;
@@ -29733,9 +34502,9 @@ namespace GW
 					}
 				}
 
-				axis.x += 1.192092896e-07;
-				axis.y += 1.192092896e-07;
-				axis.z += 1.192092896e-07;
+				axis.x += G_COLLISION_THRESHOLD_D;
+				axis.y += G_COLLISION_THRESHOLD_D;
+				axis.z += G_COLLISION_THRESHOLD_D;
 
 				if(G_ABS(origin.y * line_mid_length.z - origin.z * line_mid_length.y) >
 				   extent.y* axis.z + extent.z * axis.y)
@@ -29883,7 +34652,7 @@ namespace GW
 					det);
 
 				// Ray is parallel to or points away from triangle
-				if(G_ABS(det) < 1.192092896e-07)
+				if(G_ABS(det) < G_COLLISION_THRESHOLD_D)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
@@ -29904,7 +34673,7 @@ namespace GW
 					barycentric.y);
 				barycentric.y *= denom;
 
-				if(barycentric.y < 0.0)
+				if(barycentric.y < -G_COLLISION_THRESHOLD_D)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
@@ -29922,7 +34691,7 @@ namespace GW
 					barycentric.z);
 				barycentric.z *= denom;
 
-				if(barycentric.z < 0.0 || barycentric.y + barycentric.z > 1.0f)
+				if(barycentric.z < -G_COLLISION_THRESHOLD_D || barycentric.y + barycentric.z > 1.0f)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
@@ -29946,7 +34715,7 @@ namespace GW
 					_ray.direction.xyz(),
 					denom);
 
-				if(G_ABS(denom) < 1.192092896e-07)
+				if(G_ABS(denom) < G_COLLISION_THRESHOLD_D)
 				{
 					// Ray is parallel
 					_outResult = GCollisionCheck::NO_COLLISION;
@@ -31916,7 +36685,7 @@ namespace GW
 					cross,
 					dot);
 
-				_outResult = (dot < 1.192092896e-07) ?
+				_outResult = (dot < G_COLLISION_THRESHOLD_D) ?
 					GCollisionCheck::NO_COLLISION :
 					GCollisionCheck::COLLISION;
 
@@ -32249,9 +37018,9 @@ namespace GW
 					}
 				}
 
-				axis.x += 1.192092896e-07;
-				axis.y += 1.192092896e-07;
-				axis.z += 1.192092896e-07;
+				axis.x += G_COLLISION_THRESHOLD_D;
+				axis.y += G_COLLISION_THRESHOLD_D;
+				axis.z += G_COLLISION_THRESHOLD_D;
 
 				if(G_ABS(o.y * line_mid_length.z - o.z * line_mid_length.y) >
 				   extent.y* axis.z + extent.z * axis.y)
@@ -32469,7 +37238,7 @@ namespace GW
 					for(int j = 0; j < 3; j++)
 					{
 						abs_rotation[i][j] =
-							G_ABS(rotation[i][j]) + 1.192092896e-07;
+							G_ABS(rotation[i][j]) + G_COLLISION_THRESHOLD_D;
 					}
 				}
 
@@ -32857,7 +37626,7 @@ namespace GW
 					difference_ba,
 					denom);
 
-				if(G_ABS(denom) < 1.192092896e-07)
+				if(G_ABS(denom) < G_COLLISION_THRESHOLD_D)
 				{
 					// Coplanar
 					_outResult = GCollisionCheck::NO_COLLISION;
@@ -33228,20 +37997,20 @@ namespace GW
 					difference_ca,
 					q);
 
-				double det = 0.0f;
+				double det = 0.0;
 				GW::MATH::GVector::DotD(
 					difference_ba,
 					q,
 					det);
 
 				// Ray is parallel to or points away from triangle
-				if(G_ABS(det) < 1.192092896e-07)
+				if(G_ABS(det) < G_COLLISION_THRESHOLD_D)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
 				}
 
-				double denom = 1.0f / det;
+				double denom = 1.0 / det;
 
 				GW::MATH::GVECTORD s = {};
 				GW::MATH::GVector::SubtractVectorD(
@@ -33256,7 +38025,7 @@ namespace GW
 					barycentric.y);
 				barycentric.y *= denom;
 
-				if(barycentric.y < 0.0f)
+				if(barycentric.y < -G_COLLISION_THRESHOLD_D)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
@@ -33274,13 +38043,13 @@ namespace GW
 					barycentric.z);
 				barycentric.z *= denom;
 
-				if(barycentric.z < 0.0f || barycentric.y + barycentric.z > 1.0f)
+				if(barycentric.z < -G_COLLISION_THRESHOLD_D || barycentric.y + barycentric.z > 1.0)
 				{
 					_outResult = GCollisionCheck::NO_COLLISION;
 					return GReturn::SUCCESS;
 				}
 
-				barycentric.x = 1.0f - barycentric.y - barycentric.z;
+				barycentric.x = 1.0 - barycentric.y - barycentric.z;
 
 				if(_outBarycentric)
 				{
@@ -33322,7 +38091,7 @@ namespace GW
 					_ray.direction.xyz(),
 					denom);
 
-				if(G_ABS(denom) < 1.192092896e-07)
+				if(G_ABS(denom) < G_COLLISION_THRESHOLD_D)
 				{
 					// Coplanar
 					_outResult = GCollisionCheck::NO_COLLISION;
@@ -33763,9 +38532,9 @@ namespace GW
 				}
 
 				// Point is inside AABB so clamp to closest face
-				if(G_ABS(_sphere.x - _outContactClosest2.x) < 1.192092896e-07 ||
-				   G_ABS(_sphere.y - _outContactClosest2.y) < 1.192092896e-07 ||
-				   G_ABS(_sphere.z - _outContactClosest2.z) < 1.192092896e-07)
+				if(G_ABS(_sphere.x - _outContactClosest2.x) < G_COLLISION_THRESHOLD_D ||
+				   G_ABS(_sphere.y - _outContactClosest2.y) < G_COLLISION_THRESHOLD_D ||
+				   G_ABS(_sphere.z - _outContactClosest2.z) < G_COLLISION_THRESHOLD_D)
 				{
 					GW::MATH::GVECTORD translation = {};
 					double low = static_cast<double>(0xffffffff);
@@ -34343,7 +39112,7 @@ namespace GW
 					difference_pa,
 					_outDistance);
 
-				if(G_ABS(interval2) >= 1.192092896e-07)
+				if(G_ABS(interval2) >= G_COLLISION_THRESHOLD_D)
 				{
 					_outDistance -= interval1 * interval1 / interval2;
 				}
@@ -34519,7 +39288,7 @@ namespace GW
 				double z = G_ABS(triangle_n.z);
 
 				// Degenerate triangle
-				if(x + y + z < 1.192092896e-07)
+				if(x + y + z < G_COLLISION_THRESHOLD_D)
 				{
 					return GReturn::FAILURE;
 				}
@@ -34602,6 +39371,7 @@ namespace GW
 
 
 #endif
+
 
 
 namespace GW
@@ -34800,6 +39570,7 @@ namespace GW
 }
 
 #endif // GCOLLISION_H
+
 
 #ifndef GCOLLISION2D_H
 #define GCOLLISION2D_H
@@ -35123,7 +39894,7 @@ namespace GW
 				unsigned int j = _numVerts - 1;
 				for (unsigned int i = 0; i < _numVerts; j = i++)
 				{
-					// in any compiler that implements C, when executing the code a && b, if a is false, then b must not be evaluated, which means we dont have to check for devide-by-zero
+					// in any compiler that implements C, when executing the code a && b, if a is false, then b must not be evaluated, which means we don't have to check for divide-by-zero
 					if (((_polygon[i].y > _point.y) != (_polygon[j].y > _point.y)) &&
 						(_point.x < (_polygon[j].x - _polygon[i].x) * (_point.y - _polygon[i].y) / (_polygon[j].y - _polygon[i].y) + _polygon[i].x))
 					{
@@ -35150,7 +39921,7 @@ namespace GW
 
 				float det = A1 * B2 - A2 * B1;
 
-				if (det == 0) // lines are parallel. need to check if one line is a subsegment of the other
+				if (det == 0) // lines are parallel. need to check if one line is a sub-segment of the other
 				{
 					if (A1 * _line2.start.x + B1 * _line2.start.y == C1 ||
 						A1 * _line2.end.x + B1 * _line2.end.y == C1 ||
@@ -35407,7 +40178,7 @@ namespace GW
 
 				if (G2D_COMPARISON_STANDARD_F(rectArea, 0.0f))
 				{
-					return GReturn::FAILURE; // would get a devide-by-zero error
+					return GReturn::FAILURE; // would get a divide-by-zero error
 				}
 
 				float a, b;
@@ -35627,7 +40398,7 @@ namespace GW
 
 				double det = A1 * B2 - A2 * B1;
 
-				if (det == 0) // lines are parallel. need to check if one line is a subsegment of the other
+				if (det == 0) // lines are parallel. need to check if one line is a sub-segment of the other
 				{
 					if (A1 * _line2.start.x + B1 * _line2.start.y == C1 ||
 						A1 * _line2.end.x + B1 * _line2.end.y == C1 ||
@@ -35883,7 +40654,7 @@ namespace GW
 
 				if (G2D_COMPARISON_STANDARD_D(rectArea, 0.0))
 				{
-					return GReturn::FAILURE; // would get a devide-by-zero error
+					return GReturn::FAILURE; // would get a divide-by-zero error
 				}
 
 				double a, b;
@@ -36912,8 +41683,12 @@ namespace GW
 #define GCONTROLLERTABLEROUTING_HPP
 
 
-#define G_MAX_CONTROLLER_INDEX 16
-#define G_MAX_XBOX_CONTROLLER_INDEX 4
+#define G_MAX_CONTROLLER_COUNT 16
+#define G_MAX_XBOX_CONTROLLER_COUNT 4
+#define G_MAX_XBOX_CONTROLLER_COUNT_XBOXONE 8
+#define G_MAX_CONTROLLER_INDEX (G_MAX_CONTROLLER_COUNT - 1)
+#define G_MAX_XBOX_CONTROLLER_INDEX (G_MAX_XBOX_CONTROLLER_COUNT - 1)
+#define G_MAX_XBOX_CONTROLLER_INDEX_XBOXONE (G_MAX_XBOX_CONTROLLER_COUNT_XBOXONE - 1)
 #define G_MAX_GENERAL_INPUTS 20
 #define G_MAX_XBOX_INPUTS 20
 #define G_MAX_PS4_INPUTS 20
@@ -37769,7 +42544,7 @@ namespace GW
 #if !defined(GATEWARE_ENABLE_INPUT) || defined(GATEWARE_DISABLE_GCONTROLLER) || \
     (defined(GATEWARE_ENABLE_INPUT) && !defined(GATEWARE_DISABLE_GCONTROLLER) && !defined(__APPLE__) && !defined(__linux__) && !defined(_WIN32))
     // Even if a platform does not support a library a dummy implementation must be present!
-    // dummy implemintation for GController
+    // dummy implementation for GController
 namespace GW {
 	namespace I {
 		class GControllerImplementation :	public virtual GControllerInterface,
@@ -37810,8 +42585,53 @@ namespace GW {
 	} // end I
 } // end GW
 
+
 #elif defined(__APPLE__)
-    #ifdef __OBJC__
+    #include <TargetConditionals.h>
+    #if TARGET_OS_IOS
+        // dummy implementation for GController
+namespace GW {
+	namespace I {
+		class GControllerImplementation :	public virtual GControllerInterface,
+											public GEventGeneratorImplementation
+		{
+		public:
+			GReturn Create() {
+				return GReturn::INTERFACE_UNSUPPORTED;
+			}
+			GReturn GetState(unsigned int _controllerIndex, int _inputCode, float& _outState) override {
+				return GW::GReturn::FAILURE;
+			}
+			GReturn IsConnected(unsigned int _controllerIndex, bool& _outIsConnected) override {
+				return GW::GReturn::FAILURE;
+			}
+			GReturn GetMaxIndex(int& _outMax) override {
+				return GW::GReturn::FAILURE;
+			}
+			GReturn GetNumConnected(int& _outConnectedCount) override {
+				return GW::GReturn::FAILURE;
+			}
+			GReturn SetDeadZone(DeadZoneTypes _type, float _deadzonePercentage) override {
+				return GW::GReturn::FAILURE;
+			}
+			GReturn StartVibration(unsigned int _controllerIndex, float _pan, float _duration, float _strength) override {
+				return GW::GReturn::FAILURE;
+			}
+			GReturn IsVibrating(unsigned int _controllerIndex, bool& _outIsVibrating) override {
+				return GW::GReturn::FAILURE;
+			}
+			GReturn StopVibration(unsigned int _controllerIndex) override {
+				return GW::GReturn::FAILURE;
+			}
+			GReturn StopAllVibrations() override {
+				return GW::GReturn::FAILURE;
+			}
+		};
+	} // end I
+} // end GW
+
+    #elif TARGET_OS_MAC
+        #ifdef __OBJC__
 @import Foundation;
 @import Cocoa;
 @import IOKit.hid;
@@ -37939,7 +42759,7 @@ namespace GW
                 return -1;
             }
 
-            // prehaps make return vaule GRETURN
+            // perhaps make return value GRETURN
             CONTROLLER_STATE* CopyControllerState(const CONTROLLER_STATE* _stateToCopy, CONTROLLER_STATE* _outCopy)
             {
                 if (_stateToCopy->maxInputs == _outCopy->maxInputs)
@@ -38001,11 +42821,11 @@ namespace GW
             virtual void Initialize()
             {
                 mutex.Create();
-                pControllers = new CONTROLLER_STATE[G_MAX_CONTROLLER_INDEX];
+                pControllers = new CONTROLLER_STATE[G_MAX_CONTROLLER_COUNT];
                 deadZoneType = GW::I::GControllerInterface::DeadZoneTypes::DEADZONESQUARE;
                 deadZonePercentage = 0.2f;
 
-                for (unsigned int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+                for (unsigned int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
                 {
                     pControllers[i].isConnected = 0;
                     pControllers[i].isVibrating = 0;
@@ -38036,7 +42856,7 @@ namespace GW
             {
                 isRunning = false;
                 pthread_join(runLoopPthread_ID, NULL);
-                for (int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+                for (int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
                 {
                     delete[] pControllers[i].controllerInputs;
                     delete pControllers[i].vibrationStartTime;
@@ -38046,7 +42866,7 @@ namespace GW
 
             virtual GReturn GetState(unsigned int _controllerIndex, int _inputCode, float& _outState) override
             {
-                if (_controllerIndex >= G_MAX_CONTROLLER_INDEX || _inputCode < 0 || _inputCode >= G_MAX_GENERAL_INPUTS)
+                if (_controllerIndex > G_MAX_CONTROLLER_INDEX || _inputCode < 0 || _inputCode >= G_MAX_GENERAL_INPUTS)
                     return GReturn::INVALID_ARGUMENT;
                 if (pControllers[_controllerIndex].isConnected == 0)
                     return GReturn::FAILURE;
@@ -38058,7 +42878,7 @@ namespace GW
 
             virtual GReturn IsConnected(unsigned int _controllerIndex, bool& _outIsConnected) override
             {
-                if (_controllerIndex >= G_MAX_CONTROLLER_INDEX)
+                if (_controllerIndex > G_MAX_CONTROLLER_INDEX)
                     return GReturn::INVALID_ARGUMENT;
                 LockAsyncRead();
                 _outIsConnected = pControllers[_controllerIndex].isConnected == 0 ? false : true;
@@ -38077,7 +42897,7 @@ namespace GW
             {
                 _outConnectedCount = 0;
                 LockAsyncRead();
-                for (unsigned int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+                for (unsigned int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
                 {
                     if (pControllers[i].isConnected)
                         ++_outConnectedCount;
@@ -38182,7 +43002,7 @@ namespace internal_gw
         GW::I::GControllerInterface::EVENT_DATA eventData;
         int controllerIndex = 0;
         bool controllerFound = false;
-        for (; controllerIndex < G_MAX_CONTROLLER_INDEX; ++controllerIndex)
+        for (; controllerIndex < G_MAX_CONTROLLER_COUNT; ++controllerIndex)
         {
             if (pController->pControllers[controllerIndex].device == (IOHIDDeviceRef)inSender)
             {
@@ -38218,7 +43038,7 @@ namespace internal_gw
             }
             else if (type == kIOHIDElementTypeInput_Misc)
             {
-                // get input code from array then switch base on the code to determine how to proccess it
+                // get input code from array then switch base on the code to determine how to process it
                 switch (inputCode)
                 {
                 case G_LX_AXIS:
@@ -39047,7 +43867,7 @@ namespace internal_gw
         {
             GW::GEvent l_GEvent;
             pController->mutex.LockSyncWrite();
-            int controllerIndex = pController->FindEmptyControllerIndex(G_MAX_CONTROLLER_INDEX, pController->pControllers);
+            int controllerIndex = pController->FindEmptyControllerIndex(G_MAX_CONTROLLER_COUNT, pController->pControllers);
             if (controllerIndex != -1)
             {
                 IOReturn res = IOHIDDeviceOpen(device, kIOHIDOptionsTypeNone);
@@ -39165,7 +43985,7 @@ namespace internal_gw
             GW::GEvent l_GEvent;
             pController->mutex.LockSyncWrite();
             int controllerIndex = 0;
-            for (; controllerIndex < G_MAX_CONTROLLER_INDEX; ++controllerIndex)
+            for (; controllerIndex < G_MAX_CONTROLLER_COUNT; ++controllerIndex)
             {
                 if (device == pController->pControllers[controllerIndex].device)
                 {
@@ -39188,7 +44008,7 @@ namespace internal_gw
         }
     }
 
-    // This Function creates and return an array of dictionarys used to match connected devices
+    // This Function creates and return an array of dictionaries used to match connected devices
     static CFMutableArrayRef CreateHIDManagerCriteria()
     {
         // create a dictionary to add usage page/usages to
@@ -39258,7 +44078,7 @@ namespace internal_gw
         CFTimeInterval timer = 1;
         Boolean runLoopReturn = true;
         // The run loop will exit once a second to check and see if GController is still running
-        // The run loop is used for proccessing the events for the IOHIDManager it work similar to [NSAPP run]
+        // The run loop is used for processing the events for the IOHIDManager it work similar to [NSAPP run]
         GW::I::GGeneralController* pController = selfDataMembers.pController;
         while (pController->isRunning)
             CFRunLoopRunInMode(kCFRunLoopDefaultMode, timer, runLoopReturn);
@@ -39271,6 +44091,7 @@ namespace internal_gw
 
 
 
+    #endif
 #elif defined(__linux__)
     #include <stdio.h>
 #include <stdlib.h>
@@ -39298,7 +44119,7 @@ namespace GW
 			protected GEventGeneratorImplementation
 		{
 		private:
-			GGeneralController* pController; // POLYMORHISM
+			GGeneralController* pController; // POLYMORPHISM
 		public:
 			~GControllerImplementation();
 
@@ -39353,8 +44174,8 @@ namespace GW
 			float deadZonePercentage;
 
 			std::atomic_bool isRunning;
-			GW::SYSTEM::GConcurrent controllerThreads[G_MAX_CONTROLLER_INDEX];
-			std::atomic_bool isControllerThreadActive[G_MAX_CONTROLLER_INDEX];
+			GW::SYSTEM::GConcurrent controllerThreads[G_MAX_CONTROLLER_COUNT];
+			std::atomic_bool isControllerThreadActive[G_MAX_CONTROLLER_COUNT];
 			GW::SYSTEM::GConcurrent notifyThread;
 
 			// This function does not lock before using _controllers
@@ -39420,7 +44241,7 @@ namespace GW
 			// This functions gets an array of bits representing the keys supported for the device and check if BTN_GAMEPAD/BTN_SOUTH is set
 			bool isGamepadBitSet(int _event_fd)
 			{
-				// keys' size is based on how many sets of 64 bits it would take to cover all of the diffrent types of keys where each key is a bit
+				// keys' size is based on how many sets of 64 bits it would take to cover all of the different types of keys where each key is a bit
 				unsigned long keys[(KEY_CNT + 64 - 1) / 64];
 				// EXVIOCGBIT gets the keys supported by the device returned as an array of 64 bits per index
 				// BTN_GAMEPAD represents the bit we want to check so we find where the bit would be located in the array
@@ -39891,7 +44712,7 @@ namespace GW
 				if (close(fd) == -1)
 				{
 					if (errno == EBADF)
-						printf("fd isnt a valid open file descriptor\n");
+						printf("fd isn't a valid open file descriptor\n");
 					else if (errno == EINTR)
 						printf("close call is interrupted by signal\n");
 					else if (errno == EIO)
@@ -39949,7 +44770,7 @@ namespace GW
 											if (isGamepadBitSet(event_fd))
 											{
 												LockSyncWrite();
-												int controllerIndex = FindEmptyControllerIndex(G_MAX_CONTROLLER_INDEX, pControllers);
+												int controllerIndex = FindEmptyControllerIndex(G_MAX_CONTROLLER_COUNT, pControllers);
 												UnlockSyncWrite();
 												if (controllerIndex != -1)
 												{
@@ -39989,7 +44810,7 @@ namespace GW
 							{
 								if (!(iev.mask & IN_ISDIR))
 								{
-									for (int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+									for (int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
 									{
 										if (strncmp(pControllers[i].controllerFilePath, iev.name, 8) == 0)
 										{
@@ -40005,7 +44826,7 @@ namespace GW
 				}
 
 				close(fd);
-				for (int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+				for (int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
 				{
 					if (isControllerThreadActive[i])
 					{
@@ -40022,11 +44843,11 @@ namespace GW
 			{
 				isRunning = true;
 
-				pControllers = new CONTROLLER_STATE[G_MAX_CONTROLLER_INDEX];
+				pControllers = new CONTROLLER_STATE[G_MAX_CONTROLLER_COUNT];
 				deadZoneType = GW::I::GControllerInterface::DeadZoneTypes::DEADZONESQUARE;
 				deadZonePercentage = 0.2f;
 
-				for (unsigned int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+				for (unsigned int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
 				{
 					// Init the bools
 					isControllerThreadActive[i] = false;
@@ -40066,14 +44887,14 @@ namespace GW
 								if (isGamepadBitSet(event_fd))
 								{
 									LockAsyncRead();
-									int controllerIndex = FindEmptyControllerIndex(G_MAX_CONTROLLER_INDEX, pControllers);
+									int controllerIndex = FindEmptyControllerIndex(G_MAX_CONTROLLER_COUNT, pControllers);
 									UnlockAsyncRead();
 									if (controllerIndex != -1)
 									{
 										GW::INPUT::GControllerType controllerID;
 										int codeMapping, axisMapping;
 										GetControllerIDAndMappings(event_fd, controllerID, codeMapping, axisMapping);
-										
+
 										LockSyncWrite();
 										isControllerThreadActive[controllerIndex] = true;
 										for (int i = 0; i < 8; ++i)
@@ -40103,7 +44924,7 @@ namespace GW
 					}
 					closedir(dir);
 				}
-				
+
 				notifyThread.Create(false);
 				notifyThread.BranchSingular(std::bind(&GGeneralController::NotifyThreadEntryPoint, this));
 			}
@@ -40111,18 +44932,18 @@ namespace GW
 			virtual void Release()
 			{
 				isRunning = false;
-				
-				for (int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+
+				for (int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
 					if (isControllerThreadActive[i])
 					{
 						isControllerThreadActive[i] = false;
 						controllerThreads[i].Converge(0);
 						controllerThreads[i] = nullptr;
 					}
-				
+
 				notifyThread.Converge(0);
-				
-				for (int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+
+				for (int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
 				{
 					delete[] pControllers[i].controllerInputs;
 					delete pControllers[i].vibrationStartTime;
@@ -40132,7 +44953,7 @@ namespace GW
 
 			virtual GReturn GetState(unsigned int _controllerIndex, int _inputCode, float& _outState) override
 			{
-				if (_controllerIndex >= G_MAX_CONTROLLER_INDEX || _inputCode < 0 || _inputCode >= G_MAX_GENERAL_INPUTS)
+				if (_controllerIndex > G_MAX_CONTROLLER_INDEX || _inputCode < 0 || _inputCode >= G_MAX_GENERAL_INPUTS)
 					return GReturn::INVALID_ARGUMENT;
 				if (pControllers[_controllerIndex].isConnected == 0)
 					return GReturn::FAILURE;
@@ -40144,7 +44965,7 @@ namespace GW
 
 			virtual GReturn IsConnected(unsigned int _controllerIndex, bool& _outIsConnected) override
 			{
-				if (_controllerIndex >= G_MAX_CONTROLLER_INDEX)
+				if (_controllerIndex > G_MAX_CONTROLLER_INDEX)
 					return GReturn::INVALID_ARGUMENT;
 				LockAsyncRead();
 				_outIsConnected = pControllers[_controllerIndex].isConnected == 0 ? false : true;
@@ -40163,7 +44984,7 @@ namespace GW
 			{
 				_outConnectedCount = 0;
 				LockAsyncRead();
-				for (unsigned int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+				for (unsigned int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
 				{
 					if (pControllers[i].isConnected)
 						++_outConnectedCount;
@@ -40211,7 +45032,7 @@ namespace GW
 		{
 			pController = new GGeneralController();
 			pController->Initialize();
-			
+
 			return GReturn::SUCCESS;
 		}
 		inline GReturn GControllerImplementation::GetState(unsigned int _controllerIndex, int _inputCode, float& _outState) { return pController ? pController->GetState(_controllerIndex, _inputCode, _outState) : GReturn::FAILURE; }
@@ -40232,8 +45053,11 @@ namespace GW
 	} // end I namespace
 } // end GW namespace
 
+
 #elif defined(_WIN32)
-    #include <cmath>
+    #include <winapifamily.h>
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #include <cmath>
 #include <chrono>
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -40307,7 +45131,7 @@ namespace GW
 				return -1;
 			}
 
-			// prehaps make return vaule GRETURN
+			// perhaps make return value GRETURN
 			CONTROLLER_STATE* CopyControllerState(const CONTROLLER_STATE* _stateToCopy, CONTROLLER_STATE* _outCopy) const
 			{
 				if (_stateToCopy->maxInputs == _outCopy->maxInputs)
@@ -40361,11 +45185,11 @@ namespace GW
 
 			virtual void Initialize()
 			{
-				pControllers = new CONTROLLER_STATE[G_MAX_CONTROLLER_INDEX];
+				pControllers = new CONTROLLER_STATE[G_MAX_CONTROLLER_COUNT];
 				deadZoneType = GW::I::GControllerInterface::DeadZoneTypes::DEADZONESQUARE;
 				deadZonePercentage = 0.2f;
 
-				for (unsigned int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+				for (unsigned int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
 				{
 					pControllers[i].isConnected = 0;
 					pControllers[i].isVibrating = 0;
@@ -40382,7 +45206,7 @@ namespace GW
 
 			virtual void Release()
 			{
-				for (int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+				for (int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
 				{
 					delete[] pControllers[i].controllerInputs;
 					delete pControllers[i].vibrationStartTime;
@@ -40392,7 +45216,7 @@ namespace GW
 
 			virtual GReturn GetState(unsigned int _controllerIndex, int _inputCode, float& _outState) override
 			{
-				if (_controllerIndex >= G_MAX_CONTROLLER_INDEX || _inputCode < 0 || _inputCode >= G_MAX_GENERAL_INPUTS)
+				if (_controllerIndex > G_MAX_CONTROLLER_INDEX || _inputCode < 0 || _inputCode >= G_MAX_GENERAL_INPUTS)
 					return GReturn::INVALID_ARGUMENT;
 
 				LockAsyncRead();
@@ -40410,7 +45234,7 @@ namespace GW
 
 			virtual GReturn IsConnected(unsigned int _controllerIndex, bool& _outIsConnected) override
 			{
-				if (_controllerIndex >= G_MAX_CONTROLLER_INDEX)
+				if (_controllerIndex > G_MAX_CONTROLLER_INDEX)
 					return GReturn::INVALID_ARGUMENT;
 				LockAsyncRead();
 				_outIsConnected = pControllers[_controllerIndex].isConnected == 0 ? false : true;
@@ -40429,7 +45253,7 @@ namespace GW
 			{
 				_outConnectedCount = 0;
 				LockAsyncRead();
-				for (unsigned int i = 0; i < G_MAX_CONTROLLER_INDEX; ++i)
+				for (unsigned int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
 				{
 					if (pControllers[i].isConnected)
 						++_outConnectedCount;
@@ -40534,10 +45358,10 @@ namespace GW
 
 			virtual void Initialize()
 			{
-				pControllers = new CONTROLLER_STATE[G_MAX_XBOX_CONTROLLER_INDEX];
+				pControllers = new CONTROLLER_STATE[G_MAX_XBOX_CONTROLLER_COUNT];
 				deadZoneType = GW::I::GControllerInterface::DeadZoneTypes::DEADZONESQUARE;
 				deadZonePercentage = 0.2f;
-				for (unsigned int i = 0; i < G_MAX_XBOX_CONTROLLER_INDEX; ++i)
+				for (unsigned int i = 0; i < G_MAX_XBOX_CONTROLLER_COUNT; ++i)
 				{
 					pControllers[i].isConnected = 0;
 					pControllers[i].isVibrating = 0;
@@ -40546,21 +45370,23 @@ namespace GW
 					pControllers[i].maxInputs = G_MAX_XBOX_INPUTS;
 					pControllers[i].controllerInputs = new float[G_MAX_XBOX_INPUTS];
 				}
-				// Event callback for xinput
-				xinputDaemon.Create(G_CONTROLLER_DAEMON_OPERATION_INTERVAL, [&]()
+
+				// Seperating the main code into this lambda
+				auto updateControllerState = [&]
 				{
 					/* --- NOTE ---
-					 * pControllers:
-					 *      Locked when being read or written to because it can be read and written to outside
-					 *      of this function. All other function should lock when reading or writing to it.
-					 * XControllerSlotIndices:
-					 *      Only Locked whenever written to because it is only written to inside of this function. 
-					 *      All other functions should lock before reading this array while xinputDaemon is running.
-					 * All other member variables are not used outside of this function. Therefore, they don't need locks.
-					 */
-					CoInitialize(nullptr); // place this thread in COM single threaded appartment
+					* pControllers:
+					*      Locked when being read or written to because it can be read and written to outside
+					*      of this function. All other function should lock when reading or writing to it.
+					* XControllerSlotIndices:
+					*      Only Locked whenever written to because it is only written to inside of this function.
+					*      All other functions should lock before reading this array while xinputDaemon is running.
+					* All other member variables are not used outside of this function. Therefore, they don't need locks.
+					*/
+					CoInitialize(nullptr); // place this thread in COM single threaded apartment
+
 					GW::GEvent m_GEvent;
-					for (int i = 0; i < G_MAX_XBOX_CONTROLLER_INDEX; ++i)
+					for (int i = 0; i < G_MAX_XBOX_CONTROLLER_COUNT; ++i)
 					{
 						daemonData.result = XInputGetState(i, &daemonData.controllerState);
 						if (daemonData.result == ERROR_SUCCESS)
@@ -40568,7 +45394,7 @@ namespace GW
 							if (XControllerSlotIndices[i] < 0)
 							{
 								LockSyncWrite();
-								XControllerSlotIndices[i] = FindEmptyControllerIndex(G_MAX_XBOX_CONTROLLER_INDEX, pControllers);
+								XControllerSlotIndices[i] = FindEmptyControllerIndex(G_MAX_XBOX_CONTROLLER_COUNT, pControllers);
 								pControllers[XControllerSlotIndices[i]].isConnected = 1;
 								UnlockSyncWrite();
 
@@ -40895,14 +45721,20 @@ namespace GW
 						}
 						UnlockAsyncRead();
 					}
-				});
+				};
+
+				// Event callback for xinput
+				xinputDaemon.Create(G_CONTROLLER_DAEMON_OPERATION_INTERVAL, updateControllerState);
+
+				// Call updateControllerState() here to force the update to happen before the event callback is called
+				updateControllerState();
 			}
 
 			virtual void Release()
 			{
 				xinputDaemon = nullptr; // Stop the input thread.
 
-				for (int i = 0; i < G_MAX_XBOX_CONTROLLER_INDEX; ++i)
+				for (int i = 0; i < G_MAX_XBOX_CONTROLLER_COUNT; ++i)
 				{
 					delete[] pControllers[i].controllerInputs;
 					delete pControllers[i].vibrationStartTime;
@@ -40912,7 +45744,7 @@ namespace GW
 
 			GReturn GetState(unsigned int _controllerIndex, int _inputCode, float& _outState) override final
 			{
-				if (_controllerIndex >= G_MAX_XBOX_CONTROLLER_INDEX || _inputCode < 0 || _inputCode  > 19)
+				if (_controllerIndex > G_MAX_XBOX_CONTROLLER_INDEX || _inputCode < 0 || _inputCode  > 19)
 					return GReturn::INVALID_ARGUMENT;
 
 				LockAsyncRead();
@@ -40930,7 +45762,7 @@ namespace GW
 
 			GReturn IsConnected(unsigned int _controllerIndex, bool& _outIsConnected) override final
 			{
-				if (_controllerIndex >= G_MAX_XBOX_CONTROLLER_INDEX)
+				if (_controllerIndex > G_MAX_XBOX_CONTROLLER_INDEX)
 					return GReturn::INVALID_ARGUMENT;
 				LockAsyncRead();
 				_outIsConnected = pControllers[_controllerIndex].isConnected == 0 ? false : true;
@@ -40948,7 +45780,7 @@ namespace GW
 			{
 				_outConnectedCount = 0;
 				LockAsyncRead();
-				for (unsigned int i = 0; i < G_MAX_XBOX_CONTROLLER_INDEX; ++i)
+				for (unsigned int i = 0; i < G_MAX_XBOX_CONTROLLER_COUNT; ++i)
 				{
 					if (pControllers[i].isConnected)
 						++_outConnectedCount;
@@ -41043,7 +45875,7 @@ namespace GW
 				vibrationState.wRightMotorSpeed = 0;
 
 				LockSyncWrite();
-				for (int i = 0; i < G_MAX_XBOX_CONTROLLER_INDEX; ++i)
+				for (int i = 0; i < G_MAX_XBOX_CONTROLLER_COUNT; ++i)
 				{
 					if (pControllers[i].isVibrating)
 					{
@@ -41093,7 +45925,1730 @@ namespace GW
 	} // end I namespace
 } // end GW namespace
 
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        #include <cmath>
+#include <chrono>
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#ifndef GCONTROLLERTABLEROUTING_HPP
+#define GCONTROLLERTABLEROUTING_HPP
+
+
+#define G_MAX_CONTROLLER_COUNT 16
+#define G_MAX_XBOX_CONTROLLER_COUNT 4
+#define G_MAX_XBOX_CONTROLLER_COUNT_XBOXONE 8
+#define G_MAX_CONTROLLER_INDEX (G_MAX_CONTROLLER_COUNT - 1)
+#define G_MAX_XBOX_CONTROLLER_INDEX (G_MAX_XBOX_CONTROLLER_COUNT - 1)
+#define G_MAX_XBOX_CONTROLLER_INDEX_XBOXONE (G_MAX_XBOX_CONTROLLER_COUNT_XBOXONE - 1)
+#define G_MAX_GENERAL_INPUTS 20
+#define G_MAX_XBOX_INPUTS 20
+#define G_MAX_PS4_INPUTS 20
+#define G_MAX_XBOX_THUMB_AXIS 32768
+#define G_MIN_XBOX_THUMB_AXIS -32768
+#define G_MAX_XBOX_TRIGGER_AXIS 255
+#define G_XINPUT_MAX_VIBRATION 65535
+#define G_MAX_LINUX_THUMB_AXIS 32768
+#define G_MAX_GENERAL_TRIGGER_AXIS 255
+#define G_GENERAL_TRIGGER_THRESHOLD 51
+
+#define G_MAX_AXIS 0
+#define G_MIN_AXIS 1
+
+#define G_SONY_VENDOR_ID 0x054C
+#define G_MICROSOFT_VENDOR_ID 0x045E
+
+#define G_CODE_MAPPING_GENERAL 0
+#define G_CODE_MAPPING_PS4_WIRED 1
+#define G_CODE_MAPPING_PS4_WIRELESS 1
+#define G_CODE_MAPPING_XBOX360 0
+#define G_CODE_MAPPING_XBOXONE_WIRED 0
+#define G_CODE_MAPPING_XBOXONE_WIRELESS 2
+
+#define G_MAC_AXIS_MAPPING_GENERAL 0
+#define G_MAC_AXIS_MAPPING_PS4_WIRED 2
+#define G_MAC_AXIS_MAPPING_PS4_WIRELESS 0
+#define G_MAC_AXIS_MAPPING_XBOX360 1
+#define G_MAC_AXIS_MAPPING_XBOXONE_WIRED 1
+#define G_MAC_AXIS_MAPPING_XBOXONE_WIRELESS 3
+
+#define G_LINUX_AXIS_MAPPING_GENERAL 0
+#define G_LINUX_AXIS_MAPPING_PS4_WIRED 0
+#define G_LINUX_AXIS_MAPPING_PS4_WIRELESS 0
+#define G_LINUX_AXIS_MAPPING_XBOX360 1
+#define G_LINUX_AXIS_MAPPING_XBOXONE_WIRED 3
+#define G_LINUX_AXIS_MAPPING_XBOXONE_WIRELESS 2
+
+namespace GW
+{
+	namespace I
+	{
+		// Routes GController inputs (defined in GInputDefines.h) to the corresponding column in ControllerAxisRangesMin/Max tables.
+		constexpr int ControllerAxisOffsets[] =
+		{
+			-1, // 0
+			-1, // 1
+			-1, // 2
+			-1, // 3
+			-1, // 4
+			-1, // 5
+			 0, // 6 G_LEFT_TRIGGER_AXIS
+			 1, // 7 G_RIGHT_TRIGGER_AXIS
+			-1, // 8
+			-1, // 9
+			-1, // 10
+			-1, // 11
+			-1, // 12
+			-1, // 13
+			-1, // 14
+			-1, // 15
+			 2, // 16 G_LX_AXIS
+			 3, // 17 G_LY_AXIS
+			 4, // 18 G_RX_AXIS
+			 5  // 19 G_RY_AXIS
+		};
+
+
+		// Mac tables
+
+		constexpr float Mac_ControllerAxisRangesMax[][6] =
+		{
+			//G_LEFT_TRIGGER_AXIS   G_RIGHT_TRIGGER_AXIS   G_LX_AXIS   G_LY_AXIS   G_RX_AXIS   G_RY_AXIS
+			{ 255.0f,               255.0f,                255.0f,     255.0f,     255.0f,     255.0f    }, // General & PS4 Wireless
+			{ 255.0f,               255.0f,                32767.0f,   32767.0f,   32767.0f,   32767.0f  }, // Xbox 360 & Xbox One Wired
+			{ 315.0f,               315.0f,                255.0f,     255.0f,     255.0f,     255.0f    }, // PS4 Wired
+			{ 1023.0,               1023.0,                65535.0f,   65535.0f,   65535.0f,   65535.0f  }, // Xbox One Wireless
+		};
+
+		constexpr float Mac_ControllerAxisRangesMin[][6] =
+		{
+			//G_LEFT_TRIGGER_AXIS   G_RIGHT_TRIGGER_AXIS   G_LX_AXIS   G_LY_AXIS   G_RX_AXIS   G_RY_AXIS
+			{ 0.0f,                 0.0f,                  0.0f,       0.0f,       0.0f,       0.0f      }, // General & PS4 Wireless
+			{ 255.0f,               255.0f,                -32768.0f,  -32768.0f,  -32768.0f,  -32768.0f }, // Xbox 360 & Xbox One Wired
+			{ 0.0f,                 0.0f,                  0.0f,       0.0f,       0.0f,       0.0f      }, // PS4 Wired
+			{ 0.0f,                 0.0f,                  0.0f,       0.0f,       0.0f,       0.0f      }, // Xbox One Wireless
+		};
+
+		// Routes usage codes (defined in IOHIDUsageTables.h on Mac) to GController input.
+		constexpr unsigned int Mac_ControllerCodes[][3] =
+		{
+			//General, Xbox 360 & Xbox One Wired      PS4                    Xbox One Wireless
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 0
+			{ G_SOUTH_BTN,                            G_WEST_BTN,            G_SOUTH_BTN            }, // 1
+			{ G_EAST_BTN,                             G_SOUTH_BTN,           G_EAST_BTN             }, // 2
+			{ G_WEST_BTN,                             G_EAST_BTN,            G_UNKNOWN_INPUT        }, // 3
+			{ G_NORTH_BTN,                            G_NORTH_BTN,           G_WEST_BTN             }, // 4
+			{ G_LEFT_SHOULDER_BTN,                    G_LEFT_SHOULDER_BTN,   G_NORTH_BTN            }, // 5
+			{ G_RIGHT_SHOULDER_BTN,                   G_RIGHT_SHOULDER_BTN,  G_UNKNOWN_INPUT        }, // 6
+			{ G_LEFT_THUMB_BTN,                       G_UNKNOWN_INPUT,       G_LEFT_SHOULDER_BTN    }, // 7
+			{ G_RIGHT_THUMB_BTN,                      G_UNKNOWN_INPUT,       G_RIGHT_SHOULDER_BTN   }, // 8
+			{ G_START_BTN,                            G_SELECT_BTN,          G_UNKNOWN_INPUT        }, // 9
+			{ G_SELECT_BTN,                           G_START_BTN,           G_UNKNOWN_INPUT        }, // 10
+			{ G_UNKNOWN_INPUT,                        G_LEFT_THUMB_BTN,      G_UNKNOWN_INPUT        }, // 11
+			{ G_DPAD_UP_BTN,                          G_RIGHT_THUMB_BTN,     G_START_BTN            }, // 12
+			{ G_DPAD_DOWN_BTN,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 13
+			{ G_DPAD_LEFT_BTN,                        G_UNKNOWN_INPUT,       G_LEFT_THUMB_BTN       }, // 14
+			{ G_DPAD_RIGHT_BTN,                       G_UNKNOWN_INPUT,       G_RIGHT_THUMB_BTN      }, // 15
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 16
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 17
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 18
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 19
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 20
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 21
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 22
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 23
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 24
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 25
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 26
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 27
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 28
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 29
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 30
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 31
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 32
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 33
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 34
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 35
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 36
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 37
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 38
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 39
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 40
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 41
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 42
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 43
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 44
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 45
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 46
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 47
+			{ G_LX_AXIS,                              G_LX_AXIS,             G_LX_AXIS              }, // 48
+			{ G_LY_AXIS,                              G_LY_AXIS,             G_LY_AXIS              }, // 49
+			{ G_LEFT_TRIGGER_AXIS,                    G_RX_AXIS,             G_RX_AXIS              }, // 50
+			{ G_RX_AXIS,                              G_LEFT_TRIGGER_AXIS,   G_UNKNOWN_INPUT        }, // 51
+			{ G_RY_AXIS,                              G_RIGHT_TRIGGER_AXIS,  G_UNKNOWN_INPUT        }, // 52
+			{ G_RIGHT_TRIGGER_AXIS,                   G_RY_AXIS,             G_RY_AXIS              }, // 53
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 54
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 55
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 56
+			{ G_UNKNOWN_INPUT,                        G_DPAD_LEFT_BTN,       G_DPAD_LEFT_BTN        }, // 57 /* Dpad value reported as 0-360, 0-8, or 0-315 & -45 */
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 58
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 59
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 60
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 61
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 62
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 63
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 64
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 65
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 66
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 67
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 68
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 69
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 70
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 71
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 72
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 73
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 74
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 75
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 76
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 77
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 78
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 79
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 80
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 81
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 82
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 83
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 84
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 85
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 86
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 87
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 88
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 89
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 90
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 91
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 92
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 93
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 94
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 95
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 96
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 97
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 98
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 99
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 100
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 101
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 102
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 103
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 104
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 105
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 106
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 107
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 108
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 109
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 110
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 111
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 112
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 113
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 114
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 115
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 116
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 117
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 118
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 119
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 120
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 121
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 122
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 123
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 124
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 125
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 126
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 127
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 128
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 129
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 130
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 131
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 132
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 133
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 134
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 135
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 136
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 137
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 138
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 139
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 140
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 141
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 142
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 143
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 144
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 145
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 146
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 147
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 148
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 149
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 150
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 151
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 152
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 153
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 154
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 155
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 156
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 157
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 158
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 159
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 160
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 161
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 162
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 163
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 164
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 165
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 166
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 167
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 168
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 169
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 170
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 171
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 172
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 173
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 174
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 175
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 176
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 177
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 178
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 179
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 180
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 181
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 182
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 183
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 184
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 185
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 186
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 187
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 188
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 189
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 190
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 191
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 192
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 193
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 194
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 195
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_RIGHT_TRIGGER_AXIS   }, // 196
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_LEFT_TRIGGER_AXIS    }, // 197
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 198
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 199
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 200
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 201
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 202
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 203
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 204
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 205
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 206
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 207
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 208
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 209
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 210
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 211
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 212
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 213
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 214
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 215
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 216
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 217
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 218
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 219
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 220
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 221
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 222
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 223
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 224
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 225
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 226
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 227
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 228
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 229
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 230
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 231
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 232
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 233
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 234
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 235
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 236
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 237
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 238
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 239
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 240
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 241
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 242
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 243
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 244
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 245
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 246
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 247
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 248
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 249
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 250
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 251
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 252
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 253
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 254
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 255
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 256
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 257
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 258
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 259
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 260
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 261
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 262
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 263
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 264
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 265
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 266
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 267
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 268
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 269
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 270
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 271
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 272
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 273
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 274
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 275
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 276
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 277
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 278
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 279
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 280
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 281
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 282
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 283
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 284
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 285
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 286
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 287
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 288
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 289
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 290
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 291
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 292
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 293
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 294
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 295
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 296
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 297
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 298
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 299
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 300
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 301
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 302
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 303
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 304
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 305
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 306
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 307
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 308
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 309
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 310
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 311
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 312
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 313
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 314
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 315
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 316
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 317
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 318
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 319
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 320
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 321
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 322
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 323
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 324
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 325
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 326
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 327
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 328
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 329
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 330
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 331
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 332
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 333
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 334
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 335
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 336
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 337
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 338
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 339
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 340
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 341
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 342
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 343
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 344
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 345
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 346
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 347
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 348
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 349
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 350
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 351
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 352
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 353
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 354
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 355
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 356
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 357
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 358
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 359
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 360
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 361
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 362
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 363
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 364
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 365
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 366
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 367
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 368
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 369
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 370
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 371
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 372
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 373
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 374
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 375
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 376
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 377
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 378
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 379
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 380
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 381
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 382
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 383
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 384
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 385
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 386
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 387
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 388
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 389
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 390
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 391
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 392
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 393
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 394
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 395
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 396
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 397
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 398
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 399
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 400
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 401
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 402
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 403
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 404
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 405
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 406
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 407
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 408
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 409
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 410
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 411
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 412
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 413
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 414
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 415
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 416
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 417
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 418
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 419
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 420
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 421
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 422
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 423
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 424
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 425
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 426
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 427
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 428
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 429
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 430
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 431
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 432
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 433
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 434
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 435
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 436
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 437
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 438
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 439
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 440
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 441
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 442
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 443
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 444
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 445
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 446
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 447
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 448
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 449
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 450
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 451
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 452
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 453
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 454
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 455
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 456
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 457
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 458
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 459
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 460
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 461
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 462
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 463
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 464
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 465
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 466
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 467
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 468
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 469
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 470
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 471
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 472
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 473
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 474
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 475
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 476
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 477
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 478
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 479
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 480
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 481
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 482
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 483
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 484
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 485
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 486
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 487
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 488
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 489
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 490
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 491
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 492
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 493
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 494
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 495
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 496
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 497
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 498
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 499
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 500
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 501
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 502
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 503
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 504
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 505
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 506
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 507
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 508
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 509
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 510
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 511
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 512
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 513
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 514
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 515
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 516
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 517
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 518
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 519
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 520
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 521
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 522
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 523
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 524
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 525
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 526
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 527
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 528
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 529
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 530
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 531
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 532
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 533
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 534
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 535
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 536
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 537
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 538
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 539
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 540
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 541
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 542
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 543
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 544
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 545
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 546
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT        }, // 547
+			{ G_UNKNOWN_INPUT,                        G_UNKNOWN_INPUT,       G_SELECT_BTN           }, // 548
+		};
+
+
+		// Linux tables
+
+		constexpr float Linux_ControllerAxisRangesMax[][6] =
+		{
+			//G_LEFT_TRIGGER_AXIS   G_RIGHT_TRIGGER_AXIS   G_LX_AXIS   G_LY_AXIS   G_RX_AXIS   G_RY_AXIS
+			{ 255.0f,               255.0f,                255.0f,     255.0f,     255.0f,     255.0f    }, // General, PS4 Wired & PS4 Wireless
+			{ 255.0f,               255.0f,                32767.0f,   32767.0f,   32767.0f,   32767.0f  }, // Xbox 360
+			{ 1023.0,               1023.0,                65535.0f,   65535.0f,   65535.0f,   65535.0f  }, // Xbox One Wireless
+			{ 1023.0,               1023.0,                32767.0f,   32767.0f,   32767.0f,   32767.0f  }, // Xbox One Wired
+		};
+
+		constexpr float Linux_ControllerAxisRangesMin[][6] =
+		{
+			//G_LEFT_TRIGGER_AXIS   G_RIGHT_TRIGGER_AXIS   G_LX_AXIS   G_LY_AXIS   G_RX_AXIS   G_RY_AXIS
+			{ 0.0f,                 0.0f,                  0.0f,       0.0f,       0.0f,       0.0f      }, // General, PS4 Wired & PS4 Wireless
+			{ 255.0f,               255.0f,                -32768.0f,  -32768.0f,  -32768.0f,  -32768.0f }, // Xbox 360 & Xbox One Wired
+			{ 0.0f,                 0.0f,                  0.0f,       0.0f,       0.0f,       0.0f      }, // Xbox One Wireless
+			{ 0.0f,                 0.0f,                  -32768.0f,  -32768.0f,  -32768.0f,  -32768.0f }, // Xbox One Wired
+		};
+
+		// Routes input_event codes (defined in input-event-codes.h on Linux) for different axes to GController axis input (defined in GInputDefines.h)
+		constexpr unsigned int Linux_ControllerAxisCodes[][3] =
+		{
+			//General, Xbox 360 & Xbox One Wired    PS4                    Xbox One Wireless
+			{ G_LX_AXIS,                            G_LX_AXIS,             G_LX_AXIS            }, // 0	ABS_X
+			{ G_LY_AXIS,                            G_LY_AXIS,             G_LY_AXIS            }, // 1 ABS_Y
+			{ G_LEFT_TRIGGER_AXIS,                  G_LEFT_TRIGGER_AXIS,   G_RX_AXIS            }, // 2 ABS_Z
+			{ G_RX_AXIS,                            G_RX_AXIS,             G_UNKNOWN_INPUT      }, // 3 ABS_RX
+			{ G_RY_AXIS,                            G_RY_AXIS,             G_UNKNOWN_INPUT      }, // 4 ABS_RY
+			{ G_RIGHT_TRIGGER_AXIS,                 G_RIGHT_TRIGGER_AXIS,  G_RY_AXIS            }, // 5 ABS_RZ
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT      }, // 6 ABS_THROTTLE
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT      }, // 7 ABS_RUDDER
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT      }, // 8 ABS_WHEEL
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_RIGHT_TRIGGER_AXIS }, // 9 ABS_GAS
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_LEFT_TRIGGER_AXIS  }, // 10 ABS_BRAKE
+		};
+
+		// Routes input_event codes (from KEY_BACK to BTN_THUMBR) to GController button input.
+		constexpr unsigned int Linux_ControllerCodes[][3] =
+		{
+			//General, Xbox 360 & Xbox One Wired    PS4                    Xbox One Wireless
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_SELECT_BTN             }, // 0
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 1
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 2
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 3
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 4
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 5
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 6
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 7
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 8
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 9
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 10
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 11
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 12
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 13
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 14
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 15
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 16
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 17
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 18
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 19
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 20
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 21
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 22
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 23
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 24
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 25
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 26
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 27
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 28
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 29
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 30
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 31
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 32
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 33
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 34
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 35
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 36
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 37
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 38
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 39
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 40
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 41
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 42
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 43
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 44
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 45
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 46
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 47
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 48
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 49
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 50
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 51
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 52
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 53
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 54
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 55
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 56
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 57
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 58
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 59
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 60
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 61
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 62
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 63
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 64
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 65
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 66
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 67
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 68
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 69
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 70
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 71
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 72
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 73
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 74
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 75
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 76
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 77
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 78
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 79
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 80
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 81
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 82
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 83
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 84
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 85
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 86
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 87
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 88
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 89
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 90
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 91
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 92
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 93
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 94
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 95
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 96
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 97
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 98
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 99
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 100
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 101
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 102
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 103
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 104
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 105
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 106
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 107
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 108
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 109
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 110
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 111
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 112
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 113
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 114
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 115
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 116
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 117
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 118
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 119
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 120
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 121
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 122
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 123
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 124
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 125
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 126
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 127
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 128
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 129
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 130
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 131
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 132
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 133
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 134
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 135
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 136
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 137
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 138
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 139
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 140
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 141
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 142
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 143
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 144
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 145
+			{ G_SOUTH_BTN,                          G_SOUTH_BTN,           G_SOUTH_BTN              }, // 146
+			{ G_EAST_BTN,                           G_EAST_BTN,            G_EAST_BTN               }, // 147
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 148
+			{ G_WEST_BTN,                           G_NORTH_BTN,           G_WEST_BTN               }, // 149
+			{ G_NORTH_BTN,                          G_WEST_BTN,            G_NORTH_BTN              }, // 150
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 151
+			{ G_LEFT_SHOULDER_BTN,                  G_LEFT_SHOULDER_BTN,   G_LEFT_SHOULDER_BTN      }, // 152
+			{ G_RIGHT_SHOULDER_BTN,                 G_RIGHT_SHOULDER_BTN,  G_RIGHT_SHOULDER_BTN     }, // 153
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 154
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 155
+			{ G_SELECT_BTN,                         G_SELECT_BTN,          G_UNKNOWN_INPUT          }, // 156
+			{ G_START_BTN,                          G_START_BTN,           G_START_BTN              }, // 157
+			{ G_UNKNOWN_INPUT,                      G_UNKNOWN_INPUT,       G_UNKNOWN_INPUT          }, // 158
+			{ G_LEFT_THUMB_BTN,                     G_LEFT_THUMB_BTN,      G_LEFT_THUMB_BTN         }, // 159
+			{ G_RIGHT_THUMB_BTN,                    G_RIGHT_THUMB_BTN,     G_RIGHT_THUMB_BTN        }, // 160
+		};
+	}
+}
 #endif
+
+
+
+
+#include "winrt/Windows.Foundation.Collections.h"	// This file might be an external library file that is not part of Gateware!
+#include "winrt/Windows.Gaming.Input.h"	// This file might be an external library file that is not part of Gateware!
+#include <roapi.h>
+
+namespace GW
+{
+	namespace I
+	{
+		class GGeneralController; // Interface which all controller will inherit from
+		class GXboxController; // xbox
+		// class GPS4Controller; // Not supported yet! future devs, this is for you :)
+
+		class GControllerImplementation : public virtual GControllerInterface,
+			protected GEventGeneratorImplementation
+		{
+		private:
+			GGeneralController* pController; // POLYMORPHISM lol
+		public:
+			~GControllerImplementation();
+
+			GReturn Create();
+
+			GReturn GetState(unsigned int _controllerIndex, int _inputCode, float& _outState) override;
+			GReturn IsConnected(unsigned int _controllerIndex, bool& _outIsConnected) override;
+			GReturn GetMaxIndex(int& _outMax) override;
+			GReturn GetNumConnected(int& _outConnectedCount) override;
+			GReturn SetDeadZone(DeadZoneTypes _type, float _deadzonePercentage) override;
+			GReturn StartVibration(unsigned int _controllerIndex, float _pan, float _duration, float _strength) override;
+			GReturn IsVibrating(unsigned int _controllerIndex, bool& _outIsVibrating) override;
+			GReturn StopVibration(unsigned int _controllerIndex) override;
+			GReturn StopAllVibrations() override;
+
+			GReturn Register(CORE::GInterface _observer, void(*_callback)(const GEvent&, CORE::GInterface&)) override;
+			GReturn Observers(unsigned int& _outCount) const override;
+			GReturn Push(const GEvent& _newEvent) override;
+		};
+
+		class GGeneralController : public GControllerInterface,
+			protected GEventGeneratorImplementation
+		{
+		protected:
+			struct CONTROLLER_STATE
+			{
+				int isConnected;
+				int isVibrating;
+				float vibrationDuration;
+				std::chrono::high_resolution_clock::time_point* vibrationStartTime;
+				int maxInputs; // Hold the size of controllerInputs array
+				float* controllerInputs; // controllerInputs is used to hold an array for the input values of the controller
+				GW::INPUT::GControllerType controllerID;
+			} *pControllers;
+
+			GW::INPUT::GControllerType controllerType;
+			GW::I::GControllerInterface::DeadZoneTypes deadZoneType;
+			//winrt::Windows::Gaming::Input::RawGameController:: lastReading[4];
+			float deadZonePercentage;
+			int numConnected;
+
+			// This function does not lock before using _controllers
+			unsigned int FindEmptyControllerIndex(unsigned int _maxIndex, const CONTROLLER_STATE* _controllers)
+			{
+				for (unsigned int i = 0; i < _maxIndex; ++i)
+				{
+					if (_controllers[i].isConnected == 0)
+						return i;
+				}
+				return -1;
+			}
+
+			// perhaps make return value GRETURN
+			CONTROLLER_STATE* CopyControllerState(const CONTROLLER_STATE* _stateToCopy, CONTROLLER_STATE* _outCopy)
+			{
+				if (_stateToCopy->maxInputs == _outCopy->maxInputs)
+					for (int i = 0; i < _outCopy->maxInputs; ++i)
+					{
+						_outCopy->controllerInputs[i] = _stateToCopy->controllerInputs[i];
+					}
+				else
+					_outCopy = nullptr;
+
+				return _outCopy;
+			}
+
+			void DeadZoneCalculation(float _x, float _y, float _axisMax, float _axisMin, float& _outX, float& _outY, GW::I::GControllerInterface::DeadZoneTypes _deadzoneType, float _deadzonePercentage)
+			{
+				float range = _axisMax - _axisMin;
+				_outX = (((_x - _axisMin) * 2) / range) - 1;
+				_outY = (((_y - _axisMin) * 2) / range) - 1;
+				float liveRange = 1.0f - _deadzonePercentage;
+				if (_deadzoneType == GW::I::GControllerInterface::DeadZoneTypes::DEADZONESQUARE)
+				{
+					if (std::abs(_outX) <= _deadzonePercentage)
+						_outX = 0.0f;
+					if (std::abs(_outY) <= _deadzonePercentage)
+						_outY = 0.0f;
+
+					if (_outX > 0.0f)
+						_outX = (_outX - _deadzonePercentage) / liveRange;
+					else if (_outX < 0.0f)
+						_outX = (_outX + _deadzonePercentage) / liveRange;
+					if (_outY > 0.0f)
+						_outY = (_outY - _deadzonePercentage) / liveRange;
+					else if (_outY < 0.0f)
+						_outY = (_outY + _deadzonePercentage) / liveRange;
+				}
+				else
+				{
+					float mag = std::sqrt(_outX * _outX + _outY * _outY);
+					mag = (mag - _deadzonePercentage) / liveRange;
+					_outX *= mag;
+					_outY *= mag;
+
+					if (std::abs(_outX) <= _deadzonePercentage)
+						_outX = 0.0f;
+					if (std::abs(_outY) <= _deadzonePercentage)
+						_outY = 0.0f;
+				}
+			}
+		public:
+			GGeneralController()
+			{
+				
+			}
+
+			virtual void Initialize()
+			{
+				pControllers = new CONTROLLER_STATE[G_MAX_CONTROLLER_COUNT];
+				deadZoneType = GW::I::GControllerInterface::DeadZoneTypes::DEADZONESQUARE;
+				deadZonePercentage = 0.2f;
+
+				for (unsigned int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
+				{
+					pControllers[i].isConnected = 0;
+					pControllers[i].isVibrating = 0;
+					pControllers[i].vibrationDuration = 0;
+					pControllers[i].vibrationStartTime = new std::chrono::high_resolution_clock::time_point();
+					pControllers[i].maxInputs = G_MAX_GENERAL_INPUTS;
+					pControllers[i].controllerInputs = new float[G_MAX_GENERAL_INPUTS];
+					for (unsigned int j = 0; j < G_MAX_GENERAL_INPUTS; ++j)
+					{
+						pControllers[i].controllerInputs[j] = 0.0f;
+					}
+				}
+			}
+
+			virtual void Release()
+			{
+				for (int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
+				{
+					delete[] pControllers[i].controllerInputs;
+					delete pControllers[i].vibrationStartTime;
+				}
+				delete[] pControllers;
+			}
+
+			virtual GReturn GetState(unsigned int _controllerIndex, int _inputCode, float& _outState) override
+			{
+				if (_controllerIndex < 0 || _controllerIndex > G_MAX_CONTROLLER_INDEX || _inputCode < 0 || _inputCode >= G_MAX_GENERAL_INPUTS)
+					return GReturn::INVALID_ARGUMENT;
+				if (pControllers[_controllerIndex].isConnected == 0)
+					return GReturn::FAILURE;
+				LockAsyncRead();
+				_outState = pControllers[_controllerIndex].controllerInputs[(_inputCode)];
+				UnlockAsyncRead();
+				return GReturn::SUCCESS;
+			}
+
+			virtual GReturn IsConnected(unsigned int _controllerIndex, bool& _outIsConnected) override
+			{
+				if (_controllerIndex < 0 || _controllerIndex > G_MAX_CONTROLLER_INDEX)
+					return GReturn::INVALID_ARGUMENT;
+				LockAsyncRead();
+				_outIsConnected = pControllers[_controllerIndex].isConnected == 0 ? false : true;
+				UnlockAsyncRead();
+
+				return GReturn::SUCCESS;
+			}
+
+			virtual GReturn GetMaxIndex(int& _outMax) override
+			{
+				_outMax = G_MAX_CONTROLLER_INDEX;
+				return GReturn::SUCCESS;
+			}
+
+			virtual GReturn GetNumConnected(int& _outConnectedCount) override
+			{
+				_outConnectedCount = 0;
+				LockAsyncRead();
+				for (unsigned int i = 0; i < G_MAX_CONTROLLER_COUNT; ++i)
+				{
+					if (pControllers[i].isConnected)
+						++_outConnectedCount;
+				}
+				UnlockAsyncRead();
+				return GReturn::SUCCESS;
+			}
+
+			virtual GReturn SetDeadZone(DeadZoneTypes _type, float _deadzonePercentage) override
+			{
+				if (_deadzonePercentage > 1.0f || _deadzonePercentage < 0.0f)
+					return GReturn::INVALID_ARGUMENT;
+				LockSyncWrite();
+				deadZoneType = _type;
+				deadZonePercentage = _deadzonePercentage;
+				UnlockSyncWrite();
+				return GReturn::SUCCESS;
+			}
+
+			virtual GReturn StartVibration(unsigned int _controllerIndex, float _pan, float _duration, float _strength) override
+			{
+				return GReturn::FEATURE_UNSUPPORTED;
+			}
+
+			virtual GReturn IsVibrating(unsigned int _controllerIndex, bool& _outIsVibrating) override
+			{
+				return GReturn::FEATURE_UNSUPPORTED;
+			}
+
+			virtual GReturn StopVibration(unsigned int _controllerIndex) override
+			{
+				return GReturn::FEATURE_UNSUPPORTED;
+			}
+
+			virtual GReturn StopAllVibrations() override
+			{
+				return GReturn::FEATURE_UNSUPPORTED;
+			}
+
+			GReturn Register(CORE::GInterface _observer, void(*_callback)(const GEvent&, CORE::GInterface&)) override final { return GEventGeneratorImplementation::Register(_observer, _callback); }
+			GReturn Observers(unsigned int& _outCount) const override final { return GEventGeneratorImplementation::Observers(_outCount); }
+			GReturn Push(const GEvent& _newEvent) override final { return GEventGeneratorImplementation::Push(_newEvent); }
+		};
+
+		class GXboxController : public GGeneralController
+		{
+		private:
+			GW::SYSTEM::GDaemon xinputDaemon;
+			int XControllerSlotIndices[4];
+			winrt::Windows::Gaming::Input::GamepadReading lastReading[4];
+			struct DaemonData
+			{
+				winrt::Windows::Gaming::Input::GamepadReading controllerState;
+				EVENT_DATA eventData;
+				CONTROLLER_STATE oldState;
+
+				DaemonData()
+				{
+					ZeroMemory(&controllerState, sizeof(winrt::Windows::Gaming::Input::GamepadReading));
+					ZeroMemory(&eventData, sizeof(EVENT_DATA));
+					oldState.maxInputs = G_MAX_XBOX_INPUTS;
+					oldState.controllerInputs = new float[G_MAX_XBOX_INPUTS];
+				}
+
+				~DaemonData()
+				{
+					delete[] oldState.controllerInputs;
+				}
+			} daemonData;
+
+			float XboxDeadZoneCalc(float _value, bool _isTrigger)
+			{
+				if (_isTrigger)
+				{
+					if (_value < 0.11764706f) // calculated from 30/255, what xinput uses for it's threshold
+						_value = 0;
+				}
+				else
+				{
+					if (_value < 0.26516723f) // this number is from XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE
+						_value = 0;
+				}
+				return _value;
+			}
+		public:
+			GXboxController()
+				: GGeneralController()
+			{
+				for (int i = 0; i < 4; ++i)
+					XControllerSlotIndices[i] = -1;
+			}
+
+			virtual void Initialize()
+			{
+				pControllers = new CONTROLLER_STATE[G_MAX_XBOX_CONTROLLER_COUNT];
+				deadZoneType = GW::I::GControllerInterface::DeadZoneTypes::DEADZONESQUARE;
+				deadZonePercentage = 0.2f;
+				numConnected = 0;
+				for (unsigned int i = 0; i < G_MAX_XBOX_CONTROLLER_COUNT; ++i)
+				{
+					pControllers[i].isConnected = 0;
+					pControllers[i].isVibrating = 0;
+					pControllers[i].vibrationDuration = 0;
+					pControllers[i].vibrationStartTime = new std::chrono::high_resolution_clock::time_point();
+					pControllers[i].maxInputs = G_MAX_XBOX_INPUTS;
+					pControllers[i].controllerInputs = new float[G_MAX_XBOX_INPUTS];
+
+					for (int j = 0; j < G_MAX_XBOX_INPUTS; ++j)
+					{
+						pControllers[i].controllerInputs[j] = 0;
+					}
+				}
+				// Event callback
+				xinputDaemon.Create(G_CONTROLLER_DAEMON_OPERATION_INTERVAL, [&]()
+					{
+						GW::GEvent m_GEvent;
+						auto connectedPads = winrt::Windows::Gaming::Input::Gamepad::Gamepads();
+						
+						for (int i = 0; i < G_MAX_XBOX_CONTROLLER_COUNT; ++i)
+						{
+							if(numConnected < connectedPads.Size())
+							{
+								LockSyncWrite();
+								XControllerSlotIndices[i] = FindEmptyControllerIndex(G_MAX_XBOX_CONTROLLER_COUNT, pControllers);
+								pControllers[XControllerSlotIndices[i]].isConnected = 1;
+								++numConnected;
+								UnlockSyncWrite();
+
+								daemonData.eventData.controllerIndex = XControllerSlotIndices[i];
+								daemonData.eventData.inputCode = 0;
+								daemonData.eventData.inputValue = 0;
+								daemonData.eventData.isConnected = 1;
+								daemonData.eventData.controllerID = INPUT::GControllerType::XBOXONE;
+
+								m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERCONNECTED, daemonData.eventData);
+								Push(m_GEvent);
+							}
+
+							if (numConnected > connectedPads.Size())
+							{
+								if (XControllerSlotIndices[i] >= 0)
+								{
+									GW::GEvent m_GEvent;
+									//call event
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].isConnected = 0;
+									pControllers[XControllerSlotIndices[i]].isVibrating = 0;
+									pControllers[XControllerSlotIndices[i]].vibrationDuration = 0.0f;
+									--numConnected;
+									UnlockSyncWrite();
+									daemonData.eventData.controllerIndex = XControllerSlotIndices[i];
+									daemonData.eventData.inputCode = 0;
+									daemonData.eventData.inputValue = 0;
+									daemonData.eventData.isConnected = 0;
+									daemonData.eventData.controllerID = INPUT::GControllerType::XBOXONE;
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERDISCONNECTED, daemonData.eventData);
+									Push(m_GEvent);
+									XControllerSlotIndices[i] = -1;
+								}
+							}
+								
+							if (XControllerSlotIndices[i] >= 0)
+							{
+								daemonData.controllerState = connectedPads.GetAt(i).GetCurrentReading();
+							}
+
+							if (XControllerSlotIndices[i] >= 0 && daemonData.controllerState != lastReading[i])
+							{
+								daemonData.controllerState = connectedPads.GetAt(i).GetCurrentReading();
+								CopyControllerState(&pControllers[XControllerSlotIndices[i]], &daemonData.oldState);
+								daemonData.eventData.isConnected = 1;
+								daemonData.eventData.controllerIndex = XControllerSlotIndices[i];
+
+								lastReading[i] = daemonData.controllerState;
+
+								//Buttons
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::A) == winrt::Windows::Gaming::Input::GamepadButtons::A ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_SOUTH_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_SOUTH_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::A) == winrt::Windows::Gaming::Input::GamepadButtons::A ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_SOUTH_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_SOUTH_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::B) == winrt::Windows::Gaming::Input::GamepadButtons::B ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_EAST_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_EAST_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::B) == winrt::Windows::Gaming::Input::GamepadButtons::B ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_EAST_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_EAST_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::Y) == winrt::Windows::Gaming::Input::GamepadButtons::Y ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_NORTH_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_NORTH_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::Y) == winrt::Windows::Gaming::Input::GamepadButtons::Y ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_NORTH_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_NORTH_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::X) == winrt::Windows::Gaming::Input::GamepadButtons::X ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_WEST_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_WEST_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::X) == winrt::Windows::Gaming::Input::GamepadButtons::X ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_WEST_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_WEST_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::LeftShoulder) == winrt::Windows::Gaming::Input::GamepadButtons::LeftShoulder ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_LEFT_SHOULDER_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_LEFT_SHOULDER_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::LeftShoulder) == winrt::Windows::Gaming::Input::GamepadButtons::LeftShoulder ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_LEFT_SHOULDER_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_LEFT_SHOULDER_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::RightShoulder) == winrt::Windows::Gaming::Input::GamepadButtons::RightShoulder ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_RIGHT_SHOULDER_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_RIGHT_SHOULDER_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::RightShoulder) == winrt::Windows::Gaming::Input::GamepadButtons::RightShoulder ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_RIGHT_SHOULDER_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_RIGHT_SHOULDER_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::DPadLeft) == winrt::Windows::Gaming::Input::GamepadButtons::DPadLeft ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_DPAD_LEFT_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_DPAD_LEFT_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::DPadLeft) == winrt::Windows::Gaming::Input::GamepadButtons::DPadLeft ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_DPAD_LEFT_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_DPAD_LEFT_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::DPadRight) == winrt::Windows::Gaming::Input::GamepadButtons::DPadRight ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_DPAD_RIGHT_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_DPAD_RIGHT_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::DPadRight) == winrt::Windows::Gaming::Input::GamepadButtons::DPadRight ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_DPAD_RIGHT_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_DPAD_RIGHT_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::DPadUp) == winrt::Windows::Gaming::Input::GamepadButtons::DPadUp ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_DPAD_UP_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_DPAD_UP_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::DPadUp) == winrt::Windows::Gaming::Input::GamepadButtons::DPadUp ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_DPAD_UP_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_DPAD_UP_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::DPadDown) == winrt::Windows::Gaming::Input::GamepadButtons::DPadDown ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_DPAD_DOWN_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_DPAD_DOWN_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::DPadDown) == winrt::Windows::Gaming::Input::GamepadButtons::DPadDown ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_DPAD_DOWN_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_DPAD_DOWN_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::LeftThumbstick) == winrt::Windows::Gaming::Input::GamepadButtons::LeftThumbstick ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_LEFT_THUMB_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_LEFT_THUMB_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::LeftThumbstick) == winrt::Windows::Gaming::Input::GamepadButtons::LeftThumbstick ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_LEFT_THUMB_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_LEFT_THUMB_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::RightThumbstick) == winrt::Windows::Gaming::Input::GamepadButtons::RightThumbstick ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_RIGHT_THUMB_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_RIGHT_THUMB_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::RightThumbstick) == winrt::Windows::Gaming::Input::GamepadButtons::RightThumbstick ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_RIGHT_THUMB_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_RIGHT_THUMB_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::Menu) == winrt::Windows::Gaming::Input::GamepadButtons::Menu ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_START_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_START_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::Menu) == winrt::Windows::Gaming::Input::GamepadButtons::Menu ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_START_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_START_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (((daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::View) == winrt::Windows::Gaming::Input::GamepadButtons::View ? 1.0f : 0.0f)
+									!= daemonData.oldState.controllerInputs[G_SELECT_BTN])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_SELECT_BTN] = (daemonData.controllerState.Buttons & winrt::Windows::Gaming::Input::GamepadButtons::View) == winrt::Windows::Gaming::Input::GamepadButtons::View ? 1.0f : 0.0f;
+									daemonData.eventData.inputCode = G_SELECT_BTN;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_SELECT_BTN];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERBUTTONVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+
+								// AXES
+								if (XboxDeadZoneCalc(daemonData.controllerState.LeftTrigger, true) != daemonData.oldState.controllerInputs[G_LEFT_TRIGGER_AXIS])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_LEFT_TRIGGER_AXIS] = XboxDeadZoneCalc(daemonData.controllerState.LeftTrigger, true);
+									daemonData.eventData.inputCode = G_LEFT_TRIGGER_AXIS;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_LEFT_TRIGGER_AXIS];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERAXISVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (XboxDeadZoneCalc(daemonData.controllerState.RightTrigger, true) != daemonData.oldState.controllerInputs[G_RIGHT_TRIGGER_AXIS])
+								{
+									LockSyncWrite();
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_RIGHT_TRIGGER_AXIS] = XboxDeadZoneCalc(daemonData.controllerState.RightTrigger, true);
+									daemonData.eventData.inputCode = G_RIGHT_TRIGGER_AXIS;
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_RIGHT_TRIGGER_AXIS];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERAXISVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								LockSyncWrite();
+
+								DeadZoneCalculation(daemonData.controllerState.LeftThumbstickX,
+									daemonData.controllerState.LeftThumbstickY,
+									1,
+									-1,
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_LX_AXIS],
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_LY_AXIS],
+									deadZoneType,
+									deadZonePercentage);
+
+								DeadZoneCalculation(daemonData.controllerState.RightThumbstickX,
+									daemonData.controllerState.RightThumbstickY,
+									1,
+									-1,
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_RX_AXIS],
+									pControllers[XControllerSlotIndices[i]].controllerInputs[G_RY_AXIS],
+									deadZoneType,
+									deadZonePercentage);
+
+								float newLX = pControllers[XControllerSlotIndices[i]].controllerInputs[G_LX_AXIS];
+								float newLY = pControllers[XControllerSlotIndices[i]].controllerInputs[G_LY_AXIS];
+								float newRX = pControllers[XControllerSlotIndices[i]].controllerInputs[G_RX_AXIS];
+								float newRY = pControllers[XControllerSlotIndices[i]].controllerInputs[G_RY_AXIS];
+
+								UnlockSyncWrite();
+
+								if (newLX != daemonData.oldState.controllerInputs[G_LX_AXIS])
+								{
+									daemonData.eventData.inputCode = G_LX_AXIS;
+									LockSyncWrite();
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_LX_AXIS];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERAXISVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+								if (newLY != daemonData.oldState.controllerInputs[G_LY_AXIS])
+								{
+									daemonData.eventData.inputCode = G_LY_AXIS;
+									LockSyncWrite();
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_LY_AXIS];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERAXISVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+
+								if (newRX != daemonData.oldState.controllerInputs[G_RX_AXIS])
+								{
+									daemonData.eventData.inputCode = G_RX_AXIS;
+									LockSyncWrite();
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_RX_AXIS];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERAXISVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+
+								if (newRY != daemonData.oldState.controllerInputs[G_RY_AXIS])
+								{
+									daemonData.eventData.inputCode = G_RY_AXIS;
+									LockSyncWrite();
+									daemonData.eventData.inputValue = pControllers[XControllerSlotIndices[i]].controllerInputs[G_RY_AXIS];
+									UnlockSyncWrite();
+
+									m_GEvent.Write(GW::I::GControllerInterface::Events::CONTROLLERAXISVALUECHANGED, daemonData.eventData);
+									Push(m_GEvent);
+								}
+							}
+
+							if (XControllerSlotIndices[i] >= 0 && pControllers[XControllerSlotIndices[i]].isVibrating)
+							{
+								if (pControllers[XControllerSlotIndices[i]].vibrationDuration <=
+									(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
+										*pControllers[XControllerSlotIndices[i]].vibrationStartTime).count() * .001f))
+								{
+									winrt::Windows::Gaming::Input::GamepadVibration vibrationState;
+									vibrationState.LeftMotor = 0;
+									vibrationState.RightMotor = 0;
+									vibrationState.LeftTrigger = 0;
+									vibrationState.RightTrigger = 0;
+									pControllers[XControllerSlotIndices[i]].isVibrating = 0;
+									pControllers[XControllerSlotIndices[i]].vibrationDuration = 0.0f;
+									//myGamepads.at(i).Vibration(vibrationState);
+									connectedPads.GetAt(i).Vibration(vibrationState);
+								}
+							}
+						}
+					});
+			}
+
+			virtual void Release()
+			{
+				for (int i = 0; i < G_MAX_XBOX_CONTROLLER_COUNT; ++i)
+				{
+					delete[] pControllers[i].controllerInputs;
+					delete pControllers[i].vibrationStartTime;
+				}
+				delete[] pControllers;
+			}
+
+			GReturn GetState(unsigned int _controllerIndex, int _inputCode, float& _outState) override final
+			{
+				if (_controllerIndex < 0 || _controllerIndex > G_MAX_XBOX_CONTROLLER_INDEX || _inputCode < 0 || _inputCode  > 19)
+					return GReturn::INVALID_ARGUMENT;
+				if (pControllers[_controllerIndex].isConnected == 0)
+					return GReturn::FAILURE;
+				LockAsyncRead();
+				_outState = pControllers[_controllerIndex].controllerInputs[_inputCode];
+				UnlockAsyncRead();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn IsConnected(unsigned int _controllerIndex, bool& _outIsConnected) override final
+			{
+				if (_controllerIndex < 0 || _controllerIndex > G_MAX_XBOX_CONTROLLER_INDEX)
+					return GReturn::INVALID_ARGUMENT;
+				LockAsyncRead();
+				_outIsConnected = pControllers[_controllerIndex].isConnected == 0 ? false : true;
+				UnlockAsyncRead();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetMaxIndex(int& _outMax) override final
+			{
+				_outMax = G_MAX_XBOX_CONTROLLER_INDEX;
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetNumConnected(int& _outConnectedCount) override final
+			{
+				_outConnectedCount = 0;
+				LockAsyncRead();
+				for (unsigned int i = 0; i < G_MAX_XBOX_CONTROLLER_COUNT; ++i)
+				{
+					if (pControllers[i].isConnected)
+						++_outConnectedCount;
+				}
+				UnlockAsyncRead();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn StartVibration(unsigned int _controllerIndex, float _pan, float _duration, float _strength) override final
+			{
+				if ((_controllerIndex > G_MAX_XBOX_CONTROLLER_INDEX)
+					|| (_pan < -1.0f || _pan > 1.0f)
+					|| _duration < 0.0f
+					|| (_strength < -1.0f || _strength > 1.0f))
+					return GReturn::INVALID_ARGUMENT;
+
+				LockAsyncRead();
+				if (pControllers[_controllerIndex].isVibrating)
+				{
+					UnlockAsyncRead();
+					return GReturn::REDUNDANT;
+				}
+				UnlockAsyncRead();
+
+				winrt::Windows::Gaming::Input::GamepadVibration vibrationState;
+				vibrationState.LeftMotor = _strength * (.5f + (.5f * (-1 * _pan)));
+				vibrationState.RightMotor = _strength * (.5f + (.5f * _pan));
+
+				LockSyncWrite();
+				for (int i = 0; i < 4; ++i)
+				{
+					if (_controllerIndex == XControllerSlotIndices[i])
+					{
+						pControllers[i].isVibrating = 1;
+						pControllers[i].vibrationDuration = _duration;
+						*pControllers[i].vibrationStartTime = std::chrono::high_resolution_clock::now();
+						
+						// quick check to make sure gamepad is valid in list
+						if (XControllerSlotIndices[i] >= 0)
+						{
+							winrt::Windows::Gaming::Input::Gamepad::Gamepads().GetAt(i).Vibration(vibrationState);
+							break;
+						}
+					}
+				}
+				UnlockSyncWrite();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn IsVibrating(unsigned int _controllerIndex, bool& _outIsVibrating) override final
+			{
+				if ((_controllerIndex > G_MAX_XBOX_CONTROLLER_INDEX))
+					return GReturn::INVALID_ARGUMENT;
+				LockAsyncRead();
+				_outIsVibrating = pControllers[_controllerIndex].isVibrating == 0 ? false : true;
+				UnlockAsyncRead();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn StopVibration(unsigned int _controllerIndex) override final
+			{
+				if ((_controllerIndex > G_MAX_XBOX_CONTROLLER_INDEX))
+					return GReturn::INVALID_ARGUMENT;
+
+				LockAsyncRead();
+				if (pControllers[_controllerIndex].isVibrating == false)
+				{
+					UnlockAsyncRead();
+					return GReturn::REDUNDANT;
+				}
+				UnlockAsyncRead();
+
+				winrt::Windows::Gaming::Input::GamepadVibration vibrationState;
+				vibrationState.LeftMotor = 0;
+				vibrationState.RightMotor = 0;
+				vibrationState.LeftTrigger = 0;
+				vibrationState.RightTrigger = 0;
+
+				LockSyncWrite();
+				for (int i = 0; i < 4; ++i)
+				{
+					if (_controllerIndex == XControllerSlotIndices[i])
+					{
+						pControllers[i].isVibrating = 0;
+						pControllers[i].vibrationDuration = 0.0f;
+						
+						// quick check to make sure gamepad is valid in list
+						if (XControllerSlotIndices[i] >= 0)
+						{
+							winrt::Windows::Gaming::Input::Gamepad::Gamepads().GetAt(i).Vibration(vibrationState);
+							break;
+						}
+					}
+				}
+				UnlockSyncWrite();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn StopAllVibrations() override final
+			{
+				winrt::Windows::Gaming::Input::GamepadVibration vibrationState;
+				vibrationState.LeftMotor = 0;
+				vibrationState.RightMotor = 0;
+				vibrationState.LeftTrigger = 0;
+				vibrationState.RightTrigger = 0;
+
+				LockSyncWrite();
+				for (int i = 0; i < 4; ++i)
+				{
+					if (pControllers[i].isVibrating)
+					{
+						pControllers[i].isVibrating = 0;
+						pControllers[i].vibrationDuration = 0.0f;
+
+						// quick check to make sure gamepad is valid in list
+						if (XControllerSlotIndices[i] >= 0)
+						{
+							winrt::Windows::Gaming::Input::Gamepad::Gamepads().GetAt(i).Vibration(vibrationState);
+						}
+					}
+				}
+				UnlockSyncWrite();
+				return GReturn::SUCCESS;
+			}
+		};
+
+		// Need to put definitions here instead of class body because it needs to know function definitions
+		inline GControllerImplementation::~GControllerImplementation()
+		{
+			if (pController)
+			{
+				pController->Release();
+				delete pController;
+				pController = nullptr;
+			}
+		}
+
+		inline GReturn GControllerImplementation::Create()
+		{
+			pController = new GXboxController();
+			pController->Initialize();
+
+			return GReturn::SUCCESS;
+		}
+		inline GReturn GControllerImplementation::GetState(unsigned int _controllerIndex, int _inputCode, float& _outState) { return pController ? pController->GetState(_controllerIndex, _inputCode, _outState) : GReturn::FAILURE; }
+		inline GReturn GControllerImplementation::IsConnected(unsigned int _controllerIndex, bool& _outIsConnected) { return pController ? pController->IsConnected(_controllerIndex, _outIsConnected) : GReturn::FAILURE; }
+		inline GReturn GControllerImplementation::GetMaxIndex(int& _outMax) { return pController ? pController->GetMaxIndex(_outMax) : GReturn::FAILURE; }
+		inline GReturn GControllerImplementation::GetNumConnected(int& _outConnectedCount) { return pController ? pController->GetNumConnected(_outConnectedCount) : GReturn::FAILURE; }
+		inline GReturn GControllerImplementation::SetDeadZone(DeadZoneTypes _type, float _deadzonePercentage) { return pController ? pController->SetDeadZone(_type, _deadzonePercentage) : GReturn::FAILURE; }
+		inline GReturn GControllerImplementation::StartVibration(unsigned int _controllerIndex, float _pan, float _duration, float _strength) { return pController ? pController->StartVibration(_controllerIndex, _pan, _duration, _strength) : GReturn::FAILURE; }
+		inline GReturn GControllerImplementation::IsVibrating(unsigned int _controllerIndex, bool& _outIsVibrating) { return pController ? pController->IsVibrating(_controllerIndex, _outIsVibrating) : GReturn::FAILURE; }
+		inline GReturn GControllerImplementation::StopVibration(unsigned int _controllerIndex) { return pController ? pController->StopVibration(_controllerIndex) : GReturn::FAILURE; }
+		inline GReturn GControllerImplementation::StopAllVibrations() { return pController ? pController->StopAllVibrations() : GReturn::FAILURE; }
+		inline GReturn GControllerImplementation::Register(CORE::GInterface _observer, void(*_callback)(const GEvent&, CORE::GInterface&)) { return pController ? pController->Register(_observer, _callback) : GEventGeneratorImplementation::Register(_observer, _callback); }
+		inline GReturn GControllerImplementation::Observers(unsigned int& _outCount) const { return pController ? pController->Observers(_outCount) : GEventGeneratorImplementation::Observers(_outCount); }
+		inline GReturn GControllerImplementation::Push(const GEvent& _newEvent) { return pController ? pController->Push(_newEvent) : GEventGeneratorImplementation::Push(_newEvent); }
+	} // end I namespace
+} // end GW namespace
+
+    #endif
+#endif
+
 
 
 namespace GW
@@ -41202,7 +47757,28 @@ namespace GW
 }
 
 #elif defined(__APPLE__)
-    #ifdef __OBJC__
+    #include <TargetConditionals.h>
+    #if TARGET_OS_IOS
+        namespace GW
+{
+	namespace I
+	{
+		class GBufferedInputImplementation :	public virtual GBufferedInputInterface,
+												public GEventGeneratorImplementation
+		{
+		public:
+			GReturn Create(GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE _uwh) { 
+				return GReturn::INTERFACE_UNSUPPORTED; 
+			}
+			GReturn Create(GW::SYSTEM::GWindow _window) { 
+				return GReturn::INTERFACE_UNSUPPORTED; 
+			}
+		};
+	}
+}
+
+    #elif TARGET_OS_MAC
+        #ifdef __OBJC__
 @import Foundation;
 @import Cocoa;
 #endif
@@ -41217,7 +47793,12 @@ namespace GW
 	namespace I
 	{
 #if defined(_WIN32)
-		constexpr unsigned int Keycodes[128] =
+#include <winapifamily.h>
+#if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_UNKNOWN,				// 0
 			G_KEY_ESCAPE,				// 1
@@ -41348,8 +47929,248 @@ namespace GW
 			G_KEY_UNKNOWN,				// 126
 			G_KEY_UNKNOWN				// 127
 		};
+#elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+#define G_MAX_KEYCODES 256
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
+		{
+			G_KEY_UNKNOWN,				// 0
+			G_BUTTON_LEFT,				// 1
+			G_BUTTON_RIGHT,				// 2
+			G_KEY_UNKNOWN,				// 3 Cancel
+			G_BUTTON_MIDDLE,			// 4
+			G_KEY_UNKNOWN,				// 5 XButton1
+			G_KEY_UNKNOWN,				// 6 XButton2
+			G_KEY_UNKNOWN,				// 7
+			G_KEY_BACKSPACE,			// 8
+			G_KEY_TAB,					// 9
+			G_KEY_UNKNOWN,				// 10
+			G_KEY_UNKNOWN,				// 11
+			G_KEY_UNKNOWN,				// 12 Clear
+			G_KEY_ENTER,				// 13
+			G_KEY_UNKNOWN,				// 14
+			G_KEY_UNKNOWN,				// 15
+			G_KEY_LEFTSHIFT,			// 16 Shift
+			G_KEY_LEFTCONTROL,			// 17 Control
+			G_KEY_UNKNOWN,				// 18 Menu
+			G_KEY_PAUSE,				// 19
+			G_KEY_CAPSLOCK,				// 20
+			G_KEY_UNKNOWN,				// 21 Kana/Hangul
+			G_KEY_UNKNOWN,				// 22 ImeOn
+			G_KEY_UNKNOWN,				// 23 Junja
+			G_KEY_UNKNOWN,				// 24 Final
+			G_KEY_UNKNOWN,				// 25 Kanji
+			G_KEY_UNKNOWN,				// 26 ImeOff
+			G_KEY_ESCAPE,				// 27 
+			G_KEY_UNKNOWN,				// 28 Convert
+			G_KEY_UNKNOWN,				// 29 NonConvert
+			G_KEY_UNKNOWN,				// 30 Accept
+			G_KEY_UNKNOWN,				// 31 ModeChange
+			G_KEY_SPACE,				// 32
+			G_KEY_PAGEUP,				// 33
+			G_KEY_PAGEDOWN,				// 34
+			G_KEY_END,					// 35
+			G_KEY_HOME,					// 36
+			G_KEY_LEFT,					// 37
+			G_KEY_UP,					// 38
+			G_KEY_RIGHT,				// 39
+			G_KEY_DOWN,					// 40
+			G_KEY_UNKNOWN,				// 41 Select
+			G_KEY_PRINTSCREEN,			// 42
+			G_KEY_UNKNOWN,				// 43 Execute
+			G_KEY_PRINTSCREEN,				// 44 Snapshot
+			G_KEY_INSERT,				// 45
+			G_KEY_DELETE,				// 46
+			G_KEY_UNKNOWN,				// 47 Help
+			G_KEY_0,					// 48
+			G_KEY_1,					// 49
+			G_KEY_2,					// 50
+			G_KEY_3,					// 51
+			G_KEY_4,					// 52
+			G_KEY_5,					// 53
+			G_KEY_6,					// 54
+			G_KEY_7,					// 55
+			G_KEY_8,					// 56
+			G_KEY_9,					// 57
+			G_KEY_UNKNOWN,				// 58
+			G_KEY_UNKNOWN,				// 59
+			G_KEY_UNKNOWN,				// 60
+			G_KEY_UNKNOWN,				// 61
+			G_KEY_UNKNOWN,				// 62
+			G_KEY_UNKNOWN,				// 63
+			G_KEY_UNKNOWN,				// 64
+			G_KEY_A,					// 65
+			G_KEY_B,					// 66
+			G_KEY_C,					// 67
+			G_KEY_D,					// 68
+			G_KEY_E,					// 69
+			G_KEY_F,					// 70
+			G_KEY_G,					// 71
+			G_KEY_H,					// 72
+			G_KEY_I,					// 73
+			G_KEY_J,					// 74
+			G_KEY_K,					// 75
+			G_KEY_L,					// 76
+			G_KEY_M,					// 77
+			G_KEY_N,					// 78
+			G_KEY_O,					// 79
+			G_KEY_P,					// 80
+			G_KEY_Q,					// 81
+			G_KEY_R,					// 82
+			G_KEY_S,					// 83
+			G_KEY_T,					// 84
+			G_KEY_U,					// 85
+			G_KEY_V,					// 86
+			G_KEY_W,					// 87
+			G_KEY_X,					// 88
+			G_KEY_Y,					// 89
+			G_KEY_Z,					// 90
+			G_KEY_UNKNOWN,				// 91 LeftWindows
+			G_KEY_UNKNOWN,				// 92 RightWindow
+			G_KEY_UNKNOWN,				// 93 Application
+			G_KEY_UNKNOWN,				// 94
+			G_KEY_UNKNOWN,				// 95 Sleep
+			G_KEY_NUMPAD_0,				// 96
+			G_KEY_NUMPAD_1,				// 97
+			G_KEY_NUMPAD_2,				// 98
+			G_KEY_NUMPAD_3,				// 99
+			G_KEY_NUMPAD_4,				// 100
+			G_KEY_NUMPAD_5,				// 101
+			G_KEY_NUMPAD_6,				// 102
+			G_KEY_NUMPAD_7,				// 103
+			G_KEY_NUMPAD_8,				// 104
+			G_KEY_NUMPAD_9,				// 105
+			G_KEY_NUMPAD_MULTIPLY,		// 106
+			G_KEY_NUMPAD_ADD,			// 107
+			G_KEY_UNKNOWN,				// 108 Separator
+			G_KEY_NUMPAD_SUBTRACT,		// 109
+			G_KEY_NUMPAD_PERIOD,		// 110
+			G_KEY_NUMPAD_DIVIDE,		// 111
+			G_KEY_F1,					// 112
+			G_KEY_F2,					// 113
+			G_KEY_F3,					// 114
+			G_KEY_F4,					// 115
+			G_KEY_F5,					// 116
+			G_KEY_F6,					// 117
+			G_KEY_F7,					// 118
+			G_KEY_F8,					// 119
+			G_KEY_F9,					// 120
+			G_KEY_F10,					// 121
+			G_KEY_F11,					// 122
+			G_KEY_F12,					// 123
+			G_KEY_UNKNOWN,				// 124 F13
+			G_KEY_UNKNOWN,				// 125 F14
+			G_KEY_UNKNOWN,				// 126 F15
+			G_KEY_UNKNOWN,				// 127 F16
+			G_KEY_UNKNOWN,				// 128 F17
+			G_KEY_UNKNOWN,				// 129 F18
+			G_KEY_UNKNOWN,				// 130 F19
+			G_KEY_UNKNOWN,				// 131 F20
+			G_KEY_UNKNOWN,				// 132 F21
+			G_KEY_UNKNOWN,				// 133 F22
+			G_KEY_UNKNOWN,				// 134 F23
+			G_KEY_UNKNOWN,				// 135 F24
+			G_KEY_UNKNOWN,				// 136 NavigationView
+			G_KEY_UNKNOWN,				// 137 NavigationMenu
+			G_KEY_UNKNOWN,				// 138 NavigationUp
+			G_KEY_UNKNOWN,				// 139 NavigationDown
+			G_KEY_UNKNOWN,				// 140 NavigationLeft
+			G_KEY_UNKNOWN,				// 141 NavigationRight 
+			G_KEY_UNKNOWN,				// 142 NavigationAccept
+			G_KEY_UNKNOWN,				// 143 NavigationCancel
+			G_KEY_NUMLOCK,				// 144
+			G_KEY_SCROLL_LOCK,			// 145 Scroll
+			G_KEY_UNKNOWN,				// 146
+			G_KEY_UNKNOWN,				// 147
+			G_KEY_UNKNOWN,				// 148
+			G_KEY_UNKNOWN,				// 149
+			G_KEY_UNKNOWN,				// 150
+			G_KEY_UNKNOWN,				// 151
+			G_KEY_UNKNOWN,				// 152
+			G_KEY_UNKNOWN,				// 153
+			G_KEY_UNKNOWN,				// 154
+			G_KEY_UNKNOWN,				// 155
+			G_KEY_UNKNOWN,				// 156
+			G_KEY_UNKNOWN,				// 157
+			G_KEY_UNKNOWN,				// 158
+			G_KEY_UNKNOWN,				// 159
+			G_KEY_LEFTSHIFT,			// 160
+			G_KEY_RIGHTSHIFT,			// 161
+			G_KEY_LEFTCONTROL,			// 162
+			G_KEY_RIGHTCONTROL,			// 163
+			G_KEY_UNKNOWN,				// 164
+			G_KEY_UNKNOWN,				// 165
+			G_KEY_UNKNOWN,				// 166
+			G_KEY_UNKNOWN,				// 167
+			G_KEY_UNKNOWN,				// 168
+			G_KEY_UNKNOWN,				// 169
+			G_KEY_UNKNOWN,				// 170
+			G_KEY_UNKNOWN,				// 171
+			G_KEY_UNKNOWN,				// 172
+			G_KEY_UNKNOWN,				// 173
+			G_KEY_UNKNOWN,				// 174
+			G_KEY_UNKNOWN,				// 175
+			G_KEY_UNKNOWN,				// 176
+			G_KEY_UNKNOWN,				// 177
+			G_KEY_UNKNOWN,				// 178
+			G_KEY_UNKNOWN,				// 179
+			G_KEY_UNKNOWN,				// 180
+			G_KEY_UNKNOWN,				// 181
+			G_KEY_UNKNOWN,				// 182
+			G_KEY_UNKNOWN,				// 183
+			G_KEY_UNKNOWN,				// 184
+			G_KEY_UNKNOWN,				// 185
+			G_KEY_SEMICOLON,			// 186
+			G_KEY_EQUALS,				// 187
+			G_KEY_COMMA,				// 188
+			G_KEY_MINUS,				// 189
+			G_KEY_PERIOD,				// 190
+			G_KEY_FORWARDSLASH,			// 191
+			G_KEY_TILDE,				// 192
+			G_KEY_UNKNOWN,				// 193
+			G_KEY_UNKNOWN,				// 194
+			G_KEY_UNKNOWN,				// 195
+			G_KEY_UNKNOWN,				// 196
+			G_KEY_UNKNOWN,				// 197
+			G_KEY_UNKNOWN,				// 198
+			G_KEY_UNKNOWN,				// 199
+			G_KEY_UNKNOWN,				// 200
+			G_KEY_UNKNOWN,				// 201
+			G_KEY_UNKNOWN,				// 202
+			G_KEY_UNKNOWN,				// 203
+			G_KEY_UNKNOWN,				// 204
+			G_KEY_UNKNOWN,				// 205
+			G_KEY_UNKNOWN,				// 206
+			G_KEY_UNKNOWN,				// 207
+			G_KEY_UNKNOWN,				// 208
+			G_KEY_UNKNOWN,				// 209
+			G_KEY_UNKNOWN,				// 210
+			G_KEY_UNKNOWN,				// 211
+			G_KEY_UNKNOWN,				// 212
+			G_KEY_UNKNOWN,				// 213
+			G_KEY_UNKNOWN,				// 214
+			G_KEY_UNKNOWN,				// 215
+			G_KEY_UNKNOWN,				// 216
+			G_KEY_UNKNOWN,				// 217
+			G_KEY_UNKNOWN,				// 218
+			G_KEY_BRACKET_OPEN,			// 219
+			G_KEY_BACKSLASH,			// 220
+			G_KEY_BRACKET_CLOSE,		// 221
+			G_KEY_QUOTE,				// 222
+			G_KEY_UNKNOWN,				// 223
+			G_KEY_UNKNOWN,				// 224
+			G_KEY_UNKNOWN,				// 225
+			G_KEY_BACKSLASH,			// 226
+
+
+		};
+#endif
 #elif defined(__linux__)
-		constexpr unsigned int Keycodes[128] =
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_UNKNOWN,			// 0
 			G_KEY_UNKNOWN,			// 1
@@ -41482,7 +48303,10 @@ namespace GW
 			
 		};
 #elif defined(__APPLE__)
-		constexpr unsigned int Keycodes[128] =
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_A,				// 0
 			G_KEY_S,				// 1
@@ -42185,6 +49009,7 @@ namespace internal_gw
 }
 
 
+    #endif
 #elif defined(__linux__)
     #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -42200,7 +49025,12 @@ namespace GW
 	namespace I
 	{
 #if defined(_WIN32)
-		constexpr unsigned int Keycodes[128] =
+#include <winapifamily.h>
+#if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_UNKNOWN,				// 0
 			G_KEY_ESCAPE,				// 1
@@ -42331,8 +49161,248 @@ namespace GW
 			G_KEY_UNKNOWN,				// 126
 			G_KEY_UNKNOWN				// 127
 		};
+#elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+#define G_MAX_KEYCODES 256
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
+		{
+			G_KEY_UNKNOWN,				// 0
+			G_BUTTON_LEFT,				// 1
+			G_BUTTON_RIGHT,				// 2
+			G_KEY_UNKNOWN,				// 3 Cancel
+			G_BUTTON_MIDDLE,			// 4
+			G_KEY_UNKNOWN,				// 5 XButton1
+			G_KEY_UNKNOWN,				// 6 XButton2
+			G_KEY_UNKNOWN,				// 7
+			G_KEY_BACKSPACE,			// 8
+			G_KEY_TAB,					// 9
+			G_KEY_UNKNOWN,				// 10
+			G_KEY_UNKNOWN,				// 11
+			G_KEY_UNKNOWN,				// 12 Clear
+			G_KEY_ENTER,				// 13
+			G_KEY_UNKNOWN,				// 14
+			G_KEY_UNKNOWN,				// 15
+			G_KEY_LEFTSHIFT,			// 16 Shift
+			G_KEY_LEFTCONTROL,			// 17 Control
+			G_KEY_UNKNOWN,				// 18 Menu
+			G_KEY_PAUSE,				// 19
+			G_KEY_CAPSLOCK,				// 20
+			G_KEY_UNKNOWN,				// 21 Kana/Hangul
+			G_KEY_UNKNOWN,				// 22 ImeOn
+			G_KEY_UNKNOWN,				// 23 Junja
+			G_KEY_UNKNOWN,				// 24 Final
+			G_KEY_UNKNOWN,				// 25 Kanji
+			G_KEY_UNKNOWN,				// 26 ImeOff
+			G_KEY_ESCAPE,				// 27 
+			G_KEY_UNKNOWN,				// 28 Convert
+			G_KEY_UNKNOWN,				// 29 NonConvert
+			G_KEY_UNKNOWN,				// 30 Accept
+			G_KEY_UNKNOWN,				// 31 ModeChange
+			G_KEY_SPACE,				// 32
+			G_KEY_PAGEUP,				// 33
+			G_KEY_PAGEDOWN,				// 34
+			G_KEY_END,					// 35
+			G_KEY_HOME,					// 36
+			G_KEY_LEFT,					// 37
+			G_KEY_UP,					// 38
+			G_KEY_RIGHT,				// 39
+			G_KEY_DOWN,					// 40
+			G_KEY_UNKNOWN,				// 41 Select
+			G_KEY_PRINTSCREEN,			// 42
+			G_KEY_UNKNOWN,				// 43 Execute
+			G_KEY_PRINTSCREEN,				// 44 Snapshot
+			G_KEY_INSERT,				// 45
+			G_KEY_DELETE,				// 46
+			G_KEY_UNKNOWN,				// 47 Help
+			G_KEY_0,					// 48
+			G_KEY_1,					// 49
+			G_KEY_2,					// 50
+			G_KEY_3,					// 51
+			G_KEY_4,					// 52
+			G_KEY_5,					// 53
+			G_KEY_6,					// 54
+			G_KEY_7,					// 55
+			G_KEY_8,					// 56
+			G_KEY_9,					// 57
+			G_KEY_UNKNOWN,				// 58
+			G_KEY_UNKNOWN,				// 59
+			G_KEY_UNKNOWN,				// 60
+			G_KEY_UNKNOWN,				// 61
+			G_KEY_UNKNOWN,				// 62
+			G_KEY_UNKNOWN,				// 63
+			G_KEY_UNKNOWN,				// 64
+			G_KEY_A,					// 65
+			G_KEY_B,					// 66
+			G_KEY_C,					// 67
+			G_KEY_D,					// 68
+			G_KEY_E,					// 69
+			G_KEY_F,					// 70
+			G_KEY_G,					// 71
+			G_KEY_H,					// 72
+			G_KEY_I,					// 73
+			G_KEY_J,					// 74
+			G_KEY_K,					// 75
+			G_KEY_L,					// 76
+			G_KEY_M,					// 77
+			G_KEY_N,					// 78
+			G_KEY_O,					// 79
+			G_KEY_P,					// 80
+			G_KEY_Q,					// 81
+			G_KEY_R,					// 82
+			G_KEY_S,					// 83
+			G_KEY_T,					// 84
+			G_KEY_U,					// 85
+			G_KEY_V,					// 86
+			G_KEY_W,					// 87
+			G_KEY_X,					// 88
+			G_KEY_Y,					// 89
+			G_KEY_Z,					// 90
+			G_KEY_UNKNOWN,				// 91 LeftWindows
+			G_KEY_UNKNOWN,				// 92 RightWindow
+			G_KEY_UNKNOWN,				// 93 Application
+			G_KEY_UNKNOWN,				// 94
+			G_KEY_UNKNOWN,				// 95 Sleep
+			G_KEY_NUMPAD_0,				// 96
+			G_KEY_NUMPAD_1,				// 97
+			G_KEY_NUMPAD_2,				// 98
+			G_KEY_NUMPAD_3,				// 99
+			G_KEY_NUMPAD_4,				// 100
+			G_KEY_NUMPAD_5,				// 101
+			G_KEY_NUMPAD_6,				// 102
+			G_KEY_NUMPAD_7,				// 103
+			G_KEY_NUMPAD_8,				// 104
+			G_KEY_NUMPAD_9,				// 105
+			G_KEY_NUMPAD_MULTIPLY,		// 106
+			G_KEY_NUMPAD_ADD,			// 107
+			G_KEY_UNKNOWN,				// 108 Separator
+			G_KEY_NUMPAD_SUBTRACT,		// 109
+			G_KEY_NUMPAD_PERIOD,		// 110
+			G_KEY_NUMPAD_DIVIDE,		// 111
+			G_KEY_F1,					// 112
+			G_KEY_F2,					// 113
+			G_KEY_F3,					// 114
+			G_KEY_F4,					// 115
+			G_KEY_F5,					// 116
+			G_KEY_F6,					// 117
+			G_KEY_F7,					// 118
+			G_KEY_F8,					// 119
+			G_KEY_F9,					// 120
+			G_KEY_F10,					// 121
+			G_KEY_F11,					// 122
+			G_KEY_F12,					// 123
+			G_KEY_UNKNOWN,				// 124 F13
+			G_KEY_UNKNOWN,				// 125 F14
+			G_KEY_UNKNOWN,				// 126 F15
+			G_KEY_UNKNOWN,				// 127 F16
+			G_KEY_UNKNOWN,				// 128 F17
+			G_KEY_UNKNOWN,				// 129 F18
+			G_KEY_UNKNOWN,				// 130 F19
+			G_KEY_UNKNOWN,				// 131 F20
+			G_KEY_UNKNOWN,				// 132 F21
+			G_KEY_UNKNOWN,				// 133 F22
+			G_KEY_UNKNOWN,				// 134 F23
+			G_KEY_UNKNOWN,				// 135 F24
+			G_KEY_UNKNOWN,				// 136 NavigationView
+			G_KEY_UNKNOWN,				// 137 NavigationMenu
+			G_KEY_UNKNOWN,				// 138 NavigationUp
+			G_KEY_UNKNOWN,				// 139 NavigationDown
+			G_KEY_UNKNOWN,				// 140 NavigationLeft
+			G_KEY_UNKNOWN,				// 141 NavigationRight 
+			G_KEY_UNKNOWN,				// 142 NavigationAccept
+			G_KEY_UNKNOWN,				// 143 NavigationCancel
+			G_KEY_NUMLOCK,				// 144
+			G_KEY_SCROLL_LOCK,			// 145 Scroll
+			G_KEY_UNKNOWN,				// 146
+			G_KEY_UNKNOWN,				// 147
+			G_KEY_UNKNOWN,				// 148
+			G_KEY_UNKNOWN,				// 149
+			G_KEY_UNKNOWN,				// 150
+			G_KEY_UNKNOWN,				// 151
+			G_KEY_UNKNOWN,				// 152
+			G_KEY_UNKNOWN,				// 153
+			G_KEY_UNKNOWN,				// 154
+			G_KEY_UNKNOWN,				// 155
+			G_KEY_UNKNOWN,				// 156
+			G_KEY_UNKNOWN,				// 157
+			G_KEY_UNKNOWN,				// 158
+			G_KEY_UNKNOWN,				// 159
+			G_KEY_LEFTSHIFT,			// 160
+			G_KEY_RIGHTSHIFT,			// 161
+			G_KEY_LEFTCONTROL,			// 162
+			G_KEY_RIGHTCONTROL,			// 163
+			G_KEY_UNKNOWN,				// 164
+			G_KEY_UNKNOWN,				// 165
+			G_KEY_UNKNOWN,				// 166
+			G_KEY_UNKNOWN,				// 167
+			G_KEY_UNKNOWN,				// 168
+			G_KEY_UNKNOWN,				// 169
+			G_KEY_UNKNOWN,				// 170
+			G_KEY_UNKNOWN,				// 171
+			G_KEY_UNKNOWN,				// 172
+			G_KEY_UNKNOWN,				// 173
+			G_KEY_UNKNOWN,				// 174
+			G_KEY_UNKNOWN,				// 175
+			G_KEY_UNKNOWN,				// 176
+			G_KEY_UNKNOWN,				// 177
+			G_KEY_UNKNOWN,				// 178
+			G_KEY_UNKNOWN,				// 179
+			G_KEY_UNKNOWN,				// 180
+			G_KEY_UNKNOWN,				// 181
+			G_KEY_UNKNOWN,				// 182
+			G_KEY_UNKNOWN,				// 183
+			G_KEY_UNKNOWN,				// 184
+			G_KEY_UNKNOWN,				// 185
+			G_KEY_SEMICOLON,			// 186
+			G_KEY_EQUALS,				// 187
+			G_KEY_COMMA,				// 188
+			G_KEY_MINUS,				// 189
+			G_KEY_PERIOD,				// 190
+			G_KEY_FORWARDSLASH,			// 191
+			G_KEY_TILDE,				// 192
+			G_KEY_UNKNOWN,				// 193
+			G_KEY_UNKNOWN,				// 194
+			G_KEY_UNKNOWN,				// 195
+			G_KEY_UNKNOWN,				// 196
+			G_KEY_UNKNOWN,				// 197
+			G_KEY_UNKNOWN,				// 198
+			G_KEY_UNKNOWN,				// 199
+			G_KEY_UNKNOWN,				// 200
+			G_KEY_UNKNOWN,				// 201
+			G_KEY_UNKNOWN,				// 202
+			G_KEY_UNKNOWN,				// 203
+			G_KEY_UNKNOWN,				// 204
+			G_KEY_UNKNOWN,				// 205
+			G_KEY_UNKNOWN,				// 206
+			G_KEY_UNKNOWN,				// 207
+			G_KEY_UNKNOWN,				// 208
+			G_KEY_UNKNOWN,				// 209
+			G_KEY_UNKNOWN,				// 210
+			G_KEY_UNKNOWN,				// 211
+			G_KEY_UNKNOWN,				// 212
+			G_KEY_UNKNOWN,				// 213
+			G_KEY_UNKNOWN,				// 214
+			G_KEY_UNKNOWN,				// 215
+			G_KEY_UNKNOWN,				// 216
+			G_KEY_UNKNOWN,				// 217
+			G_KEY_UNKNOWN,				// 218
+			G_KEY_BRACKET_OPEN,			// 219
+			G_KEY_BACKSLASH,			// 220
+			G_KEY_BRACKET_CLOSE,		// 221
+			G_KEY_QUOTE,				// 222
+			G_KEY_UNKNOWN,				// 223
+			G_KEY_UNKNOWN,				// 224
+			G_KEY_UNKNOWN,				// 225
+			G_KEY_BACKSLASH,			// 226
+
+
+		};
+#endif
 #elif defined(__linux__)
-		constexpr unsigned int Keycodes[128] =
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_UNKNOWN,			// 0
 			G_KEY_UNKNOWN,			// 1
@@ -42465,7 +49535,10 @@ namespace GW
 			
 		};
 #elif defined(__APPLE__)
-		constexpr unsigned int Keycodes[128] =
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_A,				// 0
 			G_KEY_S,				// 1
@@ -42626,146 +49699,146 @@ namespace GW
 			{
 				inputDaemon = nullptr;
 			}
-			
+
 			GReturn Create(GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE _uwh)
 			{
 				if (!_uwh.window || !_uwh.display)
 					return GReturn::INVALID_ARGUMENT;
-					
+
 				window = *((Window*)(_uwh.window));
 				display = ((Display*)(_uwh.display));
 				keyMask = 0;
-				
+
 				XInitThreads();// daemon run on another thread
 				return inputDaemon.Create(G_BUFFEREDINPUT_OPERATION_INTERVAL, [&]()
-				{
-					int _code = -1;
-					GEvent m_GEvent;
-					Events m_Event = Events::Invalid;
-					EVENT_DATA m_EventData;
-					Window a, b;
-					
-					LockAsyncRead();
-					XQueryPointer(display, window, &a, &b, &m_EventData.screenX, &m_EventData.screenY, &m_EventData.x, &m_EventData.y, &m_EventData.keyMask);
+					{
+						int _code = -1;
+						GEvent m_GEvent;
+						Events m_Event = Events::Invalid;
+						EVENT_DATA m_EventData;
+						Window a, b;
 
-					char keys_return[32];
-					//Get the current state of all keys.
-					XQueryKeymap(display, keys_return);
-					UnlockAsyncRead();
-					//Loop through all the keys and check to see if they match the saved state of all the keys.
-					for (unsigned int i = 5; i < 126; ++i) 
-					{
-						m_EventData.data = Keycodes[i];
-						//Save the state of current key.
-						unsigned int key = keys_return[(i >> 3)] & (1 << (i & 7));
-						//If a key does not match send an event saying it has been updated.
-						if (key != keyStates[m_EventData.data]) 
-						{
-							if (key == 0) 
-							{
-								m_Event = Events::KEYRELEASED;
-							}
-							else
-							{
-								m_Event = Events::KEYPRESSED;
-							}
-							
-							//Send the event to all registered listeners.
-							m_GEvent.Write(m_Event, m_EventData);
-							Push(m_GEvent);
-							keyStates[m_EventData.data] = key;
-						}
-					}
+						LockAsyncRead();
+						XQueryPointer(display, window, &a, &b, &m_EventData.screenX, &m_EventData.screenY, &m_EventData.x, &m_EventData.y, &m_EventData.keyMask);
 
-					if (m_EventData.keyMask & Button1Mask) 
-					{
-						if (!keyStates[G_BUTTON_LEFT]) 
+						char keys_return[32];
+						//Get the current state of all keys.
+						XQueryKeymap(display, keys_return);
+						UnlockAsyncRead();
+						//Loop through all the keys and check to see if they match the saved state of all the keys.
+						for (unsigned int i = 5; i < 126; ++i)
 						{
-							m_EventData.data = G_BUTTON_LEFT;
-							m_Event = Events::BUTTONPRESSED;
-							keyStates[G_BUTTON_LEFT] = 1;
+							m_EventData.data = Keycodes[i];
+							//Save the state of current key.
+							unsigned int key = keys_return[(i >> 3)] & (1 << (i & 7));
+							//If a key does not match send an event saying it has been updated.
+							if (key != keyStates[m_EventData.data])
+							{
+								if (key == 0)
+								{
+									m_Event = Events::KEYRELEASED;
+								}
+								else
+								{
+									m_Event = Events::KEYPRESSED;
+								}
+
+								//Send the event to all registered listeners.
+								m_GEvent.Write(m_Event, m_EventData);
+								Push(m_GEvent);
+								keyStates[m_EventData.data] = key;
+							}
+						}
+
+						if (m_EventData.keyMask & Button1Mask)
+						{
+							if (!keyStates[G_BUTTON_LEFT])
+							{
+								m_EventData.data = G_BUTTON_LEFT;
+								m_Event = Events::BUTTONPRESSED;
+								keyStates[G_BUTTON_LEFT] = 1;
+								//Send the event to all registered listeners.
+								m_GEvent.Write(m_Event, m_EventData);
+								Push(m_GEvent);
+							}
+						}
+						else
+						{
+							if (keyStates[G_BUTTON_LEFT])
+							{
+								m_EventData.data = G_BUTTON_LEFT;
+								m_Event = Events::BUTTONRELEASED;
+								keyStates[G_BUTTON_LEFT] = 0;
+								//Send the event to all registered listeners.
+								m_GEvent.Write(m_Event, m_EventData);
+								Push(m_GEvent);
+							}
+						}
+
+						if (m_EventData.keyMask & Button2Mask)
+						{
+							if (!keyStates[G_BUTTON_MIDDLE])
+							{
+								m_EventData.data = G_BUTTON_MIDDLE;
+								m_Event = Events::BUTTONPRESSED;
+								keyStates[G_BUTTON_MIDDLE] = 1;
+								//Send the event to all registered listeners.
+								m_GEvent.Write(m_Event, m_EventData);
+								Push(m_GEvent);
+							}
+						}
+						else
+						{
+							if (keyStates[G_BUTTON_MIDDLE])
+							{
+								m_EventData.data = G_BUTTON_MIDDLE;
+								m_Event = Events::BUTTONRELEASED;
+								keyStates[G_BUTTON_MIDDLE] = 0;
+								//Send the event to all registered listeners.
+								m_GEvent.Write(m_Event, m_EventData);
+								Push(m_GEvent);
+							}
+						}
+
+						if (m_EventData.keyMask & Button3Mask)
+						{
+							if (!keyStates[G_BUTTON_RIGHT])
+							{
+								m_EventData.data = G_BUTTON_RIGHT;
+								m_Event = Events::BUTTONPRESSED;
+								keyStates[G_BUTTON_RIGHT] = 1;
+								//Send the event to all registered listeners.
+								m_GEvent.Write(m_Event, m_EventData);
+								Push(m_GEvent);
+							}
+						}
+						else
+						{
+							if (keyStates[G_BUTTON_RIGHT])
+							{
+								m_EventData.data = G_BUTTON_RIGHT;
+								m_Event = Events::BUTTONRELEASED;
+								keyStates[G_BUTTON_RIGHT] = 0;
+								//Send the event to all registered listeners.
+								m_GEvent.Write(m_Event, m_EventData);
+								Push(m_GEvent);
+							}
+						}
+
+						if ((m_EventData.x - lastMouseX) != 0 || (m_EventData.y - lastMouseY) != 0)
+						{
+							m_EventData.data = G_KEY_UNKNOWN;
+							m_Event = Events::MOUSEMOVE;
 							//Send the event to all registered listeners.
 							m_GEvent.Write(m_Event, m_EventData);
 							Push(m_GEvent);
+
+							lastMouseX = m_EventData.x;
+							lastMouseY = m_EventData.y;
 						}
-					}
-					else 
-					{
-						if (keyStates[G_BUTTON_LEFT]) 
-						{
-							m_EventData.data = G_BUTTON_LEFT;
-							m_Event = Events::BUTTONRELEASED;
-							keyStates[G_BUTTON_LEFT] = 0;
-							//Send the event to all registered listeners.
-							m_GEvent.Write(m_Event, m_EventData);
-							Push(m_GEvent);
-						}
-					}
-					
-					if (m_EventData.keyMask & Button2Mask) 
-					{
-						if (!keyStates[G_BUTTON_MIDDLE]) 
-						{
-							m_EventData.data = G_BUTTON_MIDDLE;
-							m_Event = Events::BUTTONPRESSED;
-							keyStates[G_BUTTON_MIDDLE] = 1;
-							//Send the event to all registered listeners.
-							m_GEvent.Write(m_Event, m_EventData);
-							Push(m_GEvent);
-						}
-					}
-					else 
-					{
-						if (keyStates[G_BUTTON_MIDDLE]) 
-						{
-							m_EventData.data = G_BUTTON_MIDDLE;
-							m_Event = Events::BUTTONRELEASED;
-							keyStates[G_BUTTON_MIDDLE] = 0;
-							//Send the event to all registered listeners.
-							m_GEvent.Write(m_Event, m_EventData);
-							Push(m_GEvent);
-						}
-					}
-		
-					if (m_EventData.keyMask & Button3Mask) 
-					{
-						if (!keyStates[G_BUTTON_RIGHT]) 
-						{
-							m_EventData.data = G_BUTTON_RIGHT;
-							m_Event = Events::BUTTONPRESSED;
-							keyStates[G_BUTTON_RIGHT] = 1;
-							//Send the event to all registered listeners.
-							m_GEvent.Write(m_Event, m_EventData);
-							Push(m_GEvent);
-						}
-					}
-					else 
-					{
-						if (keyStates[G_BUTTON_RIGHT]) 
-						{
-							m_EventData.data = G_BUTTON_RIGHT;
-							m_Event = Events::BUTTONRELEASED;
-							keyStates[G_BUTTON_RIGHT] = 0;
-							//Send the event to all registered listeners.
-							m_GEvent.Write(m_Event, m_EventData);
-							Push(m_GEvent);
-						}
-					}
-					
-					if ((m_EventData.x - lastMouseX) != 0 || (m_EventData.y - lastMouseY) != 0)
-					{
-						m_EventData.data = G_KEY_UNKNOWN;
-						m_Event = Events::MOUSEMOVE;
-						//Send the event to all registered listeners.
-						m_GEvent.Write(m_Event, m_EventData);
-						Push(m_GEvent);
-						
-						lastMouseX = m_EventData.x;
-						lastMouseY = m_EventData.y;
-					}					
-				});
+					});
 			}
-			
+
 			GReturn Create(GW::SYSTEM::GWindow _window)
 			{
 				if (!_window)
@@ -42777,19 +49850,22 @@ namespace GW
 					return code;
 
 				// stop if window is killed
-				watcher.Create(_window, [&](){
+				watcher.Create(_window, [&]() {
 					if (+watcher.Find(GW::SYSTEM::GWindow::Events::DESTROY, true))
 						inputDaemon = nullptr;
-				});
-				
+					});
+
 				return Create(uwh);
 			}
 		};
 	}
 }
 
+
 #elif defined(_WIN32)
-    #include <map>
+    #include <winapifamily.h>
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #include <map>
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 // Need include guard for this because GInput and GBufferedInput uses this file
@@ -42803,7 +49879,12 @@ namespace GW
 	namespace I
 	{
 #if defined(_WIN32)
-		constexpr unsigned int Keycodes[128] =
+#include <winapifamily.h>
+#if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_UNKNOWN,				// 0
 			G_KEY_ESCAPE,				// 1
@@ -42934,8 +50015,248 @@ namespace GW
 			G_KEY_UNKNOWN,				// 126
 			G_KEY_UNKNOWN				// 127
 		};
+#elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+#define G_MAX_KEYCODES 256
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
+		{
+			G_KEY_UNKNOWN,				// 0
+			G_BUTTON_LEFT,				// 1
+			G_BUTTON_RIGHT,				// 2
+			G_KEY_UNKNOWN,				// 3 Cancel
+			G_BUTTON_MIDDLE,			// 4
+			G_KEY_UNKNOWN,				// 5 XButton1
+			G_KEY_UNKNOWN,				// 6 XButton2
+			G_KEY_UNKNOWN,				// 7
+			G_KEY_BACKSPACE,			// 8
+			G_KEY_TAB,					// 9
+			G_KEY_UNKNOWN,				// 10
+			G_KEY_UNKNOWN,				// 11
+			G_KEY_UNKNOWN,				// 12 Clear
+			G_KEY_ENTER,				// 13
+			G_KEY_UNKNOWN,				// 14
+			G_KEY_UNKNOWN,				// 15
+			G_KEY_LEFTSHIFT,			// 16 Shift
+			G_KEY_LEFTCONTROL,			// 17 Control
+			G_KEY_UNKNOWN,				// 18 Menu
+			G_KEY_PAUSE,				// 19
+			G_KEY_CAPSLOCK,				// 20
+			G_KEY_UNKNOWN,				// 21 Kana/Hangul
+			G_KEY_UNKNOWN,				// 22 ImeOn
+			G_KEY_UNKNOWN,				// 23 Junja
+			G_KEY_UNKNOWN,				// 24 Final
+			G_KEY_UNKNOWN,				// 25 Kanji
+			G_KEY_UNKNOWN,				// 26 ImeOff
+			G_KEY_ESCAPE,				// 27 
+			G_KEY_UNKNOWN,				// 28 Convert
+			G_KEY_UNKNOWN,				// 29 NonConvert
+			G_KEY_UNKNOWN,				// 30 Accept
+			G_KEY_UNKNOWN,				// 31 ModeChange
+			G_KEY_SPACE,				// 32
+			G_KEY_PAGEUP,				// 33
+			G_KEY_PAGEDOWN,				// 34
+			G_KEY_END,					// 35
+			G_KEY_HOME,					// 36
+			G_KEY_LEFT,					// 37
+			G_KEY_UP,					// 38
+			G_KEY_RIGHT,				// 39
+			G_KEY_DOWN,					// 40
+			G_KEY_UNKNOWN,				// 41 Select
+			G_KEY_PRINTSCREEN,			// 42
+			G_KEY_UNKNOWN,				// 43 Execute
+			G_KEY_PRINTSCREEN,				// 44 Snapshot
+			G_KEY_INSERT,				// 45
+			G_KEY_DELETE,				// 46
+			G_KEY_UNKNOWN,				// 47 Help
+			G_KEY_0,					// 48
+			G_KEY_1,					// 49
+			G_KEY_2,					// 50
+			G_KEY_3,					// 51
+			G_KEY_4,					// 52
+			G_KEY_5,					// 53
+			G_KEY_6,					// 54
+			G_KEY_7,					// 55
+			G_KEY_8,					// 56
+			G_KEY_9,					// 57
+			G_KEY_UNKNOWN,				// 58
+			G_KEY_UNKNOWN,				// 59
+			G_KEY_UNKNOWN,				// 60
+			G_KEY_UNKNOWN,				// 61
+			G_KEY_UNKNOWN,				// 62
+			G_KEY_UNKNOWN,				// 63
+			G_KEY_UNKNOWN,				// 64
+			G_KEY_A,					// 65
+			G_KEY_B,					// 66
+			G_KEY_C,					// 67
+			G_KEY_D,					// 68
+			G_KEY_E,					// 69
+			G_KEY_F,					// 70
+			G_KEY_G,					// 71
+			G_KEY_H,					// 72
+			G_KEY_I,					// 73
+			G_KEY_J,					// 74
+			G_KEY_K,					// 75
+			G_KEY_L,					// 76
+			G_KEY_M,					// 77
+			G_KEY_N,					// 78
+			G_KEY_O,					// 79
+			G_KEY_P,					// 80
+			G_KEY_Q,					// 81
+			G_KEY_R,					// 82
+			G_KEY_S,					// 83
+			G_KEY_T,					// 84
+			G_KEY_U,					// 85
+			G_KEY_V,					// 86
+			G_KEY_W,					// 87
+			G_KEY_X,					// 88
+			G_KEY_Y,					// 89
+			G_KEY_Z,					// 90
+			G_KEY_UNKNOWN,				// 91 LeftWindows
+			G_KEY_UNKNOWN,				// 92 RightWindow
+			G_KEY_UNKNOWN,				// 93 Application
+			G_KEY_UNKNOWN,				// 94
+			G_KEY_UNKNOWN,				// 95 Sleep
+			G_KEY_NUMPAD_0,				// 96
+			G_KEY_NUMPAD_1,				// 97
+			G_KEY_NUMPAD_2,				// 98
+			G_KEY_NUMPAD_3,				// 99
+			G_KEY_NUMPAD_4,				// 100
+			G_KEY_NUMPAD_5,				// 101
+			G_KEY_NUMPAD_6,				// 102
+			G_KEY_NUMPAD_7,				// 103
+			G_KEY_NUMPAD_8,				// 104
+			G_KEY_NUMPAD_9,				// 105
+			G_KEY_NUMPAD_MULTIPLY,		// 106
+			G_KEY_NUMPAD_ADD,			// 107
+			G_KEY_UNKNOWN,				// 108 Separator
+			G_KEY_NUMPAD_SUBTRACT,		// 109
+			G_KEY_NUMPAD_PERIOD,		// 110
+			G_KEY_NUMPAD_DIVIDE,		// 111
+			G_KEY_F1,					// 112
+			G_KEY_F2,					// 113
+			G_KEY_F3,					// 114
+			G_KEY_F4,					// 115
+			G_KEY_F5,					// 116
+			G_KEY_F6,					// 117
+			G_KEY_F7,					// 118
+			G_KEY_F8,					// 119
+			G_KEY_F9,					// 120
+			G_KEY_F10,					// 121
+			G_KEY_F11,					// 122
+			G_KEY_F12,					// 123
+			G_KEY_UNKNOWN,				// 124 F13
+			G_KEY_UNKNOWN,				// 125 F14
+			G_KEY_UNKNOWN,				// 126 F15
+			G_KEY_UNKNOWN,				// 127 F16
+			G_KEY_UNKNOWN,				// 128 F17
+			G_KEY_UNKNOWN,				// 129 F18
+			G_KEY_UNKNOWN,				// 130 F19
+			G_KEY_UNKNOWN,				// 131 F20
+			G_KEY_UNKNOWN,				// 132 F21
+			G_KEY_UNKNOWN,				// 133 F22
+			G_KEY_UNKNOWN,				// 134 F23
+			G_KEY_UNKNOWN,				// 135 F24
+			G_KEY_UNKNOWN,				// 136 NavigationView
+			G_KEY_UNKNOWN,				// 137 NavigationMenu
+			G_KEY_UNKNOWN,				// 138 NavigationUp
+			G_KEY_UNKNOWN,				// 139 NavigationDown
+			G_KEY_UNKNOWN,				// 140 NavigationLeft
+			G_KEY_UNKNOWN,				// 141 NavigationRight 
+			G_KEY_UNKNOWN,				// 142 NavigationAccept
+			G_KEY_UNKNOWN,				// 143 NavigationCancel
+			G_KEY_NUMLOCK,				// 144
+			G_KEY_SCROLL_LOCK,			// 145 Scroll
+			G_KEY_UNKNOWN,				// 146
+			G_KEY_UNKNOWN,				// 147
+			G_KEY_UNKNOWN,				// 148
+			G_KEY_UNKNOWN,				// 149
+			G_KEY_UNKNOWN,				// 150
+			G_KEY_UNKNOWN,				// 151
+			G_KEY_UNKNOWN,				// 152
+			G_KEY_UNKNOWN,				// 153
+			G_KEY_UNKNOWN,				// 154
+			G_KEY_UNKNOWN,				// 155
+			G_KEY_UNKNOWN,				// 156
+			G_KEY_UNKNOWN,				// 157
+			G_KEY_UNKNOWN,				// 158
+			G_KEY_UNKNOWN,				// 159
+			G_KEY_LEFTSHIFT,			// 160
+			G_KEY_RIGHTSHIFT,			// 161
+			G_KEY_LEFTCONTROL,			// 162
+			G_KEY_RIGHTCONTROL,			// 163
+			G_KEY_UNKNOWN,				// 164
+			G_KEY_UNKNOWN,				// 165
+			G_KEY_UNKNOWN,				// 166
+			G_KEY_UNKNOWN,				// 167
+			G_KEY_UNKNOWN,				// 168
+			G_KEY_UNKNOWN,				// 169
+			G_KEY_UNKNOWN,				// 170
+			G_KEY_UNKNOWN,				// 171
+			G_KEY_UNKNOWN,				// 172
+			G_KEY_UNKNOWN,				// 173
+			G_KEY_UNKNOWN,				// 174
+			G_KEY_UNKNOWN,				// 175
+			G_KEY_UNKNOWN,				// 176
+			G_KEY_UNKNOWN,				// 177
+			G_KEY_UNKNOWN,				// 178
+			G_KEY_UNKNOWN,				// 179
+			G_KEY_UNKNOWN,				// 180
+			G_KEY_UNKNOWN,				// 181
+			G_KEY_UNKNOWN,				// 182
+			G_KEY_UNKNOWN,				// 183
+			G_KEY_UNKNOWN,				// 184
+			G_KEY_UNKNOWN,				// 185
+			G_KEY_SEMICOLON,			// 186
+			G_KEY_EQUALS,				// 187
+			G_KEY_COMMA,				// 188
+			G_KEY_MINUS,				// 189
+			G_KEY_PERIOD,				// 190
+			G_KEY_FORWARDSLASH,			// 191
+			G_KEY_TILDE,				// 192
+			G_KEY_UNKNOWN,				// 193
+			G_KEY_UNKNOWN,				// 194
+			G_KEY_UNKNOWN,				// 195
+			G_KEY_UNKNOWN,				// 196
+			G_KEY_UNKNOWN,				// 197
+			G_KEY_UNKNOWN,				// 198
+			G_KEY_UNKNOWN,				// 199
+			G_KEY_UNKNOWN,				// 200
+			G_KEY_UNKNOWN,				// 201
+			G_KEY_UNKNOWN,				// 202
+			G_KEY_UNKNOWN,				// 203
+			G_KEY_UNKNOWN,				// 204
+			G_KEY_UNKNOWN,				// 205
+			G_KEY_UNKNOWN,				// 206
+			G_KEY_UNKNOWN,				// 207
+			G_KEY_UNKNOWN,				// 208
+			G_KEY_UNKNOWN,				// 209
+			G_KEY_UNKNOWN,				// 210
+			G_KEY_UNKNOWN,				// 211
+			G_KEY_UNKNOWN,				// 212
+			G_KEY_UNKNOWN,				// 213
+			G_KEY_UNKNOWN,				// 214
+			G_KEY_UNKNOWN,				// 215
+			G_KEY_UNKNOWN,				// 216
+			G_KEY_UNKNOWN,				// 217
+			G_KEY_UNKNOWN,				// 218
+			G_KEY_BRACKET_OPEN,			// 219
+			G_KEY_BACKSLASH,			// 220
+			G_KEY_BRACKET_CLOSE,		// 221
+			G_KEY_QUOTE,				// 222
+			G_KEY_UNKNOWN,				// 223
+			G_KEY_UNKNOWN,				// 224
+			G_KEY_UNKNOWN,				// 225
+			G_KEY_BACKSLASH,			// 226
+
+
+		};
+#endif
 #elif defined(__linux__)
-		constexpr unsigned int Keycodes[128] =
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_UNKNOWN,			// 0
 			G_KEY_UNKNOWN,			// 1
@@ -43068,7 +50389,10 @@ namespace GW
 			
 		};
 #elif defined(__APPLE__)
-		constexpr unsigned int Keycodes[128] =
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_A,				// 0
 			G_KEY_S,				// 1
@@ -43209,21 +50533,23 @@ namespace GW
 
 namespace internal_gw
 {
-	struct GBUFFEREDINPUT_GLOBAL
+	struct GBUFFEREDINPUT_VALUES
 	{
 		unsigned int keyMask = 0;
 		LONG_PTR _userWinProc = 0;
 		POINT lastMousePosition = { 0, 0 };
 		UCHAR lastPressedState[256] = { 0, };
 		GW::CORE::GEventGenerator keyEvents;
-		GBUFFEREDINPUT_GLOBAL() {
+
+		unsigned int count = 0;
+		GBUFFEREDINPUT_VALUES() {
 			keyEvents.Create();
 		}
 	};
-	static GBUFFEREDINPUT_GLOBAL& GBufferedInputGlobal()
-	{
-		static GBUFFEREDINPUT_GLOBAL gdata;
-		return gdata;
+
+	inline std::map<HWND, GBUFFEREDINPUT_VALUES>& GetWindowBufferedInputValues() {
+		static std::map<HWND, GBUFFEREDINPUT_VALUES> hWndMapBuffered;
+		return hWndMapBuffered;
 	}
 }
 
@@ -43234,7 +50560,8 @@ namespace GW
 		class GBufferedInputImplementation : public virtual GBufferedInputInterface
 		{
 		private:
-			HWND wndHandle = nullptr;
+			HWND hWnd = nullptr;
+			internal_gw::GBUFFEREDINPUT_VALUES* inputStates;
 			
 			static LRESULT CALLBACK GWindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
@@ -43259,7 +50586,7 @@ namespace GW
 					}
 
 					UINT dwSize = 0;
-					unsigned int keyMask = internal_gw::GBufferedInputGlobal().keyMask;
+					unsigned int keyMask = internal_gw::GetWindowBufferedInputValues()[hWnd].keyMask;
 					//Get the size of RawInput
 					GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
 					static std::vector<BYTE> rawbuff;
@@ -43326,17 +50653,17 @@ namespace GW
 						case 0:
 						case 1:
 							//Check if the mouse position changed by at least a pixel amount, we don't want to send messages for sub-pixel change.
-							if ((m_EventData.x - internal_gw::GBufferedInputGlobal().lastMousePosition.x) != 0 ||
-								(m_EventData.y - internal_gw::GBufferedInputGlobal().lastMousePosition.y) != 0)
+							if ((m_EventData.x - internal_gw::GetWindowBufferedInputValues()[hWnd].lastMousePosition.x) != 0 ||
+								(m_EventData.y - internal_gw::GetWindowBufferedInputValues()[hWnd].lastMousePosition.y) != 0)
 							{
 								m_EventData.data = G_KEY_UNKNOWN;
 								m_EventData.keyMask = keyMask;
 
 								m_Event = Events::MOUSEMOVE;
 								m_GEvent.Write(m_Event, m_EventData);
-								internal_gw::GBufferedInputGlobal().keyEvents.Push(m_GEvent);
+								internal_gw::GetWindowBufferedInputValues()[hWnd].keyEvents.Push(m_GEvent);
 
-								internal_gw::GBufferedInputGlobal().lastMousePosition = { m_EventData.x, m_EventData.y };
+								internal_gw::GetWindowBufferedInputValues()[hWnd].lastMousePosition = { m_EventData.x, m_EventData.y };
 							}
 							break;
 						}
@@ -43386,28 +50713,28 @@ namespace GW
 						}
 					}
 					// don't send key repeats when holding down the button
-					if (internal_gw::GBufferedInputGlobal().
+					if (internal_gw::GetWindowBufferedInputValues()[hWnd].
 					lastPressedState[m_EventData.data] == 1 &&
 					m_Event == Events::KEYPRESSED)
 						m_Event = Events::Invalid;
-					else if (internal_gw::GBufferedInputGlobal().
+					else if (internal_gw::GetWindowBufferedInputValues()[hWnd].
 					lastPressedState[m_EventData.data] == 0 &&
 					m_Event == Events::KEYPRESSED)
-						internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] = 1;
-					else if (internal_gw::GBufferedInputGlobal().
+						internal_gw::GetWindowBufferedInputValues()[hWnd].lastPressedState[m_EventData.data] = 1;
+					else if (internal_gw::GetWindowBufferedInputValues()[hWnd].
 					lastPressedState[m_EventData.data] == 1 &&
 					m_Event == Events::KEYRELEASED)
-						internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] = 0;
+						internal_gw::GetWindowBufferedInputValues()[hWnd].lastPressedState[m_EventData.data] = 0;
 
 					//If the mouse move event was the only event, don't send it again.
 					if (m_Event != Events::MOUSEMOVE)
 					{
-						internal_gw::GBufferedInputGlobal().keyMask = keyMask;
+						internal_gw::GetWindowBufferedInputValues()[hWnd].keyMask = keyMask;
 						m_EventData.keyMask = keyMask;
 
 						m_GEvent.Write(m_Event, m_EventData);
 						if (m_Event != Events::Invalid)
-							internal_gw::GBufferedInputGlobal().keyEvents.Push(m_GEvent);
+							internal_gw::GetWindowBufferedInputValues()[hWnd].keyEvents.Push(m_GEvent);
 					}
 				}
 				break;
@@ -43415,23 +50742,41 @@ namespace GW
 				default:
 					break;
 				}
-				return CallWindowProcW((WNDPROC)internal_gw::GBufferedInputGlobal()._userWinProc, hWnd, uMsg, wParam, lParam);
+				return CallWindowProcW((WNDPROC)internal_gw::GetWindowBufferedInputValues()[hWnd]._userWinProc, hWnd, uMsg, wParam, lParam);
 			}
 		public:
 			~GBufferedInputImplementation()
 			{
-				if (wndHandle)
+				if (hWnd) {
+					--inputStates->count;
 					//Sets the WinProc back. (Fixes the StackOverFlow bug)
-					SetWindowLongPtr(wndHandle, GWLP_WNDPROC, (LONG_PTR)internal_gw::GBufferedInputGlobal()._userWinProc);
+					if (inputStates->count == 0) {
+						SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)inputStates->_userWinProc);
+						internal_gw::GetWindowBufferedInputValues().erase(hWnd);
+					}
+				}
 			}
-			GReturn Create(GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE _uwh)
+			GReturn Create(GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE _windowHandle)
 			{
-				if (!_uwh.window)
+				if (!_windowHandle.window)
 					return GReturn::INVALID_ARGUMENT;
 
-				wndHandle = static_cast<HWND>(_uwh.window);
-				if ((internal_gw::GBufferedInputGlobal()._userWinProc = 
-					SetWindowLongPtr(wndHandle, GWLP_WNDPROC, (LONG_PTR)GWindowProcedure)) == NULL)
+				hWnd = static_cast<HWND>(_windowHandle.window);
+				auto iter = internal_gw::GetWindowBufferedInputValues().find(hWnd);
+
+				if (iter != internal_gw::GetWindowBufferedInputValues().end()) {
+					inputStates = &internal_gw::GetWindowBufferedInputValues()[hWnd];
+					++inputStates->count;
+
+					return GW::GReturn::SUCCESS;
+				}
+
+				internal_gw::GetWindowBufferedInputValues()[hWnd] = internal_gw::GBUFFEREDINPUT_VALUES();
+				inputStates = &internal_gw::GetWindowBufferedInputValues()[hWnd];
+
+				inputStates->count = 1;
+
+				if ((inputStates->_userWinProc = SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)GWindowProcedure)) == NULL)
 				{
 					//The user has not setup a windows proc prior to this point.
 					printf("SetWindowLongPtr Error : %d \n", GetLastError());
@@ -43500,13 +50845,13 @@ namespace GW
 				rID[0].usUsagePage = 0x01;
 				rID[0].usUsage = 0x06;
 				rID[0].dwFlags = RIDEV_EXINPUTSINK;
-				rID[0].hwndTarget = wndHandle;
+				rID[0].hwndTarget = hWnd;
 
 				//Mouse
 				rID[1].usUsagePage = 0x01;
 				rID[1].usUsage = 0x02;
 				rID[1].dwFlags = RIDEV_EXINPUTSINK;
-				rID[1].hwndTarget = wndHandle;
+				rID[1].hwndTarget = hWnd;
 
 				if (RegisterRawInputDevices(rID, 2, sizeof(rID[0])) == false)
 				{
@@ -43517,19 +50862,19 @@ namespace GW
 				//Capslock
 				if ((GetKeyState(VK_CAPITAL) & 0x0001) != 0)
 				{
-					G_TURNON_BIT(internal_gw::GBufferedInputGlobal().keyMask, G_MASK_CAPS_LOCK);
+					G_TURNON_BIT(inputStates->keyMask, G_MASK_CAPS_LOCK);
 				}
 
 				//Numlock
 				if ((GetKeyState(VK_NUMLOCK) & 0x0001) != 0)
 				{
-					G_TURNON_BIT(internal_gw::GBufferedInputGlobal().keyMask, G_MASK_NUM_LOCK);
+					G_TURNON_BIT(inputStates->keyMask, G_MASK_NUM_LOCK);
 				}
 
 				//ScrollLock
 				if ((GetKeyState(VK_SCROLL) & 0x0001) != 0)
 				{
-					G_TURNON_BIT(internal_gw::GBufferedInputGlobal().keyMask, G_MASK_SCROLL_LOCK);
+					G_TURNON_BIT(inputStates->keyMask, G_MASK_SCROLL_LOCK);
 				}
 
 				return GReturn::SUCCESS;
@@ -43549,89 +50894,36 @@ namespace GW
 			}
 			// transfer any receivers to internal global broadcaster
 			GReturn Register(CORE::GEventCache _observer) override {
-				return internal_gw::GBufferedInputGlobal().keyEvents.Register(_observer);
+				return inputStates->keyEvents.Register(_observer);
 			}
 			GReturn Register(CORE::GEventResponder _observer) override {
-				return internal_gw::GBufferedInputGlobal().keyEvents.Register(_observer);
+				return inputStates->keyEvents.Register(_observer);
 			}
 			GReturn Register(CORE::GInterface _observer, void(*_callback)(const GEvent&, CORE::GInterface&)) override {
-				return internal_gw::GBufferedInputGlobal().keyEvents.Register(_observer, _callback);
+				return inputStates->keyEvents.Register(_observer, _callback);
 			}
 			GReturn Deregister(CORE::GInterface _observer) override {
-				return internal_gw::GBufferedInputGlobal().keyEvents.Deregister(_observer);
+				return inputStates->keyEvents.Deregister(_observer);
 			}
 			GReturn Observers(unsigned int& _outCount) const override {
-				return internal_gw::GBufferedInputGlobal().keyEvents.Observers(_outCount);
+				return inputStates->keyEvents.Observers(_outCount);
 			}
 			GReturn Push(const GEvent& _newEvent) override {
-				return internal_gw::GBufferedInputGlobal().keyEvents.Push(_newEvent);
+				return inputStates->keyEvents.Push(_newEvent);
 			}
 		};
 	}
 }
 
-#endif
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        #include <Windows.h>
+#include <vector>
 
-
-namespace GW
-{
-	namespace INPUT
-	{
-		class GBufferedInput final
-			: public I::GProxy<I::GBufferedInputInterface, I::GBufferedInputImplementation, GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE>
-		{
-		public: // Only public functions are exposed via Proxy, never protected or private operations
-			// proxy functions should be ignored by doxygen
-			GATEWARE_PROXY_CLASS(GBufferedInput)
-			GATEWARE_TYPEDEF(Events)
-			GATEWARE_TYPEDEF(EVENT_DATA)
-
-			// reimplemented functions
-			GATEWARE_FUNCTION(Register)
-			GATEWARE_CONST_FUNCTION(Observers)
-			GATEWARE_FUNCTION(Push)
-
-			// This area does not contain actual code, it is only for the benefit of documentation generation.
-		};
-	}
-}
-#endif // GBUFFEREDINPUT_H
-
-#ifndef GINPUT_H
-#define GINPUT_H
-
-
-
-
-
-
-namespace GW
-{
-	namespace I
-	{
-		class GInputInterface : public virtual GInterfaceInterface
-		{
-		public:
-			virtual GReturn GetState(int _keyCode, float& _outState) = 0;
-			virtual GReturn GetMouseDelta(float& _x, float& _y) = 0;
-			virtual GReturn GetMousePosition(float& _x, float& _y) const = 0;
-			virtual GReturn GetKeyMask(unsigned int& _outKeyMask) const = 0;
-		};
-	}// end I
-}// end GW 
-
-// Implementation Source link, will be search-replaced in single header version.
-// Implementaion for GInput.h
-// *IMPORTANT* End users of Gateware may ignore the contents of these files if they please.(Developers Only)
-// File not included in Doxygen, these files will be compiled directly into associated header file when deployed
-// Developers: Do NOT assume the contents of this file are within the scope of the related interface's namespace
-// Developers: These are NOT cpp files do not use "using namespace" or unprotected global variables (prefer static members)
-// Developers: If you MUST use a non-static global, use the "internal_gw" namespace to store them. (only on approval)
-
-// Gateware platform specific implementations are seperated into different files to keep things clean and flexible
-// As new platforms come online or are deprecated (or upgraded) we can modify their selection through this file
-// When adding implementations please try to condense redundant file includes where possible.
-// This will reduce size/redundancy when the library is tool compressed into single header form.
+#include <winrt/Windows.UI.Core.h>
+#include <winrt/Windows.UI.Input.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.UI.ViewManagement.h>
 // Need include guard for this because GInput and GBufferedInput uses this file
 #ifndef GINPUTTABLEROUTING_HPP
 #define GINPUTTABLEROUTING_HPP
@@ -43643,7 +50935,12 @@ namespace GW
 	namespace I
 	{
 #if defined(_WIN32)
-		constexpr unsigned int Keycodes[128] =
+#include <winapifamily.h>
+#if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_UNKNOWN,				// 0
 			G_KEY_ESCAPE,				// 1
@@ -43774,8 +51071,248 @@ namespace GW
 			G_KEY_UNKNOWN,				// 126
 			G_KEY_UNKNOWN				// 127
 		};
+#elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+#define G_MAX_KEYCODES 256
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
+		{
+			G_KEY_UNKNOWN,				// 0
+			G_BUTTON_LEFT,				// 1
+			G_BUTTON_RIGHT,				// 2
+			G_KEY_UNKNOWN,				// 3 Cancel
+			G_BUTTON_MIDDLE,			// 4
+			G_KEY_UNKNOWN,				// 5 XButton1
+			G_KEY_UNKNOWN,				// 6 XButton2
+			G_KEY_UNKNOWN,				// 7
+			G_KEY_BACKSPACE,			// 8
+			G_KEY_TAB,					// 9
+			G_KEY_UNKNOWN,				// 10
+			G_KEY_UNKNOWN,				// 11
+			G_KEY_UNKNOWN,				// 12 Clear
+			G_KEY_ENTER,				// 13
+			G_KEY_UNKNOWN,				// 14
+			G_KEY_UNKNOWN,				// 15
+			G_KEY_LEFTSHIFT,			// 16 Shift
+			G_KEY_LEFTCONTROL,			// 17 Control
+			G_KEY_UNKNOWN,				// 18 Menu
+			G_KEY_PAUSE,				// 19
+			G_KEY_CAPSLOCK,				// 20
+			G_KEY_UNKNOWN,				// 21 Kana/Hangul
+			G_KEY_UNKNOWN,				// 22 ImeOn
+			G_KEY_UNKNOWN,				// 23 Junja
+			G_KEY_UNKNOWN,				// 24 Final
+			G_KEY_UNKNOWN,				// 25 Kanji
+			G_KEY_UNKNOWN,				// 26 ImeOff
+			G_KEY_ESCAPE,				// 27 
+			G_KEY_UNKNOWN,				// 28 Convert
+			G_KEY_UNKNOWN,				// 29 NonConvert
+			G_KEY_UNKNOWN,				// 30 Accept
+			G_KEY_UNKNOWN,				// 31 ModeChange
+			G_KEY_SPACE,				// 32
+			G_KEY_PAGEUP,				// 33
+			G_KEY_PAGEDOWN,				// 34
+			G_KEY_END,					// 35
+			G_KEY_HOME,					// 36
+			G_KEY_LEFT,					// 37
+			G_KEY_UP,					// 38
+			G_KEY_RIGHT,				// 39
+			G_KEY_DOWN,					// 40
+			G_KEY_UNKNOWN,				// 41 Select
+			G_KEY_PRINTSCREEN,			// 42
+			G_KEY_UNKNOWN,				// 43 Execute
+			G_KEY_PRINTSCREEN,				// 44 Snapshot
+			G_KEY_INSERT,				// 45
+			G_KEY_DELETE,				// 46
+			G_KEY_UNKNOWN,				// 47 Help
+			G_KEY_0,					// 48
+			G_KEY_1,					// 49
+			G_KEY_2,					// 50
+			G_KEY_3,					// 51
+			G_KEY_4,					// 52
+			G_KEY_5,					// 53
+			G_KEY_6,					// 54
+			G_KEY_7,					// 55
+			G_KEY_8,					// 56
+			G_KEY_9,					// 57
+			G_KEY_UNKNOWN,				// 58
+			G_KEY_UNKNOWN,				// 59
+			G_KEY_UNKNOWN,				// 60
+			G_KEY_UNKNOWN,				// 61
+			G_KEY_UNKNOWN,				// 62
+			G_KEY_UNKNOWN,				// 63
+			G_KEY_UNKNOWN,				// 64
+			G_KEY_A,					// 65
+			G_KEY_B,					// 66
+			G_KEY_C,					// 67
+			G_KEY_D,					// 68
+			G_KEY_E,					// 69
+			G_KEY_F,					// 70
+			G_KEY_G,					// 71
+			G_KEY_H,					// 72
+			G_KEY_I,					// 73
+			G_KEY_J,					// 74
+			G_KEY_K,					// 75
+			G_KEY_L,					// 76
+			G_KEY_M,					// 77
+			G_KEY_N,					// 78
+			G_KEY_O,					// 79
+			G_KEY_P,					// 80
+			G_KEY_Q,					// 81
+			G_KEY_R,					// 82
+			G_KEY_S,					// 83
+			G_KEY_T,					// 84
+			G_KEY_U,					// 85
+			G_KEY_V,					// 86
+			G_KEY_W,					// 87
+			G_KEY_X,					// 88
+			G_KEY_Y,					// 89
+			G_KEY_Z,					// 90
+			G_KEY_UNKNOWN,				// 91 LeftWindows
+			G_KEY_UNKNOWN,				// 92 RightWindow
+			G_KEY_UNKNOWN,				// 93 Application
+			G_KEY_UNKNOWN,				// 94
+			G_KEY_UNKNOWN,				// 95 Sleep
+			G_KEY_NUMPAD_0,				// 96
+			G_KEY_NUMPAD_1,				// 97
+			G_KEY_NUMPAD_2,				// 98
+			G_KEY_NUMPAD_3,				// 99
+			G_KEY_NUMPAD_4,				// 100
+			G_KEY_NUMPAD_5,				// 101
+			G_KEY_NUMPAD_6,				// 102
+			G_KEY_NUMPAD_7,				// 103
+			G_KEY_NUMPAD_8,				// 104
+			G_KEY_NUMPAD_9,				// 105
+			G_KEY_NUMPAD_MULTIPLY,		// 106
+			G_KEY_NUMPAD_ADD,			// 107
+			G_KEY_UNKNOWN,				// 108 Separator
+			G_KEY_NUMPAD_SUBTRACT,		// 109
+			G_KEY_NUMPAD_PERIOD,		// 110
+			G_KEY_NUMPAD_DIVIDE,		// 111
+			G_KEY_F1,					// 112
+			G_KEY_F2,					// 113
+			G_KEY_F3,					// 114
+			G_KEY_F4,					// 115
+			G_KEY_F5,					// 116
+			G_KEY_F6,					// 117
+			G_KEY_F7,					// 118
+			G_KEY_F8,					// 119
+			G_KEY_F9,					// 120
+			G_KEY_F10,					// 121
+			G_KEY_F11,					// 122
+			G_KEY_F12,					// 123
+			G_KEY_UNKNOWN,				// 124 F13
+			G_KEY_UNKNOWN,				// 125 F14
+			G_KEY_UNKNOWN,				// 126 F15
+			G_KEY_UNKNOWN,				// 127 F16
+			G_KEY_UNKNOWN,				// 128 F17
+			G_KEY_UNKNOWN,				// 129 F18
+			G_KEY_UNKNOWN,				// 130 F19
+			G_KEY_UNKNOWN,				// 131 F20
+			G_KEY_UNKNOWN,				// 132 F21
+			G_KEY_UNKNOWN,				// 133 F22
+			G_KEY_UNKNOWN,				// 134 F23
+			G_KEY_UNKNOWN,				// 135 F24
+			G_KEY_UNKNOWN,				// 136 NavigationView
+			G_KEY_UNKNOWN,				// 137 NavigationMenu
+			G_KEY_UNKNOWN,				// 138 NavigationUp
+			G_KEY_UNKNOWN,				// 139 NavigationDown
+			G_KEY_UNKNOWN,				// 140 NavigationLeft
+			G_KEY_UNKNOWN,				// 141 NavigationRight 
+			G_KEY_UNKNOWN,				// 142 NavigationAccept
+			G_KEY_UNKNOWN,				// 143 NavigationCancel
+			G_KEY_NUMLOCK,				// 144
+			G_KEY_SCROLL_LOCK,			// 145 Scroll
+			G_KEY_UNKNOWN,				// 146
+			G_KEY_UNKNOWN,				// 147
+			G_KEY_UNKNOWN,				// 148
+			G_KEY_UNKNOWN,				// 149
+			G_KEY_UNKNOWN,				// 150
+			G_KEY_UNKNOWN,				// 151
+			G_KEY_UNKNOWN,				// 152
+			G_KEY_UNKNOWN,				// 153
+			G_KEY_UNKNOWN,				// 154
+			G_KEY_UNKNOWN,				// 155
+			G_KEY_UNKNOWN,				// 156
+			G_KEY_UNKNOWN,				// 157
+			G_KEY_UNKNOWN,				// 158
+			G_KEY_UNKNOWN,				// 159
+			G_KEY_LEFTSHIFT,			// 160
+			G_KEY_RIGHTSHIFT,			// 161
+			G_KEY_LEFTCONTROL,			// 162
+			G_KEY_RIGHTCONTROL,			// 163
+			G_KEY_UNKNOWN,				// 164
+			G_KEY_UNKNOWN,				// 165
+			G_KEY_UNKNOWN,				// 166
+			G_KEY_UNKNOWN,				// 167
+			G_KEY_UNKNOWN,				// 168
+			G_KEY_UNKNOWN,				// 169
+			G_KEY_UNKNOWN,				// 170
+			G_KEY_UNKNOWN,				// 171
+			G_KEY_UNKNOWN,				// 172
+			G_KEY_UNKNOWN,				// 173
+			G_KEY_UNKNOWN,				// 174
+			G_KEY_UNKNOWN,				// 175
+			G_KEY_UNKNOWN,				// 176
+			G_KEY_UNKNOWN,				// 177
+			G_KEY_UNKNOWN,				// 178
+			G_KEY_UNKNOWN,				// 179
+			G_KEY_UNKNOWN,				// 180
+			G_KEY_UNKNOWN,				// 181
+			G_KEY_UNKNOWN,				// 182
+			G_KEY_UNKNOWN,				// 183
+			G_KEY_UNKNOWN,				// 184
+			G_KEY_UNKNOWN,				// 185
+			G_KEY_SEMICOLON,			// 186
+			G_KEY_EQUALS,				// 187
+			G_KEY_COMMA,				// 188
+			G_KEY_MINUS,				// 189
+			G_KEY_PERIOD,				// 190
+			G_KEY_FORWARDSLASH,			// 191
+			G_KEY_TILDE,				// 192
+			G_KEY_UNKNOWN,				// 193
+			G_KEY_UNKNOWN,				// 194
+			G_KEY_UNKNOWN,				// 195
+			G_KEY_UNKNOWN,				// 196
+			G_KEY_UNKNOWN,				// 197
+			G_KEY_UNKNOWN,				// 198
+			G_KEY_UNKNOWN,				// 199
+			G_KEY_UNKNOWN,				// 200
+			G_KEY_UNKNOWN,				// 201
+			G_KEY_UNKNOWN,				// 202
+			G_KEY_UNKNOWN,				// 203
+			G_KEY_UNKNOWN,				// 204
+			G_KEY_UNKNOWN,				// 205
+			G_KEY_UNKNOWN,				// 206
+			G_KEY_UNKNOWN,				// 207
+			G_KEY_UNKNOWN,				// 208
+			G_KEY_UNKNOWN,				// 209
+			G_KEY_UNKNOWN,				// 210
+			G_KEY_UNKNOWN,				// 211
+			G_KEY_UNKNOWN,				// 212
+			G_KEY_UNKNOWN,				// 213
+			G_KEY_UNKNOWN,				// 214
+			G_KEY_UNKNOWN,				// 215
+			G_KEY_UNKNOWN,				// 216
+			G_KEY_UNKNOWN,				// 217
+			G_KEY_UNKNOWN,				// 218
+			G_KEY_BRACKET_OPEN,			// 219
+			G_KEY_BACKSLASH,			// 220
+			G_KEY_BRACKET_CLOSE,		// 221
+			G_KEY_QUOTE,				// 222
+			G_KEY_UNKNOWN,				// 223
+			G_KEY_UNKNOWN,				// 224
+			G_KEY_UNKNOWN,				// 225
+			G_KEY_BACKSLASH,			// 226
+
+
+		};
+#endif
 #elif defined(__linux__)
-		constexpr unsigned int Keycodes[128] =
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_UNKNOWN,			// 0
 			G_KEY_UNKNOWN,			// 1
@@ -43908,7 +51445,1049 @@ namespace GW
 			
 		};
 #elif defined(__APPLE__)
-		constexpr unsigned int Keycodes[128] =
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
+		{
+			G_KEY_A,				// 0
+			G_KEY_S,				// 1
+			G_KEY_D,				// 2
+			G_KEY_F,				// 3
+			G_KEY_H,				// 4
+			G_KEY_G,				// 5
+			G_KEY_Z,				// 6
+			G_KEY_X,				// 7
+			G_KEY_C,				// 8
+			G_KEY_V,				// 9
+			G_KEY_UNKNOWN,			// 10
+			G_KEY_B,				// 11
+			G_KEY_Q,				// 12
+			G_KEY_W,				// 13
+			G_KEY_E,				// 14
+			G_KEY_R,				// 15
+			G_KEY_Y,				// 16
+			G_KEY_T,				// 17
+			G_KEY_1,				// 18
+			G_KEY_2,				// 19
+			G_KEY_3,				// 20
+			G_KEY_4,				// 21
+			G_KEY_6,				// 22
+			G_KEY_5,				// 23
+			G_KEY_EQUALS,			// 24
+			G_KEY_9,				// 25
+			G_KEY_7,				// 26
+			G_KEY_MINUS,			// 27
+			G_KEY_8,				// 28
+			G_KEY_0,				// 29
+			G_KEY_BRACKET_CLOSE,	// 30
+			G_KEY_O,				// 31
+			G_KEY_U,				// 32
+			G_KEY_BRACKET_OPEN,		// 33
+			G_KEY_I,				// 34
+			G_KEY_P,				// 35
+			G_KEY_ENTER,			// 36
+			G_KEY_L,				// 37
+			G_KEY_J,				// 38
+			G_KEY_QUOTE,			// 39
+			G_KEY_K,				// 40
+			G_KEY_SEMICOLON,		// 41
+			G_KEY_BACKSLASH,		// 42
+			G_KEY_COMMA,			// 43
+			G_KEY_FORWARDSLASH,		// 44
+			G_KEY_N,				// 45
+			G_KEY_M,				// 46
+			G_KEY_PERIOD,			// 47
+			G_KEY_TAB,				// 48
+			G_KEY_SPACE,			// 49
+			G_KEY_TILDE,			// 50
+			G_KEY_DELETE,			// 51
+			G_KEY_UNKNOWN,			// 52
+			G_KEY_ESCAPE,			// 53
+			G_KEY_UNKNOWN,			// 54
+			G_KEY_COMMAND,		    // 55
+			G_KEY_LEFTSHIFT,		// 56
+			G_KEY_CAPSLOCK,			// 57
+			G_KEY_LEFTALT,			// 58
+			G_KEY_LEFTCONTROL,		// 59
+			G_KEY_RIGHTSHIFT,		// 60
+			G_KEY_RIGHTALT,			// 61
+			G_KEY_RIGHTCONTROL,		// 62
+			G_KEY_UNKNOWN,			// 63
+			G_KEY_UNKNOWN,			// 64
+			G_KEY_NUMPAD_PERIOD,	// 65
+			G_KEY_UNKNOWN,			// 66
+			G_KEY_NUMPAD_MULTIPLY,	// 67
+			G_KEY_UNKNOWN,			// 68
+			G_KEY_NUMPAD_ADD,		// 69
+			G_KEY_UNKNOWN,			// 70
+			G_KEY_NUMLOCK,			// 71
+			G_KEY_UNKNOWN,			// 72
+			G_KEY_UNKNOWN,			// 73
+			G_KEY_UNKNOWN,			// 74
+			G_KEY_NUMPAD_DIVIDE,	// 75
+			G_KEY_NUMPAD_ENTER,		// 76
+			G_KEY_UNKNOWN,			// 77
+			G_KEY_NUMPAD_SUBTRACT,	// 78
+			G_KEY_UNKNOWN,			// 79
+			G_KEY_UNKNOWN,			// 80
+			G_KEY_EQUALS,			// 81
+			G_KEY_NUMPAD_0,			// 82
+			G_KEY_NUMPAD_1,			// 83
+			G_KEY_NUMPAD_2,			// 84
+			G_KEY_NUMPAD_3,			// 85
+			G_KEY_NUMPAD_4,			// 86
+			G_KEY_NUMPAD_5,			// 87
+			G_KEY_NUMPAD_6,			// 88
+			G_KEY_NUMPAD_7,			// 89
+			G_KEY_UNKNOWN,			// 90
+			G_KEY_NUMPAD_8,			// 91
+			G_KEY_NUMPAD_9,			// 92
+			G_KEY_UNKNOWN,			// 93
+			G_KEY_UNKNOWN,			// 94
+			G_KEY_UNKNOWN,			// 95
+			G_KEY_F5,				// 96
+			G_KEY_F6,				// 97
+			G_KEY_F7,				// 98
+			G_KEY_F3,				// 99
+			G_KEY_F8,				// 100
+			G_KEY_F9,				// 101
+			G_KEY_UNKNOWN,			// 102
+			G_KEY_F11,				// 103
+			G_KEY_UNKNOWN,			// 104
+			G_KEY_UNKNOWN,			// 105
+			G_KEY_UNKNOWN,			// 106
+			G_KEY_UNKNOWN,			// 107
+			G_KEY_UNKNOWN,			// 108
+			G_KEY_F10,				// 109
+			G_KEY_UNKNOWN,			// 110
+			G_KEY_F12,				// 111
+			G_KEY_UNKNOWN,			// 112
+			G_KEY_UNKNOWN,			// 113
+			G_KEY_INSERT,			// 114
+			G_KEY_HOME,				// 115
+			G_KEY_PAGEUP,			// 116
+			G_KEY_DELETE,			// 117
+			G_KEY_F4,				// 118
+			G_KEY_END,				// 119
+			G_KEY_F2,				// 120
+			G_KEY_PAGEDOWN,			// 121
+			G_KEY_F1,				// 122
+			G_KEY_LEFT,				// 123
+			G_KEY_RIGHT,			// 124
+			G_KEY_DOWN,				// 125
+			G_KEY_UP,				// 126
+            G_KEY_UNKNOWN           // 127
+		};
+#endif
+	}
+}
+#endif
+
+
+
+#include <iostream>
+
+namespace internal_gw {
+	struct GBUFFEREDINPUT_GLOBAL {
+
+		unsigned int keyMask;
+		LONG_PTR _userWinProc;
+		winrt::Windows::Foundation::Point lastMousePosition = { 0, 0 };
+		winrt::Windows::Foundation::Point lastMousePositionRaw = { 0, 0 };
+		UCHAR lastPressedState[256] = { 0, };
+
+		GW::CORE::GEventGenerator keyEvents;
+		GBUFFEREDINPUT_GLOBAL() {
+			keyEvents.Create();
+		}
+	};
+	inline GBUFFEREDINPUT_GLOBAL& GBufferedInputGlobal() {
+		static GBUFFEREDINPUT_GLOBAL keyData;
+		return keyData;
+	}
+}
+
+namespace GW {
+	namespace I {
+		class GBufferedInputImplementation : public virtual GBufferedInputInterface {
+		private:
+			CORE::GThreadShared threadShare;
+			winrt::event_token m_keyDown;
+			winrt::event_token m_keyUp;
+			winrt::event_token m_pointerMoved;
+			winrt::event_token m_pointerPressed;
+			winrt::event_token m_pointerReleased;
+			winrt::event_token m_pointerWheelChanged;
+
+			// This should only be used if there is only one view
+			winrt::Windows::Foundation::IAsyncAction CallOnMainViewUiThreadAsync(winrt::Windows::UI::Core::DispatchedHandler handler) const
+			{
+				co_await winrt::Windows::ApplicationModel::Core::CoreApplication::MainView().CoreWindow().Dispatcher().RunAsync(winrt::Windows::UI::Core::CoreDispatcherPriority::Normal, handler);
+			}
+
+		private:
+			void OnKeyDown(winrt::Windows::UI::Core::KeyEventArgs const& _args) {
+				GEvent m_GEvent;
+				Events m_Event = Events::Invalid;
+				EVENT_DATA m_EventData;
+
+				m_EventData.screenX = internal_gw::GBufferedInputGlobal().lastMousePositionRaw.X;
+				m_EventData.screenY = internal_gw::GBufferedInputGlobal().lastMousePositionRaw.X;
+				m_EventData.x = internal_gw::GBufferedInputGlobal().lastMousePosition.X;
+				m_EventData.y = internal_gw::GBufferedInputGlobal().lastMousePosition.X;
+
+				unsigned int keyMask = internal_gw::GBufferedInputGlobal().keyMask;
+				m_EventData.data = Keycodes[(USHORT)_args.VirtualKey()];
+				m_Event = Events::KEYPRESSED;
+
+				if (internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] == 1)
+					m_Event = Events::Invalid;
+				else if (internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] == 0)
+					internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] = 1;
+
+				internal_gw::GBufferedInputGlobal().keyMask = keyMask;
+				m_EventData.keyMask = keyMask;
+
+				m_GEvent.Write(m_Event, m_EventData);
+				if (m_Event != Events::Invalid)
+					internal_gw::GBufferedInputGlobal().keyEvents.Push(m_GEvent);
+			}
+
+			void OnKeyUp(winrt::Windows::UI::Core::KeyEventArgs const& _args) {
+				GEvent m_GEvent;
+				Events m_Event = Events::Invalid;
+				EVENT_DATA m_EventData;
+
+				m_EventData.screenX = internal_gw::GBufferedInputGlobal().lastMousePositionRaw.X;
+				m_EventData.screenY = internal_gw::GBufferedInputGlobal().lastMousePositionRaw.X;
+				m_EventData.x = internal_gw::GBufferedInputGlobal().lastMousePosition.X;
+				m_EventData.y = internal_gw::GBufferedInputGlobal().lastMousePosition.X;
+
+				unsigned int keyMask = internal_gw::GBufferedInputGlobal().keyMask;
+				m_EventData.data = Keycodes[(USHORT)_args.VirtualKey()];
+				m_Event = Events::KEYRELEASED;
+
+				internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] = 0;
+
+				internal_gw::GBufferedInputGlobal().keyMask = keyMask;
+				m_EventData.keyMask = keyMask;
+
+				m_GEvent.Write(m_Event, m_EventData);
+				if (m_Event != Events::Invalid)
+					internal_gw::GBufferedInputGlobal().keyEvents.Push(m_GEvent);
+			}
+
+			void OnMouseMoved(winrt::Windows::UI::Core::PointerEventArgs const& _args) {
+				if (internal_gw::GBufferedInputGlobal().lastMousePosition.X - _args.CurrentPoint().Position().X != 0 ||
+					internal_gw::GBufferedInputGlobal().lastMousePosition.Y - _args.CurrentPoint().Position().Y != 0) {
+					internal_gw::GBufferedInputGlobal().lastMousePosition = _args.CurrentPoint().Position();
+					internal_gw::GBufferedInputGlobal().lastMousePositionRaw = _args.CurrentPoint().RawPosition();
+				}
+			}
+
+			void OnMousePressed(winrt::Windows::UI::Core::PointerEventArgs const& _args) {
+				GEvent m_GEvent;
+				Events m_Event = Events::Invalid;
+				EVENT_DATA m_EventData;
+				m_EventData.data = G_KEY_UNKNOWN;
+
+				m_EventData.screenX = internal_gw::GBufferedInputGlobal().lastMousePositionRaw.X;
+				m_EventData.screenY = internal_gw::GBufferedInputGlobal().lastMousePositionRaw.X;
+				m_EventData.x = internal_gw::GBufferedInputGlobal().lastMousePosition.X;
+				m_EventData.y = internal_gw::GBufferedInputGlobal().lastMousePosition.X;
+
+				unsigned int keyMask = internal_gw::GBufferedInputGlobal().keyMask;
+
+				if (_args.CurrentPoint().Properties().IsLeftButtonPressed() && internal_gw::GBufferedInputGlobal().lastPressedState[G_BUTTON_LEFT] == 0)
+					m_EventData.data = G_BUTTON_LEFT;
+				if (_args.CurrentPoint().Properties().IsRightButtonPressed() && internal_gw::GBufferedInputGlobal().lastPressedState[G_BUTTON_LEFT] == 0)
+					m_EventData.data = G_BUTTON_RIGHT;
+				if (_args.CurrentPoint().Properties().IsMiddleButtonPressed() && internal_gw::GBufferedInputGlobal().lastPressedState[G_BUTTON_LEFT] == 0)
+					m_EventData.data = G_BUTTON_MIDDLE;
+
+				m_Event = Events::KEYPRESSED;
+
+				if (internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] == 1)
+					m_Event = Events::Invalid;
+				else if (internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] == 0)
+					internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] = 1;
+
+				internal_gw::GBufferedInputGlobal().keyMask = keyMask;
+				m_EventData.keyMask = keyMask;
+
+				m_GEvent.Write(m_Event, m_EventData);
+				if (m_Event != Events::Invalid && m_EventData.data != G_KEY_UNKNOWN)
+					internal_gw::GBufferedInputGlobal().keyEvents.Push(m_GEvent);
+			}
+
+			void OnMouseReleased(winrt::Windows::UI::Core::PointerEventArgs const& _args) {
+				GEvent m_GEvent;
+				Events m_Event = Events::Invalid;
+				EVENT_DATA m_EventData;
+				m_EventData.data = G_KEY_UNKNOWN;
+
+				m_EventData.screenX = internal_gw::GBufferedInputGlobal().lastMousePositionRaw.X;
+				m_EventData.screenY = internal_gw::GBufferedInputGlobal().lastMousePositionRaw.X;
+				m_EventData.x = internal_gw::GBufferedInputGlobal().lastMousePosition.X;
+				m_EventData.y = internal_gw::GBufferedInputGlobal().lastMousePosition.X;
+
+				unsigned int keyMask = internal_gw::GBufferedInputGlobal().keyMask;
+
+				if (!_args.CurrentPoint().Properties().IsLeftButtonPressed() && internal_gw::GBufferedInputGlobal().lastPressedState[G_BUTTON_LEFT] == 1)
+					m_EventData.data = G_BUTTON_LEFT;
+				if (!_args.CurrentPoint().Properties().IsRightButtonPressed() && internal_gw::GBufferedInputGlobal().lastPressedState[G_BUTTON_RIGHT] == 1)
+					m_EventData.data = G_BUTTON_RIGHT;
+				if (!_args.CurrentPoint().Properties().IsMiddleButtonPressed() && internal_gw::GBufferedInputGlobal().lastPressedState[G_BUTTON_MIDDLE] == 1)
+					m_EventData.data = G_BUTTON_MIDDLE;
+
+				m_Event = Events::KEYRELEASED;
+
+				internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] = 0;
+
+				internal_gw::GBufferedInputGlobal().keyMask = keyMask;
+				m_EventData.keyMask = keyMask;
+
+				m_GEvent.Write(m_Event, m_EventData);
+				if (m_Event != Events::Invalid && m_EventData.data != G_KEY_UNKNOWN)
+					internal_gw::GBufferedInputGlobal().keyEvents.Push(m_GEvent);
+			}
+
+			void OnMouseScroll(winrt::Windows::UI::Core::PointerEventArgs const& _args) {
+				unsigned int gKey;
+				int scrollDelta = _args.CurrentPoint().Properties().MouseWheelDelta();
+				if (scrollDelta > 0)
+					gKey = G_MOUSE_SCROLL_UP;
+				else if (scrollDelta < 0)
+					gKey = G_MOUSE_SCROLL_DOWN;
+
+				GEvent m_GEvent;
+				Events m_Event = Events::Invalid;
+				EVENT_DATA m_EventData;
+
+				m_EventData.screenX = internal_gw::GBufferedInputGlobal().lastMousePositionRaw.X;
+				m_EventData.screenY = internal_gw::GBufferedInputGlobal().lastMousePositionRaw.X;
+				m_EventData.x = internal_gw::GBufferedInputGlobal().lastMousePosition.X;
+				m_EventData.y = internal_gw::GBufferedInputGlobal().lastMousePosition.X;
+
+				unsigned int keyMask = internal_gw::GBufferedInputGlobal().keyMask;
+				m_EventData.data = gKey;
+				m_Event = Events::MOUSESCROLL;
+
+				internal_gw::GBufferedInputGlobal().lastPressedState[m_EventData.data] = 0;
+
+				internal_gw::GBufferedInputGlobal().keyMask = keyMask;
+				m_EventData.keyMask = keyMask;
+
+				m_GEvent.Write(m_Event, m_EventData);
+				if (m_Event != Events::Invalid)
+					internal_gw::GBufferedInputGlobal().keyEvents.Push(m_GEvent);
+			}
+
+
+		public:
+			~GBufferedInputImplementation() {
+				// revoke events
+				auto process = CallOnMainViewUiThreadAsync([this]()
+					{
+						auto window = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+
+						window.KeyDown(m_keyDown);
+						window.KeyUp(m_keyUp);
+						window.PointerMoved(m_pointerMoved);
+						window.PointerPressed(m_pointerPressed);
+						window.PointerReleased(m_pointerReleased);
+						window.PointerWheelChanged(m_pointerWheelChanged);
+					}); process.get();
+			}
+
+			// GWindow - one version
+			// UNIVERSAL_WINDOW_HANDLE by value - another version
+			GReturn Create(GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE _windowHandle) {
+				if (!_windowHandle.window)
+					return GW::GReturn::INVALID_ARGUMENT;
+
+				// subscribe events to delegates
+				// call on main thread
+				auto process = CallOnMainViewUiThreadAsync([this]() mutable
+					{
+						auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+						auto window = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+
+						// Event::KEYDOWN
+						this->m_keyDown = window.KeyDown([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::KeyEventArgs const& args)
+							{
+								this->OnKeyDown(args);
+							});
+
+
+						// Event::KEYUP
+						this->m_keyUp = window.KeyUp([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::KeyEventArgs const& args)
+							{
+								this->OnKeyUp(args);
+							});
+
+						// Event::MOUSEMOVE
+						this->m_pointerMoved = window.PointerMoved([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::PointerEventArgs const& args)
+							{
+								this->OnMouseMoved(args);
+							});
+						// Event::MOUSEPRESSED
+						this->m_pointerPressed = window.PointerPressed([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::PointerEventArgs const& args)
+							{
+								this->OnMousePressed(args);
+							});
+						// Event::MOUSERELEASED
+						this->m_pointerReleased = window.PointerReleased([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::PointerEventArgs const& args)
+							{
+								this->OnMouseReleased(args);
+							});
+						// Event::MOUSESCROLLED
+						this->m_pointerWheelChanged = window.PointerWheelChanged([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::PointerEventArgs const& args)
+							{
+								this->OnMouseScroll(args);
+							});
+					}); process.get();
+
+					return GReturn::SUCCESS;
+			}
+
+			GReturn Create(const GW::SYSTEM::GWindow _gWindow) {
+				if (!_gWindow)
+					return GReturn::INVALID_ARGUMENT;
+
+				GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE uwh;
+				GReturn code = _gWindow.GetWindowHandle(uwh);
+				if (G_FAIL(code))
+					return code;
+
+				return Create(uwh);
+			}
+
+			// transfer any receivers to internal global broadcaster
+			GReturn Register(CORE::GEventCache _observer) override {
+				return internal_gw::GBufferedInputGlobal().keyEvents.Register(_observer);
+			}
+			GReturn Register(CORE::GEventResponder _observer) override {
+				return internal_gw::GBufferedInputGlobal().keyEvents.Register(_observer);
+			}
+			GReturn Register(CORE::GInterface _observer, void(*_callback)(const GEvent&, CORE::GInterface&)) override {
+				return internal_gw::GBufferedInputGlobal().keyEvents.Register(_observer, _callback);
+			}
+			GReturn Deregister(CORE::GInterface _observer) override {
+				return internal_gw::GBufferedInputGlobal().keyEvents.Deregister(_observer);
+			}
+			GReturn Observers(unsigned int& _outCount) const override {
+				return internal_gw::GBufferedInputGlobal().keyEvents.Observers(_outCount);
+			}
+			GReturn Push(const GEvent& _newEvent) override {
+				return internal_gw::GBufferedInputGlobal().keyEvents.Push(_newEvent);
+			}
+		};
+	}
+}
+
+    #endif
+#endif
+
+
+
+namespace GW
+{
+	namespace INPUT
+	{
+		class GBufferedInput final
+			: public I::GProxy<I::GBufferedInputInterface, I::GBufferedInputImplementation, GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE>
+		{
+		public: // Only public functions are exposed via Proxy, never protected or private operations
+			// proxy functions should be ignored by doxygen
+			GATEWARE_PROXY_CLASS(GBufferedInput)
+			GATEWARE_TYPEDEF(Events)
+			GATEWARE_TYPEDEF(EVENT_DATA)
+
+			// reimplemented functions
+			GATEWARE_FUNCTION(Register)
+			GATEWARE_CONST_FUNCTION(Observers)
+			GATEWARE_FUNCTION(Push)
+
+			// This area does not contain actual code, it is only for the benefit of documentation generation.
+		};
+	}
+}
+#endif // GBUFFEREDINPUT_H
+
+#ifndef GINPUT_H
+#define GINPUT_H
+
+
+
+
+
+
+namespace GW
+{
+	namespace I
+	{
+		class GInputInterface : public virtual GInterfaceInterface
+		{
+		public:
+			virtual GReturn GetState(int _keyCode, float& _outState) = 0;
+			virtual GReturn GetMouseDelta(float& _x, float& _y) = 0;
+			virtual GReturn GetMousePosition(float& _x, float& _y) const = 0;
+			virtual GReturn GetKeyMask(unsigned int& _outKeyMask) const = 0;
+		};
+	}// end I
+}// end GW 
+
+// Implementation Source link, will be search-replaced in single header version.
+// Implementaion for GInput.h
+// *IMPORTANT* End users of Gateware may ignore the contents of these files if they please.(Developers Only)
+// File not included in Doxygen, these files will be compiled directly into associated header file when deployed
+// Developers: Do NOT assume the contents of this file are within the scope of the related interface's namespace
+// Developers: These are NOT cpp files do not use "using namespace" or unprotected global variables (prefer static members)
+// Developers: If you MUST use a non-static global, use the "internal_gw" namespace to store them. (only on approval)
+
+// Gateware platform specific implementations are seperated into different files to keep things clean and flexible
+// As new platforms come online or are deprecated (or upgraded) we can modify their selection through this file
+// When adding implementations please try to condense redundant file includes where possible.
+// This will reduce size/redundancy when the library is tool compressed into single header form.
+// Need include guard for this because GInput and GBufferedInput uses this file
+#ifndef GINPUTTABLEROUTING_HPP
+#define GINPUTTABLEROUTING_HPP
+
+// Defines platform specific key codes that is shared between
+// GInput and GBufferedInput
+namespace GW
+{
+	namespace I
+	{
+#if defined(_WIN32)
+#include <winapifamily.h>
+#if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
+		{
+			G_KEY_UNKNOWN,				// 0
+			G_KEY_ESCAPE,				// 1
+			G_KEY_1,					// 2
+			G_KEY_2,					// 3
+			G_KEY_3,					// 4
+			G_KEY_4,					// 5
+			G_KEY_5,					// 6
+			G_KEY_6,					// 7
+			G_KEY_7,					// 8
+			G_KEY_8,					// 9
+			G_KEY_9,					// 10
+			G_KEY_0,					// 11
+			G_KEY_MINUS,				// 12
+			G_KEY_EQUALS,				// 13
+			G_KEY_BACKSPACE,			// 14
+			G_KEY_TAB,					// 15
+			G_KEY_Q,					// 16
+			G_KEY_W,					// 17
+			G_KEY_E,					// 18
+			G_KEY_R,					// 19
+			G_KEY_T,					// 20
+			G_KEY_Y,					// 21
+			G_KEY_U,					// 22
+			G_KEY_I,					// 23
+			G_KEY_O,					// 24
+			G_KEY_P,					// 25
+			G_KEY_BRACKET_OPEN,			// 26
+			G_KEY_BRACKET_CLOSE,		// 27
+			G_KEY_ENTER,				// 28
+			G_KEY_LEFTCONTROL,			// 29
+			G_KEY_A,					// 30
+			G_KEY_S,					// 31
+			G_KEY_D,					// 32
+			G_KEY_F,					// 33
+			G_KEY_G,					// 34
+			G_KEY_H,					// 35
+			G_KEY_J,					// 36
+			G_KEY_K,					// 37
+			G_KEY_L,					// 38
+			G_KEY_SEMICOLON,			// 39
+			G_KEY_QUOTE,				// 40
+			G_KEY_TILDE,				// 41
+			G_KEY_LEFTSHIFT,			// 42
+			G_KEY_BACKSLASH,			// 43
+			G_KEY_Z,					// 44
+			G_KEY_X,					// 45
+			G_KEY_C,					// 46
+			G_KEY_V,					// 47
+			G_KEY_B,					// 48
+			G_KEY_N,					// 49
+			G_KEY_M,					// 50
+			G_KEY_COMMA,				// 51
+			G_KEY_PERIOD,				// 52
+			G_KEY_FORWARDSLASH,			// 53
+			G_KEY_RIGHTSHIFT,			// 54
+			G_KEY_NUMPAD_MULTIPLY,		// 55
+			G_KEY_LEFTALT,				// 56
+			G_KEY_SPACE,				// 57
+			G_KEY_CAPSLOCK,				// 58
+			G_KEY_F1,					// 59
+			G_KEY_F2,					// 60
+			G_KEY_F3,					// 61
+			G_KEY_F4,					// 62
+			G_KEY_F5,					// 63
+			G_KEY_F6,					// 64
+			G_KEY_F7,					// 65
+			G_KEY_F8,					// 66
+			G_KEY_F9,					// 67
+			G_KEY_F10,					// 68
+			G_KEY_NUMLOCK,				// 69
+			G_KEY_SCROLL_LOCK,			// 70
+			G_KEY_NUMPAD_7,				// 71
+			G_KEY_NUMPAD_8,				// 72
+			G_KEY_NUMPAD_9,				// 73
+			G_KEY_NUMPAD_SUBTRACT,		// 74
+			G_KEY_NUMPAD_4,				// 75
+			G_KEY_NUMPAD_5,				// 76
+			G_KEY_NUMPAD_6,				// 77
+			G_KEY_NUMPAD_ADD,			// 78
+			G_KEY_NUMPAD_1,				// 79
+			G_KEY_NUMPAD_2,				// 80
+			G_KEY_NUMPAD_3,				// 81
+			G_KEY_NUMPAD_0,				// 82
+			G_KEY_NUMPAD_PERIOD,		// 83
+			G_KEY_UNKNOWN,				// 84
+			G_KEY_UNKNOWN,				// 85
+			G_KEY_UNKNOWN,				// 86
+			G_KEY_F11,					// 87
+			G_KEY_F12,					// 88
+			G_KEY_UNKNOWN,				// 89
+			G_KEY_UNKNOWN,				// 90
+			G_KEY_UNKNOWN,				// 91
+			G_KEY_UNKNOWN,				// 92
+			G_KEY_UNKNOWN,				// 93
+			G_KEY_UNKNOWN,				// 94
+			G_KEY_UNKNOWN,				// 95
+			G_KEY_UNKNOWN,				// 96
+			G_KEY_UNKNOWN,				// 97
+			G_KEY_UNKNOWN,				// 98
+			G_KEY_UNKNOWN,				// 99
+			G_KEY_UNKNOWN,				// 100
+			G_KEY_UNKNOWN,				// 101
+			G_KEY_UNKNOWN,				// 102
+			G_KEY_UNKNOWN,				// 103
+			G_KEY_UNKNOWN,				// 104
+			G_KEY_UNKNOWN,				// 105
+			G_KEY_UNKNOWN,				// 106
+			G_KEY_UNKNOWN,				// 107
+			G_KEY_UNKNOWN,				// 108
+			G_KEY_UNKNOWN,				// 109
+			G_KEY_UNKNOWN,				// 110
+			G_KEY_UNKNOWN,				// 111
+			G_KEY_UNKNOWN,				// 112
+			G_KEY_UNKNOWN,				// 113
+			G_KEY_UNKNOWN,				// 114
+			G_KEY_UNKNOWN,				// 115
+			G_KEY_UNKNOWN,				// 116
+			G_KEY_UNKNOWN,				// 117
+			G_KEY_UNKNOWN,				// 118
+			G_KEY_UNKNOWN,				// 119
+			G_KEY_UNKNOWN,				// 120
+			G_KEY_UNKNOWN,				// 121
+			G_KEY_UNKNOWN,				// 122
+			G_KEY_UNKNOWN,				// 123
+			G_KEY_UNKNOWN,				// 124
+			G_KEY_UNKNOWN,				// 125
+			G_KEY_UNKNOWN,				// 126
+			G_KEY_UNKNOWN				// 127
+		};
+#elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+#define G_MAX_KEYCODES 256
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
+		{
+			G_KEY_UNKNOWN,				// 0
+			G_BUTTON_LEFT,				// 1
+			G_BUTTON_RIGHT,				// 2
+			G_KEY_UNKNOWN,				// 3 Cancel
+			G_BUTTON_MIDDLE,			// 4
+			G_KEY_UNKNOWN,				// 5 XButton1
+			G_KEY_UNKNOWN,				// 6 XButton2
+			G_KEY_UNKNOWN,				// 7
+			G_KEY_BACKSPACE,			// 8
+			G_KEY_TAB,					// 9
+			G_KEY_UNKNOWN,				// 10
+			G_KEY_UNKNOWN,				// 11
+			G_KEY_UNKNOWN,				// 12 Clear
+			G_KEY_ENTER,				// 13
+			G_KEY_UNKNOWN,				// 14
+			G_KEY_UNKNOWN,				// 15
+			G_KEY_LEFTSHIFT,			// 16 Shift
+			G_KEY_LEFTCONTROL,			// 17 Control
+			G_KEY_UNKNOWN,				// 18 Menu
+			G_KEY_PAUSE,				// 19
+			G_KEY_CAPSLOCK,				// 20
+			G_KEY_UNKNOWN,				// 21 Kana/Hangul
+			G_KEY_UNKNOWN,				// 22 ImeOn
+			G_KEY_UNKNOWN,				// 23 Junja
+			G_KEY_UNKNOWN,				// 24 Final
+			G_KEY_UNKNOWN,				// 25 Kanji
+			G_KEY_UNKNOWN,				// 26 ImeOff
+			G_KEY_ESCAPE,				// 27 
+			G_KEY_UNKNOWN,				// 28 Convert
+			G_KEY_UNKNOWN,				// 29 NonConvert
+			G_KEY_UNKNOWN,				// 30 Accept
+			G_KEY_UNKNOWN,				// 31 ModeChange
+			G_KEY_SPACE,				// 32
+			G_KEY_PAGEUP,				// 33
+			G_KEY_PAGEDOWN,				// 34
+			G_KEY_END,					// 35
+			G_KEY_HOME,					// 36
+			G_KEY_LEFT,					// 37
+			G_KEY_UP,					// 38
+			G_KEY_RIGHT,				// 39
+			G_KEY_DOWN,					// 40
+			G_KEY_UNKNOWN,				// 41 Select
+			G_KEY_PRINTSCREEN,			// 42
+			G_KEY_UNKNOWN,				// 43 Execute
+			G_KEY_PRINTSCREEN,				// 44 Snapshot
+			G_KEY_INSERT,				// 45
+			G_KEY_DELETE,				// 46
+			G_KEY_UNKNOWN,				// 47 Help
+			G_KEY_0,					// 48
+			G_KEY_1,					// 49
+			G_KEY_2,					// 50
+			G_KEY_3,					// 51
+			G_KEY_4,					// 52
+			G_KEY_5,					// 53
+			G_KEY_6,					// 54
+			G_KEY_7,					// 55
+			G_KEY_8,					// 56
+			G_KEY_9,					// 57
+			G_KEY_UNKNOWN,				// 58
+			G_KEY_UNKNOWN,				// 59
+			G_KEY_UNKNOWN,				// 60
+			G_KEY_UNKNOWN,				// 61
+			G_KEY_UNKNOWN,				// 62
+			G_KEY_UNKNOWN,				// 63
+			G_KEY_UNKNOWN,				// 64
+			G_KEY_A,					// 65
+			G_KEY_B,					// 66
+			G_KEY_C,					// 67
+			G_KEY_D,					// 68
+			G_KEY_E,					// 69
+			G_KEY_F,					// 70
+			G_KEY_G,					// 71
+			G_KEY_H,					// 72
+			G_KEY_I,					// 73
+			G_KEY_J,					// 74
+			G_KEY_K,					// 75
+			G_KEY_L,					// 76
+			G_KEY_M,					// 77
+			G_KEY_N,					// 78
+			G_KEY_O,					// 79
+			G_KEY_P,					// 80
+			G_KEY_Q,					// 81
+			G_KEY_R,					// 82
+			G_KEY_S,					// 83
+			G_KEY_T,					// 84
+			G_KEY_U,					// 85
+			G_KEY_V,					// 86
+			G_KEY_W,					// 87
+			G_KEY_X,					// 88
+			G_KEY_Y,					// 89
+			G_KEY_Z,					// 90
+			G_KEY_UNKNOWN,				// 91 LeftWindows
+			G_KEY_UNKNOWN,				// 92 RightWindow
+			G_KEY_UNKNOWN,				// 93 Application
+			G_KEY_UNKNOWN,				// 94
+			G_KEY_UNKNOWN,				// 95 Sleep
+			G_KEY_NUMPAD_0,				// 96
+			G_KEY_NUMPAD_1,				// 97
+			G_KEY_NUMPAD_2,				// 98
+			G_KEY_NUMPAD_3,				// 99
+			G_KEY_NUMPAD_4,				// 100
+			G_KEY_NUMPAD_5,				// 101
+			G_KEY_NUMPAD_6,				// 102
+			G_KEY_NUMPAD_7,				// 103
+			G_KEY_NUMPAD_8,				// 104
+			G_KEY_NUMPAD_9,				// 105
+			G_KEY_NUMPAD_MULTIPLY,		// 106
+			G_KEY_NUMPAD_ADD,			// 107
+			G_KEY_UNKNOWN,				// 108 Separator
+			G_KEY_NUMPAD_SUBTRACT,		// 109
+			G_KEY_NUMPAD_PERIOD,		// 110
+			G_KEY_NUMPAD_DIVIDE,		// 111
+			G_KEY_F1,					// 112
+			G_KEY_F2,					// 113
+			G_KEY_F3,					// 114
+			G_KEY_F4,					// 115
+			G_KEY_F5,					// 116
+			G_KEY_F6,					// 117
+			G_KEY_F7,					// 118
+			G_KEY_F8,					// 119
+			G_KEY_F9,					// 120
+			G_KEY_F10,					// 121
+			G_KEY_F11,					// 122
+			G_KEY_F12,					// 123
+			G_KEY_UNKNOWN,				// 124 F13
+			G_KEY_UNKNOWN,				// 125 F14
+			G_KEY_UNKNOWN,				// 126 F15
+			G_KEY_UNKNOWN,				// 127 F16
+			G_KEY_UNKNOWN,				// 128 F17
+			G_KEY_UNKNOWN,				// 129 F18
+			G_KEY_UNKNOWN,				// 130 F19
+			G_KEY_UNKNOWN,				// 131 F20
+			G_KEY_UNKNOWN,				// 132 F21
+			G_KEY_UNKNOWN,				// 133 F22
+			G_KEY_UNKNOWN,				// 134 F23
+			G_KEY_UNKNOWN,				// 135 F24
+			G_KEY_UNKNOWN,				// 136 NavigationView
+			G_KEY_UNKNOWN,				// 137 NavigationMenu
+			G_KEY_UNKNOWN,				// 138 NavigationUp
+			G_KEY_UNKNOWN,				// 139 NavigationDown
+			G_KEY_UNKNOWN,				// 140 NavigationLeft
+			G_KEY_UNKNOWN,				// 141 NavigationRight 
+			G_KEY_UNKNOWN,				// 142 NavigationAccept
+			G_KEY_UNKNOWN,				// 143 NavigationCancel
+			G_KEY_NUMLOCK,				// 144
+			G_KEY_SCROLL_LOCK,			// 145 Scroll
+			G_KEY_UNKNOWN,				// 146
+			G_KEY_UNKNOWN,				// 147
+			G_KEY_UNKNOWN,				// 148
+			G_KEY_UNKNOWN,				// 149
+			G_KEY_UNKNOWN,				// 150
+			G_KEY_UNKNOWN,				// 151
+			G_KEY_UNKNOWN,				// 152
+			G_KEY_UNKNOWN,				// 153
+			G_KEY_UNKNOWN,				// 154
+			G_KEY_UNKNOWN,				// 155
+			G_KEY_UNKNOWN,				// 156
+			G_KEY_UNKNOWN,				// 157
+			G_KEY_UNKNOWN,				// 158
+			G_KEY_UNKNOWN,				// 159
+			G_KEY_LEFTSHIFT,			// 160
+			G_KEY_RIGHTSHIFT,			// 161
+			G_KEY_LEFTCONTROL,			// 162
+			G_KEY_RIGHTCONTROL,			// 163
+			G_KEY_UNKNOWN,				// 164
+			G_KEY_UNKNOWN,				// 165
+			G_KEY_UNKNOWN,				// 166
+			G_KEY_UNKNOWN,				// 167
+			G_KEY_UNKNOWN,				// 168
+			G_KEY_UNKNOWN,				// 169
+			G_KEY_UNKNOWN,				// 170
+			G_KEY_UNKNOWN,				// 171
+			G_KEY_UNKNOWN,				// 172
+			G_KEY_UNKNOWN,				// 173
+			G_KEY_UNKNOWN,				// 174
+			G_KEY_UNKNOWN,				// 175
+			G_KEY_UNKNOWN,				// 176
+			G_KEY_UNKNOWN,				// 177
+			G_KEY_UNKNOWN,				// 178
+			G_KEY_UNKNOWN,				// 179
+			G_KEY_UNKNOWN,				// 180
+			G_KEY_UNKNOWN,				// 181
+			G_KEY_UNKNOWN,				// 182
+			G_KEY_UNKNOWN,				// 183
+			G_KEY_UNKNOWN,				// 184
+			G_KEY_UNKNOWN,				// 185
+			G_KEY_SEMICOLON,			// 186
+			G_KEY_EQUALS,				// 187
+			G_KEY_COMMA,				// 188
+			G_KEY_MINUS,				// 189
+			G_KEY_PERIOD,				// 190
+			G_KEY_FORWARDSLASH,			// 191
+			G_KEY_TILDE,				// 192
+			G_KEY_UNKNOWN,				// 193
+			G_KEY_UNKNOWN,				// 194
+			G_KEY_UNKNOWN,				// 195
+			G_KEY_UNKNOWN,				// 196
+			G_KEY_UNKNOWN,				// 197
+			G_KEY_UNKNOWN,				// 198
+			G_KEY_UNKNOWN,				// 199
+			G_KEY_UNKNOWN,				// 200
+			G_KEY_UNKNOWN,				// 201
+			G_KEY_UNKNOWN,				// 202
+			G_KEY_UNKNOWN,				// 203
+			G_KEY_UNKNOWN,				// 204
+			G_KEY_UNKNOWN,				// 205
+			G_KEY_UNKNOWN,				// 206
+			G_KEY_UNKNOWN,				// 207
+			G_KEY_UNKNOWN,				// 208
+			G_KEY_UNKNOWN,				// 209
+			G_KEY_UNKNOWN,				// 210
+			G_KEY_UNKNOWN,				// 211
+			G_KEY_UNKNOWN,				// 212
+			G_KEY_UNKNOWN,				// 213
+			G_KEY_UNKNOWN,				// 214
+			G_KEY_UNKNOWN,				// 215
+			G_KEY_UNKNOWN,				// 216
+			G_KEY_UNKNOWN,				// 217
+			G_KEY_UNKNOWN,				// 218
+			G_KEY_BRACKET_OPEN,			// 219
+			G_KEY_BACKSLASH,			// 220
+			G_KEY_BRACKET_CLOSE,		// 221
+			G_KEY_QUOTE,				// 222
+			G_KEY_UNKNOWN,				// 223
+			G_KEY_UNKNOWN,				// 224
+			G_KEY_UNKNOWN,				// 225
+			G_KEY_BACKSLASH,			// 226
+
+
+		};
+#endif
+#elif defined(__linux__)
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
+		{
+			G_KEY_UNKNOWN,			// 0
+			G_KEY_UNKNOWN,			// 1
+			G_KEY_UNKNOWN,			// 2
+			G_KEY_UNKNOWN,			// 3
+			G_KEY_UNKNOWN,			// 4
+			G_KEY_UNKNOWN,			// 5
+			G_KEY_UNKNOWN,			// 6
+			G_KEY_UNKNOWN,			// 7
+			G_KEY_UNKNOWN,			// 8
+			G_KEY_ESCAPE,			// 9
+			G_KEY_1,				// 10
+			G_KEY_2,				// 11
+			G_KEY_3,				// 12
+			G_KEY_4,				// 13
+			G_KEY_5,				// 14
+			G_KEY_6,				// 15
+			G_KEY_7,				// 16
+			G_KEY_8,				// 17
+			G_KEY_9,				// 18
+			G_KEY_0,				// 19
+			G_KEY_MINUS,			// 20
+			G_KEY_EQUALS,			// 21
+			G_KEY_BACKSPACE,		// 22
+			G_KEY_TAB,				// 23
+			G_KEY_Q,				// 24
+			G_KEY_W,				// 25
+			G_KEY_E,				// 26
+			G_KEY_R,				// 27
+			G_KEY_T,				// 28
+			G_KEY_Y,				// 29
+			G_KEY_U,				// 30
+			G_KEY_I,				// 31
+			G_KEY_O,				// 32
+			G_KEY_P,				// 33
+			G_KEY_BRACKET_OPEN,		// 34
+			G_KEY_BRACKET_CLOSE,	// 35
+			G_KEY_ENTER,			// 36
+			G_KEY_LEFTCONTROL,		// 37
+			G_KEY_A,				// 38
+			G_KEY_S,				// 39
+			G_KEY_D,				// 40
+			G_KEY_F,				// 41
+			G_KEY_G,				// 42
+			G_KEY_H,				// 43
+			G_KEY_J,				// 44
+			G_KEY_K,				// 45
+			G_KEY_L,				// 46
+			G_KEY_SEMICOLON,		// 47
+			G_KEY_QUOTE,			// 48
+			G_KEY_TILDE,			// 49
+			G_KEY_LEFTSHIFT,		// 50
+			G_KEY_BACKSLASH,		// 51
+			G_KEY_Z,				// 52
+			G_KEY_X,				// 53
+			G_KEY_C,				// 54
+			G_KEY_V,				// 55
+			G_KEY_B,				// 56
+			G_KEY_N,				// 57
+			G_KEY_M,				// 58
+			G_KEY_COMMA,			// 59
+			G_KEY_PERIOD,			// 60
+			G_KEY_FORWARDSLASH,		// 61
+			G_KEY_RIGHTSHIFT,		// 62
+			G_KEY_NUMPAD_MULTIPLY,	// 63
+			G_KEY_LEFTALT,			// 64
+			G_KEY_SPACE,			// 65
+			G_KEY_CAPSLOCK,			// 66
+			G_KEY_F1,				// 67
+			G_KEY_F2,				// 68
+			G_KEY_F3,				// 69
+			G_KEY_F4,				// 70
+			G_KEY_F5,				// 71
+			G_KEY_F6,				// 72
+			G_KEY_F7,				// 73
+			G_KEY_F8,				// 74
+			G_KEY_F9,				// 75
+			G_KEY_F10,				// 76
+			G_KEY_NUMLOCK,			// 77
+			G_KEY_SCROLL_LOCK,		// 78
+			G_KEY_NUMPAD_7,			// 79
+			G_KEY_NUMPAD_8,			// 80
+			G_KEY_NUMPAD_9,			// 81
+			G_KEY_NUMPAD_SUBTRACT,	// 82
+			G_KEY_NUMPAD_4,			// 83
+			G_KEY_NUMPAD_5,			// 84
+			G_KEY_NUMPAD_6,			// 85
+			G_KEY_NUMPAD_ADD,		// 86
+			G_KEY_NUMPAD_1,			// 87
+			G_KEY_NUMPAD_2,			// 88
+			G_KEY_NUMPAD_3,			// 89
+			G_KEY_NUMPAD_0,			// 90
+			G_KEY_NUMPAD_PERIOD,	// 91
+			G_KEY_UNKNOWN,			// 92
+			G_KEY_UNKNOWN,			// 93
+			G_KEY_UNKNOWN,			// 94
+			G_KEY_F11,				// 95
+			G_KEY_F12,				// 96
+			G_KEY_UNKNOWN,			// 97
+			G_KEY_UNKNOWN,			// 98
+			G_KEY_UNKNOWN,			// 99
+			G_KEY_UNKNOWN,			// 100
+			G_KEY_UNKNOWN,			// 101
+			G_KEY_UNKNOWN,			// 102
+			G_KEY_UNKNOWN,			// 103
+			G_KEY_NUMPAD_ENTER,		// 104
+			G_KEY_UNKNOWN,			// 105
+			G_KEY_NUMPAD_DIVIDE,	// 106
+			G_KEY_PRINTSCREEN,		// 107
+			G_KEY_RIGHTALT,			// 108
+			G_KEY_UNKNOWN,			// 109
+			G_KEY_HOME,				// 110
+			G_KEY_UP,				// 111
+			G_KEY_PAGEUP,			// 112
+			G_KEY_LEFT,				// 113
+			G_KEY_RIGHT,			// 114
+			G_KEY_END,				// 115
+			G_KEY_DOWN,				// 116
+			G_KEY_PAGEDOWN,			// 117
+			G_KEY_INSERT,			// 118
+			G_KEY_DELETE,			// 119
+			G_KEY_UNKNOWN,			// 120
+			G_KEY_UNKNOWN,			// 121
+			G_KEY_UNKNOWN,			// 122
+			G_KEY_UNKNOWN,			// 123
+			G_KEY_UNKNOWN,			// 124
+			G_KEY_UNKNOWN,			// 125
+			G_KEY_UNKNOWN,			// 126
+			G_KEY_PAUSE				// 127
+			
+		};
+#elif defined(__APPLE__)
+
+#define G_MAX_KEYCODES 128
+
+		constexpr unsigned int Keycodes[G_MAX_KEYCODES] =
 		{
 			G_KEY_A,				// 0
 			G_KEY_S,				// 1
@@ -44087,7 +52666,48 @@ namespace GW
 
 
 #elif defined(__APPLE__)
-	#ifdef __OBJC__
+	#include <TargetConditionals.h>
+    #if TARGET_OS_IOS
+        // dummy implementation of GInput
+
+namespace GW
+{
+	namespace I
+	{
+		class GInputImplementation : public virtual GInputInterface
+		{
+		public:
+			GReturn GetState(int _keyCode, float& _outState) override
+			{
+				return GReturn::FAILURE;
+			}
+			GReturn GetMouseDelta(float& _x, float& _y) override
+			{
+				return GReturn::FAILURE;
+			}
+			GReturn GetMousePosition(float& _x, float& _y) const override
+			{
+				return GReturn::FAILURE;
+			}
+			GReturn GetKeyMask(unsigned int& _outKeyMask) const override
+			{
+				return GReturn::FAILURE;
+			}
+			GReturn Create(GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE _dummyHandle)
+			{
+				return GReturn::INTERFACE_UNSUPPORTED;
+			}
+			GReturn Create(const GW::SYSTEM::GWindow _dummyWindow)
+			{
+				return GReturn::INTERFACE_UNSUPPORTED;
+			}
+		};
+	}
+}
+
+
+    #elif TARGET_OS_MAC
+        #ifdef __OBJC__
 @import Foundation;
 @import Cocoa;
 #endif
@@ -44521,6 +53141,7 @@ namespace internal_gw
 #undef TOGGLE_BIT
 
 
+    #endif
 #elif defined(__linux__)
 	#include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -44570,57 +53191,57 @@ namespace GW
 				_window = *((Window*)(_windowHandle.window));
 				_display = ((Display*)(_windowHandle.display));
 
-				//Select the type of Input events we wish to recieve.
+				//Select the type of Input events we wish to receive.
 				///XSelectInput(_display, _window, ExposureMask | ButtonPressMask | ButtonReleaseMask | KeyReleaseMask | KeyPressMask | LockMask | ControlMask | ShiftMask);
-				
+
 				XInitThreads();// daemon run on another thread
-                // Creates a daemon that parses all the input on the other thread
-                inputDaemon.Create(G_INPUT_OPERATION_INTERVAL, [&]()
-                {
-					XQueryKeymap(_display, keys_return);
-					
-					static int stateOfKeyOld = 0;
-					
-					for (unsigned int i = 0; i < 128; ++i)
+				// Creates a daemon that parses all the input on the other thread
+				inputDaemon.Create(G_INPUT_OPERATION_INTERVAL, [&]()
 					{
-						_code = Keycodes[i];
-						
-						int index = i >> 3;
-						int bitshift = 1 << (i & 7);
-						
-						// to debug, add a conditional break point where b != 0, then press any key
-						// whatever I is equal to, is the bit offset of the key you pressed.
-						// ex: num pad 0 is at i = 90
-						auto b = keys_return[index] & (bitshift) ? 1 : 0;
-						
-						//Set keyboard input
-						keyStates[_code] = b;
-					}
-					
-					// not currently supported. would be returned by XQueryKeymap if it was.
-					// auto keycode = XKeysymToKeycode( _display, XK_Control_R );
-					// keyStates[G_KEY_RIGHTCONTROL] = keys_return[keycode >> 3] & (1 << (keycode & 7)) ? 1 : 0;
-					
-					
-					XQueryPointer(_display, _window, &root, &child, &_mouseScreenPositionX, &_mouseScreenPositionY, &_mousePositionX, &_mousePositionY, &keyMask);
+						XQueryKeymap(_display, keys_return);
 
-					//Set the mouse input
-					keyStates[G_BUTTON_LEFT] = (keyMask & Button1Mask) ? 1 : 0;
-					keyStates[G_BUTTON_RIGHT] = (keyMask & Button3Mask) ? 1 : 0;
-					keyStates[G_BUTTON_MIDDLE] = (keyMask & Button2Mask) ? 1 : 0;
+						static int stateOfKeyOld = 0;
 
-					//Set the change in mouse position.
-					_mouseDeltaX = _mousePositionX - _mousePrevX;
-					_mouseDeltaY = _mousePositionY - _mousePrevY;
+						for (unsigned int i = 0; i < 128; ++i)
+						{
+							_code = Keycodes[i];
 
-					//Set the previous mouse position as the current.
-					_mousePrevX = _mousePositionX;
-					_mousePrevY = _mousePositionY;
-					
-					//Insure updates are tracked correctly
-					if (_mouseDeltaX || _mouseDeltaY)
-						++mouseWriteCount;
-                });
+							int index = i >> 3;
+							int bitshift = 1 << (i & 7);
+
+							// to debug, add a conditional break point where b != 0, then press any key
+							// whatever I is equal to, is the bit offset of the key you pressed.
+							// ex: num pad 0 is at i = 90
+							auto b = keys_return[index] & (bitshift) ? 1 : 0;
+
+							//Set keyboard input
+							keyStates[_code] = b;
+						}
+
+						// not currently supported. would be returned by XQueryKeymap if it was.
+						// auto keycode = XKeysymToKeycode( _display, XK_Control_R );
+						// keyStates[G_KEY_RIGHTCONTROL] = keys_return[keycode >> 3] & (1 << (keycode & 7)) ? 1 : 0;
+
+
+						XQueryPointer(_display, _window, &root, &child, &_mouseScreenPositionX, &_mouseScreenPositionY, &_mousePositionX, &_mousePositionY, &keyMask);
+
+						//Set the mouse input
+						keyStates[G_BUTTON_LEFT] = (keyMask & Button1Mask) ? 1 : 0;
+						keyStates[G_BUTTON_RIGHT] = (keyMask & Button3Mask) ? 1 : 0;
+						keyStates[G_BUTTON_MIDDLE] = (keyMask & Button2Mask) ? 1 : 0;
+
+						//Set the change in mouse position.
+						_mouseDeltaX = _mousePositionX - _mousePrevX;
+						_mouseDeltaY = _mousePositionY - _mousePrevY;
+
+						//Set the previous mouse position as the current.
+						_mousePrevX = _mousePositionX;
+						_mousePrevY = _mousePositionY;
+
+						//Insure updates are tracked correctly
+						if (_mouseDeltaX || _mouseDeltaY)
+							++mouseWriteCount;
+					});
 
 				return GReturn::SUCCESS;
 			}
@@ -44631,13 +53252,13 @@ namespace GW
 
 				if (-_gWindow.GetWindowHandle(uwHndl))
 					return GW::GReturn::FAILURE;
-				
+
 				// stop if window is killed
-				watcher.Create(_gWindow, [&](){
+				watcher.Create(_gWindow, [&]() {
 					if (+watcher.Find(GW::SYSTEM::GWindow::Events::DESTROY, true))
 						inputDaemon = nullptr;
-				});
-				
+					});
+
 				return Create(uwHndl);
 			}
 
@@ -44678,13 +53299,17 @@ namespace GW
 	}
 }
 
+
 #elif defined(_WIN32)
-	#define WIN32_LEAN_AND_MEAN
+    #include <winapifamily.h>
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <vector>
+#include <map>
 
 namespace internal_gw {
-	struct GINPUT_GLOBAL {
+	struct GINPUT_VALUES {
 		int mousePrevX;
 		int mousePrevY;
 		int mousePositionX;
@@ -44702,11 +53327,14 @@ namespace internal_gw {
 		LONG_PTR _userWinProc;
 
 		unsigned int n_Keys[256];
+		unsigned int count = 0;
 	};
-	static GINPUT_GLOBAL& GInputGlobal() {
-		static GINPUT_GLOBAL keyData;
-		return keyData;
+
+	inline std::map<HWND, GINPUT_VALUES>& GetWindowInputValues() {
+		static std::map<HWND, GINPUT_VALUES> hWndMap;
+		return hWndMap;
 	}
+
 }
 
 namespace GW {
@@ -44715,6 +53343,7 @@ namespace GW {
 			private GInterfaceImplementation {
 		private:
 			HWND hWnd = nullptr;
+			internal_gw::GINPUT_VALUES* inputStates;
 
 			static bool SetGKeyIfSpecialCase(unsigned int& gKey, const USHORT& makeCode, const USHORT& flags, const LPARAM& lp) {
 				if (flags & 2) {
@@ -44774,9 +53403,11 @@ namespace GW {
 			// This functions checks to see if the key was "pressed" by windows and not the user
 			// as is the case when num lock is off and the user presses any of the keys in the area 
 			// to the left of the num pad, for example.
-			static bool ShouldSkipBecauseBogusKeyPress(const USHORT& makeCode, const USHORT& flags) {
+			static bool ShouldSkipBecauseBogusKeyPress(const USHORT& makeCode, const USHORT& flags, HWND window) {
 				// makecode must be shift, numlock must be off, and the E0 bit must be set
-				bool bogusShift = makeCode == 42 && !G_CHECK_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_NUM_LOCK) && (flags & 2);
+				bool bogusShift = makeCode == 42 && 
+					!G_CHECK_BIT(internal_gw::GetWindowInputValues()[window].keyMask, 
+						G_MASK_NUM_LOCK) && (flags & 2);
 
 				// makecode must be numpad multiply, and the E0 bit must be set
 				bool bogusMultiply = makeCode == 55 && (flags & 2);
@@ -44822,49 +53453,49 @@ namespace GW {
 							if (message == WM_KEYDOWN || message == WM_SYSKEYDOWN) {
 								SetGKeyIfSpecialCase(gKey, makeCode, flags, lp);
 
-								if (!(ShouldSkipBecauseBogusKeyPress(makeCode, flags))) {
-									internal_gw::GInputGlobal().n_Keys[gKey] = 1;
+								if (!(ShouldSkipBecauseBogusKeyPress(makeCode, flags, window))) {
+									internal_gw::GetWindowInputValues()[window].n_Keys[gKey] = 1;
 								}
 
 								switch (gKey) {
 									case G_KEY_RIGHTSHIFT:
 									case G_KEY_LEFTSHIFT:
-										G_TURNON_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_SHIFT);
+										G_TURNON_BIT(internal_gw::GetWindowInputValues()[window].keyMask, G_MASK_SHIFT);
 										break;
 									case G_KEY_RIGHTCONTROL:
 									case G_KEY_LEFTCONTROL:
-										G_TURNON_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_CONTROL);
+										G_TURNON_BIT(internal_gw::GetWindowInputValues()[window].keyMask, G_MASK_CONTROL);
 										break;
 									case G_KEY_CAPSLOCK:
-										G_TOGGLE_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_CAPS_LOCK);
+										G_TOGGLE_BIT(internal_gw::GetWindowInputValues()[window].keyMask, G_MASK_CAPS_LOCK);
 										break;
 									case G_KEY_NUMLOCK:
-										G_TOGGLE_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_NUM_LOCK);
+										G_TOGGLE_BIT(internal_gw::GetWindowInputValues()[window].keyMask, G_MASK_NUM_LOCK);
 										break;
 									case G_KEY_SCROLL_LOCK:
-										G_TOGGLE_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_SCROLL_LOCK);
+										G_TOGGLE_BIT(internal_gw::GetWindowInputValues()[window].keyMask, G_MASK_SCROLL_LOCK);
 										break;
 								}
 							}
 							else if (message == WM_KEYUP || message == WM_SYSKEYUP) {
 								SetGKeyIfSpecialCase(gKey, makeCode, flags, lp);
-								internal_gw::GInputGlobal().n_Keys[gKey] = 0;
+								internal_gw::GetWindowInputValues()[window].n_Keys[gKey] = 0;
 								
 								switch (gKey) {
 									case G_KEY_RIGHTSHIFT:
 									case G_KEY_LEFTSHIFT:
-										G_TURNOFF_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_SHIFT);
+										G_TURNOFF_BIT(internal_gw::GetWindowInputValues()[window].keyMask, G_MASK_SHIFT);
 										break;
 									case G_KEY_RIGHTCONTROL:
 									case G_KEY_LEFTCONTROL:
-										G_TURNOFF_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_CONTROL);
+										G_TURNOFF_BIT(internal_gw::GetWindowInputValues()[window].keyMask, G_MASK_CONTROL);
 										break;
 								}
 							}
 							//printf("scanCode: %d\t flags: %d\t keymask: %d\n", makeCode, flags, internal_gw::GInputGlobal().keyMask);
 						}
 						else if (raw->header.dwType == RIM_TYPEMOUSE) {
-							++internal_gw::GInputGlobal().mouseWriteCount;
+							++internal_gw::GetWindowInputValues()[window].mouseWriteCount;
 
 							switch (raw->data.mouse.ulButtons) {
 								case 1:
@@ -44885,13 +53516,13 @@ namespace GW {
 								case 120:
 								{
 									gKey = G_MOUSE_SCROLL_UP;
-									++internal_gw::GInputGlobal().scrollUpWriteCount;
+									++internal_gw::GetWindowInputValues()[window].scrollUpWriteCount;
 									break;
 								}
 								case 65416:
 								{
 									gKey = G_MOUSE_SCROLL_DOWN;
-									++internal_gw::GInputGlobal().scrollDownWriteCount;
+									++internal_gw::GetWindowInputValues()[window].scrollDownWriteCount;
 									break;
 								}
 							}
@@ -44901,47 +53532,47 @@ namespace GW {
 								case 1:
 								case 4:
 								case 16:
-									internal_gw::GInputGlobal().n_Keys[gKey] = 1;
+									internal_gw::GetWindowInputValues()[window].n_Keys[gKey] = 1;
 									break;
 									//Released
 								case 2:
 								case 8:
 								case 32:
-									internal_gw::GInputGlobal().n_Keys[gKey] = 0;
+									internal_gw::GetWindowInputValues()[window].n_Keys[gKey] = 0;
 									break;
 								case 1024:
-									internal_gw::GInputGlobal().n_Keys[gKey] = 1;
+									internal_gw::GetWindowInputValues()[window].n_Keys[gKey] = 1;
 									break;
 							}
 
 							//update delta mouse position
-							if ((internal_gw::GInputGlobal().mouseWriteCount - internal_gw::GInputGlobal().mouseReadCount) <= 1) {
-								internal_gw::GInputGlobal().mouseDeltaX = raw->data.mouse.lLastX;
-								internal_gw::GInputGlobal().mouseDeltaY = raw->data.mouse.lLastY;
+							if ((internal_gw::GetWindowInputValues()[window].mouseWriteCount - internal_gw::GetWindowInputValues()[window].mouseReadCount) <= 1) {
+								internal_gw::GetWindowInputValues()[window].mouseDeltaX = raw->data.mouse.lLastX;
+								internal_gw::GetWindowInputValues()[window].mouseDeltaY = raw->data.mouse.lLastY;
 							}
 							else {
-								internal_gw::GInputGlobal().mouseDeltaX += raw->data.mouse.lLastX;
-								internal_gw::GInputGlobal().mouseDeltaY += raw->data.mouse.lLastY;
+								internal_gw::GetWindowInputValues()[window].mouseDeltaX += raw->data.mouse.lLastX;
+								internal_gw::GetWindowInputValues()[window].mouseDeltaY += raw->data.mouse.lLastY;
 							}
 
 						}
 
 						if (gKey != G_MOUSE_SCROLL_UP) {
-							internal_gw::GInputGlobal().n_Keys[G_MOUSE_SCROLL_UP] = 0;
-							internal_gw::GInputGlobal().scrollUpReadCount = internal_gw::GInputGlobal().scrollUpWriteCount;
+							internal_gw::GetWindowInputValues()[window].n_Keys[G_MOUSE_SCROLL_UP] = 0;
+							internal_gw::GetWindowInputValues()[window].scrollUpReadCount = internal_gw::GetWindowInputValues()[window].scrollUpWriteCount;
 						}
 						if (gKey != G_MOUSE_SCROLL_DOWN) {
-							internal_gw::GInputGlobal().n_Keys[G_MOUSE_SCROLL_DOWN] = 0;
-							internal_gw::GInputGlobal().scrollDownReadCount = internal_gw::GInputGlobal().scrollDownWriteCount;
+							internal_gw::GetWindowInputValues()[window].n_Keys[G_MOUSE_SCROLL_DOWN] = 0;
+							internal_gw::GetWindowInputValues()[window].scrollDownReadCount = internal_gw::GetWindowInputValues()[window].scrollDownWriteCount;
 						}
 
 						POINT p;
 						if (GetCursorPos(&p) && ScreenToClient(window, &p)) {
-							internal_gw::GInputGlobal().mousePositionX = static_cast<int>(p.x);
-							internal_gw::GInputGlobal().mousePositionY = static_cast<int>(p.y);
+							internal_gw::GetWindowInputValues()[window].mousePositionX = static_cast<int>(p.x);
+							internal_gw::GetWindowInputValues()[window].mousePositionY = static_cast<int>(p.y);
 
-							internal_gw::GInputGlobal().mousePrevX = internal_gw::GInputGlobal().mousePositionX;
-							internal_gw::GInputGlobal().mousePrevY = internal_gw::GInputGlobal().mousePositionY;
+							internal_gw::GetWindowInputValues()[window].mousePrevX = internal_gw::GetWindowInputValues()[window].mousePositionX;
+							internal_gw::GetWindowInputValues()[window].mousePrevY = internal_gw::GetWindowInputValues()[window].mousePositionY;
 						}
 
 						delete[] lpb;
@@ -44950,14 +53581,19 @@ namespace GW {
 					default:
 						break;
 				}
-				return CallWindowProcW((WNDPROC)internal_gw::GInputGlobal()._userWinProc, window, msg, wp, lp);
+				return CallWindowProcW((WNDPROC)internal_gw::GetWindowInputValues()[window]._userWinProc, window, msg, wp, lp);
 			}
 
 		public:
 			~GInputImplementation() {
-				if (hWnd)
+				if (hWnd) {
+					--inputStates->count;
 					//Sets the WinProc back. (Fixes the StackOverFlow bug)
-					SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)internal_gw::GInputGlobal()._userWinProc);
+					if (inputStates->count == 0) {
+						SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)inputStates->_userWinProc);
+						internal_gw::GetWindowInputValues().erase(hWnd);
+					}
+				}
 			}
 
 			// GWindow - one version
@@ -44967,9 +53603,24 @@ namespace GW {
 					return GW::GReturn::INVALID_ARGUMENT;
 
 				hWnd = static_cast<HWND>(_windowHandle.window);
-				internal_gw::GInputGlobal()._userWinProc = SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)GWinProc);
 
-				if (internal_gw::GInputGlobal()._userWinProc == NULL)
+				auto iter = internal_gw::GetWindowInputValues().find(hWnd);
+
+				if (iter != internal_gw::GetWindowInputValues().end()) {
+					inputStates = &internal_gw::GetWindowInputValues()[hWnd];
+					++inputStates->count;
+
+					return GW::GReturn::SUCCESS;
+				}
+
+				internal_gw::GetWindowInputValues()[hWnd] = internal_gw::GINPUT_VALUES();
+				inputStates = &internal_gw::GetWindowInputValues()[hWnd];
+
+				inputStates->count = 1;
+
+				inputStates->_userWinProc = SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)GWinProc);
+
+				if (inputStates->_userWinProc == NULL)
 					return GW::GReturn::FAILURE;
 
 				//Getting Raw Input Devices.
@@ -45032,18 +53683,324 @@ namespace GW {
 
 				//Capslock
 				if ((GetKeyState(VK_CAPITAL) & 0x0001) != 0)
-					G_TURNON_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_CAPS_LOCK);
+					G_TURNON_BIT(inputStates->keyMask, G_MASK_CAPS_LOCK);
 
 				//Numlock
 				if ((GetKeyState(VK_NUMLOCK) & 0x0001) != 0)
-					G_TURNON_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_NUM_LOCK);
+					G_TURNON_BIT(inputStates->keyMask, G_MASK_NUM_LOCK);
 
 				//ScrollLock
 				if ((GetKeyState(VK_SCROLL) & 0x0001) != 0)
-					G_TURNON_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_SCROLL_LOCK);
+					G_TURNON_BIT(inputStates->keyMask, G_MASK_SCROLL_LOCK);
 
 
 				return GW::GReturn::SUCCESS;
+			}
+
+			GReturn Create(const GW::SYSTEM::GWindow _gWindow) {
+				GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE uwHndl;
+
+				if (-_gWindow.GetWindowHandle(uwHndl))
+					return GW::GReturn::FAILURE;
+
+				return Create(uwHndl);
+			}
+
+			GReturn GetState(int _keyCode, float& _outState) override {
+				if (_keyCode == G_MOUSE_SCROLL_UP && inputStates->n_Keys[G_MOUSE_SCROLL_UP] == 1) {
+					// Compare writes to the SCROLL_UP state by GWinProc to reads by the user.
+					if (inputStates->scrollUpWriteCount != inputStates->scrollUpReadCount)
+						++inputStates->scrollUpReadCount;
+					else
+						inputStates->n_Keys[G_MOUSE_SCROLL_UP] = 0; // Prevents over-reporting scroll up.
+				}
+				else if (_keyCode == G_MOUSE_SCROLL_DOWN && inputStates->n_Keys[G_MOUSE_SCROLL_DOWN] == 1) {
+					if (inputStates->scrollDownWriteCount != inputStates->scrollDownReadCount)
+						++inputStates->scrollDownReadCount;
+					else
+						inputStates->n_Keys[G_MOUSE_SCROLL_DOWN] = 0;
+				}
+
+				_outState = (float)inputStates->n_Keys[_keyCode];
+				return GW::GReturn::SUCCESS;
+			}
+
+			GReturn GetMouseDelta(float& _x, float& _y) override {
+				_x = static_cast<float>(inputStates->mouseDeltaX);
+				_y = static_cast<float>(inputStates->mouseDeltaY);
+				if (inputStates->mouseReadCount != inputStates->mouseWriteCount) {
+					inputStates->mouseReadCount = inputStates->mouseWriteCount;
+					return GW::GReturn::SUCCESS;
+				}
+				return GW::GReturn::REDUNDANT;
+			}
+
+			GReturn GetMousePosition(float& _x, float& _y) const override {
+				_x = static_cast<float>(inputStates->mousePositionX);
+				_y = static_cast<float>(inputStates->mousePositionY);
+
+				return GW::GReturn::SUCCESS;
+			}
+
+			GReturn GetKeyMask(unsigned int& _outKeyMask) const override {
+				_outKeyMask = inputStates->keyMask;
+				return GW::GReturn::SUCCESS;
+			}
+		};
+	}
+}
+
+#undef G_MACRO_PAGEUP
+#undef G_MACRO_PAGEDOWN
+
+
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        #include <Windows.h>
+#include <vector>
+
+#include <winrt/Windows.UI.Core.h>
+#include <winrt/Windows.UI.Input.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.UI.ViewManagement.h>
+
+#include <iostream>
+
+namespace internal_gw {
+	struct GINPUT_GLOBAL {
+		int mousePrevX;
+		int mousePrevY;
+		int mousePositionX;
+		int mousePositionY;
+		int mouseDeltaX;
+		int mouseDeltaY;
+		unsigned int keyMask;
+
+		unsigned int mouseReadCount;
+		unsigned int mouseWriteCount;
+		unsigned int scrollUpWriteCount;
+		unsigned int scrollUpReadCount;
+		unsigned int scrollDownWriteCount;
+		unsigned int scrollDownReadCount;
+		LONG_PTR _userWinProc;
+
+		unsigned int n_Keys[256];
+	};
+	inline GINPUT_GLOBAL& GInputGlobal() {
+		static GINPUT_GLOBAL keyData;
+		return keyData;
+	}
+}
+
+namespace GW {
+	namespace I {
+		class GInputImplementation : public virtual GInputInterface,
+			private GEventGeneratorImplementation {
+		private:
+			CORE::GThreadShared threadShare;
+			winrt::event_token m_keyDown;
+			winrt::event_token m_keyUp;
+			winrt::event_token m_pointerMoved;
+			winrt::event_token m_pointerPressed;
+			winrt::event_token m_pointerReleased;
+			winrt::event_token m_pointerWheelChanged;
+
+			// This should only be used if there is only one view
+			winrt::Windows::Foundation::IAsyncAction CallOnMainViewUiThreadAsync(winrt::Windows::UI::Core::DispatchedHandler handler) const
+			{
+				co_await winrt::Windows::ApplicationModel::Core::CoreApplication::MainView().CoreWindow().Dispatcher().RunAsync(winrt::Windows::UI::Core::CoreDispatcherPriority::Normal, handler);
+			}
+
+		private:
+			void OnKeyDown(winrt::Windows::UI::Core::KeyEventArgs const& _args) {
+				USHORT makeCode = (USHORT)_args.VirtualKey();
+				unsigned int gKey = 0;
+
+				gKey = Keycodes[makeCode];
+
+				internal_gw::GInputGlobal().n_Keys[gKey] = 1;
+
+				switch (gKey) {
+				case G_KEY_RIGHTSHIFT:
+				case G_KEY_LEFTSHIFT:
+					G_TURNON_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_SHIFT);
+					break;
+				case G_KEY_RIGHTCONTROL:
+				case G_KEY_LEFTCONTROL:
+					G_TURNON_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_CONTROL);
+					break;
+				case G_KEY_CAPSLOCK:
+					G_TOGGLE_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_CAPS_LOCK);
+					break;
+				case G_KEY_NUMLOCK:
+					G_TOGGLE_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_NUM_LOCK);
+					break;
+				case G_KEY_SCROLL_LOCK:
+					G_TOGGLE_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_SCROLL_LOCK);
+					break;
+				}
+			}
+
+			void OnKeyUp(winrt::Windows::UI::Core::KeyEventArgs const& _args) {
+				USHORT makeCode = (USHORT)_args.VirtualKey();
+				unsigned int gKey = 0;
+
+				gKey = Keycodes[makeCode];
+
+				internal_gw::GInputGlobal().n_Keys[gKey] = 0;
+
+				switch (gKey) {
+				case G_KEY_RIGHTSHIFT:
+				case G_KEY_LEFTSHIFT:
+					G_TURNOFF_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_SHIFT);
+					break;
+				case G_KEY_RIGHTCONTROL:
+				case G_KEY_LEFTCONTROL:
+					G_TURNOFF_BIT(internal_gw::GInputGlobal().keyMask, G_MASK_CONTROL);
+					break;
+				}
+			}
+
+			void OnMouseMoved(winrt::Windows::UI::Core::PointerEventArgs const& _args) {
+				++internal_gw::GInputGlobal().mouseWriteCount;
+				//update delta mouse position
+				if ((internal_gw::GInputGlobal().mouseWriteCount - internal_gw::GInputGlobal().mouseReadCount) <= 1) {
+					internal_gw::GInputGlobal().mousePrevX = static_cast<int>(internal_gw::GInputGlobal().mousePositionX);
+					internal_gw::GInputGlobal().mousePrevY = static_cast<int>(internal_gw::GInputGlobal().mousePositionY);
+				}				
+
+				auto p = _args.CurrentPoint().RawPosition();
+				internal_gw::GInputGlobal().mousePositionX = static_cast<int>(p.X);
+				internal_gw::GInputGlobal().mousePositionY = static_cast<int>(p.Y);
+
+				internal_gw::GInputGlobal().mouseDeltaX = static_cast<int>(internal_gw::GInputGlobal().mousePositionX - internal_gw::GInputGlobal().mousePrevX);
+				internal_gw::GInputGlobal().mouseDeltaY = static_cast<int>(internal_gw::GInputGlobal().mousePositionY - internal_gw::GInputGlobal().mousePrevY);
+
+				//std::cout << internal_gw::GInputGlobal().mouseDeltaX << "--" << internal_gw::GInputGlobal().mouseDeltaY << std::endl;
+			}
+
+			void OnMousePressed(winrt::Windows::UI::Core::PointerEventArgs const& _args) {
+				if (_args.CurrentPoint().Properties().IsLeftButtonPressed())
+					internal_gw::GInputGlobal().n_Keys[G_BUTTON_LEFT] = 1;
+				if (_args.CurrentPoint().Properties().IsRightButtonPressed())
+					internal_gw::GInputGlobal().n_Keys[G_BUTTON_RIGHT] = 1;
+				if (_args.CurrentPoint().Properties().IsMiddleButtonPressed())
+					internal_gw::GInputGlobal().n_Keys[G_BUTTON_MIDDLE] = 1;
+
+			}
+
+			void OnMouseReleased(winrt::Windows::UI::Core::PointerEventArgs const& _args) {
+				if (!_args.CurrentPoint().Properties().IsLeftButtonPressed())
+					internal_gw::GInputGlobal().n_Keys[G_BUTTON_LEFT] = 0;
+				if (!_args.CurrentPoint().Properties().IsRightButtonPressed())
+					internal_gw::GInputGlobal().n_Keys[G_BUTTON_RIGHT] = 0;
+				if (!_args.CurrentPoint().Properties().IsMiddleButtonPressed())
+					internal_gw::GInputGlobal().n_Keys[G_BUTTON_MIDDLE] = 0;
+			}
+
+			void OnMouseScroll(winrt::Windows::UI::Core::PointerEventArgs const& _args) {
+				unsigned int gKey;
+				int scrollDelta = _args.CurrentPoint().Properties().MouseWheelDelta();
+				if (scrollDelta > 0) {
+					gKey = G_MOUSE_SCROLL_UP;
+					++internal_gw::GInputGlobal().scrollUpWriteCount;
+				}
+				else if (scrollDelta < 0) {
+					gKey = G_MOUSE_SCROLL_DOWN;
+					++internal_gw::GInputGlobal().scrollDownWriteCount;
+				}
+
+				internal_gw::GInputGlobal().n_Keys[gKey] = 1;
+
+				if (gKey != G_MOUSE_SCROLL_UP) {
+					internal_gw::GInputGlobal().n_Keys[G_MOUSE_SCROLL_UP] = 0;
+					internal_gw::GInputGlobal().scrollUpReadCount = internal_gw::GInputGlobal().scrollUpWriteCount;
+				}
+				if (gKey != G_MOUSE_SCROLL_DOWN) {
+					internal_gw::GInputGlobal().n_Keys[G_MOUSE_SCROLL_DOWN] = 0;
+					internal_gw::GInputGlobal().scrollDownReadCount = internal_gw::GInputGlobal().scrollDownWriteCount;
+				}
+			}
+
+
+		public:
+			~GInputImplementation() {
+				// revoke events
+				auto process = CallOnMainViewUiThreadAsync([this]()
+					{
+						auto window = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+
+						window.KeyDown(m_keyDown);
+						window.KeyUp(m_keyUp);
+						window.PointerMoved(m_pointerMoved);
+						window.PointerPressed(m_pointerPressed);
+						window.PointerReleased(m_pointerReleased);
+						window.PointerWheelChanged(m_pointerWheelChanged);
+					}); process.get();
+			}
+
+			GReturn Push(const GEvent& _newEvent) override { return GEventGeneratorImplementation::Push(_newEvent); }
+
+			// GWindow - one version
+			// UNIVERSAL_WINDOW_HANDLE by value - another version
+			GReturn Create(GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE _windowHandle) {
+				if (_windowHandle.window == nullptr)
+					return GW::GReturn::INVALID_ARGUMENT;
+
+				// subscribe events to delegates
+				// call on main thread
+				auto process = CallOnMainViewUiThreadAsync([this]() mutable
+					{
+						auto view = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+						auto window = winrt::Windows::UI::Core::CoreWindow::GetForCurrentThread();
+
+						// Event::KEYDOWN
+						this->m_keyDown = window.KeyDown([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::KeyEventArgs const& args)
+							{
+								this->OnKeyDown(args);
+							});
+
+						// Event::KEYUP
+						this->m_keyUp = window.KeyUp([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::KeyEventArgs const& args)
+							{
+								this->OnKeyUp(args);
+							});
+
+						// Event::MOUSEMOVE
+						this->m_pointerMoved = window.PointerMoved([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::PointerEventArgs const& args)
+							{
+								this->OnMouseMoved(args);
+							});
+						// Event::MOUSEPRESSED
+						this->m_pointerPressed = window.PointerPressed([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::PointerEventArgs const& args)
+							{
+								this->OnMousePressed(args);
+							});
+						// Event::MOUSERELEASED
+						this->m_pointerReleased = window.PointerReleased([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::PointerEventArgs const& args)
+							{
+								this->OnMouseReleased(args);
+							});
+						// Event::MOUSESCROLLED
+						this->m_pointerWheelChanged = window.PointerWheelChanged([this]
+						(winrt::Windows::UI::Core::CoreWindow const&,
+							winrt::Windows::UI::Core::PointerEventArgs const& args)
+							{
+								this->OnMouseScroll(args);
+							});
+					}); process.get();
+
+					return GReturn::SUCCESS;
 			}
 
 			GReturn Create(const GW::SYSTEM::GWindow _gWindow) {
@@ -45061,7 +54018,7 @@ namespace GW {
 					if (internal_gw::GInputGlobal().scrollUpWriteCount != internal_gw::GInputGlobal().scrollUpReadCount)
 						++internal_gw::GInputGlobal().scrollUpReadCount;
 					else
-						internal_gw::GInputGlobal().n_Keys[G_MOUSE_SCROLL_UP] = 0; // Prevents overreporting scroll up.
+						internal_gw::GInputGlobal().n_Keys[G_MOUSE_SCROLL_UP] = 0; // Prevents over-reporting scroll up.
 				}
 				else if (_keyCode == G_MOUSE_SCROLL_DOWN && internal_gw::GInputGlobal().n_Keys[G_MOUSE_SCROLL_DOWN] == 1) {
 					if (internal_gw::GInputGlobal().scrollDownWriteCount != internal_gw::GInputGlobal().scrollDownReadCount)
@@ -45099,9 +54056,7 @@ namespace GW {
 	}
 }
 
-#undef G_MACRO_PAGEUP
-#undef G_MACRO_PAGEDOWN
-
+    #endif
 #endif
 
 
@@ -45183,14 +54138,14 @@ namespace GW
 	}
 }
 
-// Implementaion for GAudio.h
+// Implementation for GAudio.h
 // *IMPORTANT* End users of Gateware may ignore the contents of these files if they please.(Developers Only)
 // File not included in Doxygen, these files will be compiled directly into associated header file when deployed
 // Developers: Do NOT assume the contents of this file are within the scope of the related interface's namespace
 // Developers: These are NOT cpp files do not use "using namespace" or unprotected global variables (prefer static members)
 // Developers: If you MUST use a non-static global, use the "internal_gw" namespace to store them. (only on approval)
 
-// Gateware platform specific implementations are seperated into different files to keep things clean and flexible
+// Gateware platform specific implementations are separated into different files to keep things clean and flexible
 // As new platforms come online or are deprecated (or upgraded) we can modify their selection through this file
 // When adding implementations please try to condense redundant file includes where possible.
 // This will reduce size/redundancy when the library is tool compressed into single header form.
@@ -45268,7 +54223,80 @@ namespace GW
 
 
 #elif defined(__APPLE__)
-    #ifdef __OBJC__
+    #include <TargetConditionals.h>
+    #if TARGET_OS_IOS
+        namespace GW
+{
+    namespace I
+    {
+        class GAudioImplementation :    public virtual GAudioInterface,
+                                        public GEventGeneratorImplementation
+        {
+        public:
+            // Main class
+            GReturn Create()
+            {
+                return GReturn::INTERFACE_UNSUPPORTED;
+            }
+            GReturn SetMasterVolume(float _value) override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn SetGlobalSoundVolume(float _value) override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn SetGlobalMusicVolume(float _value) override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn SetSoundsChannelVolumes(const float* _values, unsigned int _numChannels) override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn SetMusicChannelVolumes(const float* _values, unsigned int _numChannels) override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn PlaySounds() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn PauseSounds() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn ResumeSounds() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn StopSounds() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn PlayMusic() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn PauseMusic() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn ResumeMusic() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn StopMusic() override
+            {
+                return GReturn::FAILURE;
+            }
+        };
+    }
+}
+
+
+    #elif TARGET_OS_MAC
+        #ifdef __OBJC__
 #import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
 #import <AVFoundation/AVFoundation.h>
@@ -45321,7 +54349,7 @@ namespace internal_gw
 
             /* NOTE: This code currently does not do anything. */
             /* It is supposed to adjust the output channels to 6 but fails. */
-            /* The mixer and busses create ok but the channel setting code fails*/
+            /* The mixer and buses create ok but the channel setting code fails*/
             /*
             // Give the mixer one input bus and one output bus
             UInt32 inBuses = 1;
@@ -45422,7 +54450,7 @@ namespace GW
                 bool success = mac_audio->Init();
                 if (success == false)
                     return GReturn::HARDWARE_UNAVAILABLE;
-                // Initalize GAudio's volumes
+                // Initialize GAudio's volumes
                 masterVolume = 1.0f;
                 soundsVolume = 1.0f;
                 musicVolume = 1.0f;
@@ -45608,6 +54636,7 @@ namespace GW
 #undef G_NUM_OF_OUTPUTS
 
 
+    #endif
 #elif defined(__linux__)
     #include <atomic>
 #include <math.h>
@@ -45619,12 +54648,12 @@ namespace GW
 
 namespace GW
 {
-    namespace I
-    {
-        class GAudioImplementation :	public virtual GAudioInterface,
-										public GEventGeneratorImplementation
-        {
-        public:
+	namespace I
+	{
+		class GAudioImplementation : public virtual GAudioInterface,
+			public GEventGeneratorImplementation
+		{
+		public:
 			float masterVolume = 1.0f;
 			float soundsVolume = 1.0f;
 			float musicVolume = 1.0f;
@@ -45636,18 +54665,18 @@ namespace GW
 				// Broadcast DESTROY here
 				GEvent gEvent;
 				// EVENT_DATA is not required for this event
-				gEvent.Write(Events::DESTROY, nullptr_t());
+				gEvent.Write(Events::DESTROY, std::nullptr_t());
 				this->Push(gEvent);
 			}
 
-            // Main class
-            GReturn Create()
-            {	
+			// Main class
+			GReturn Create()
+			{
 				// check for available hardware
 				pa_threaded_mainloop* myMainLoop = pa_threaded_mainloop_new();
 				if (myMainLoop == NULL)
 					return GReturn::HARDWARE_UNAVAILABLE;
-					
+
 				pa_threaded_mainloop_lock(myMainLoop);
 				{
 					pa_context* myContext = pa_context_new(pa_threaded_mainloop_get_api(myMainLoop), "AudioHardware");
@@ -45664,23 +54693,23 @@ namespace GW
 						pa_threaded_mainloop_free(myMainLoop);
 						return GReturn::HARDWARE_UNAVAILABLE;
 					}
-					
+
 					pa_context_disconnect(myContext);
 					pa_context_unref(myContext);
 				}
-				pa_threaded_mainloop_unlock(myMainLoop);				
+				pa_threaded_mainloop_unlock(myMainLoop);
 				pa_threaded_mainloop_free(myMainLoop);
-				
-				// Initalize GAudio's volumes
+
+				// Initialize GAudio's volumes
 				masterVolume = 1.0f;
 				soundsVolume = 1.0f;
 				musicVolume = 1.0f;
 
 				return GEventGeneratorImplementation::Create();
-            }
+			}
 
-            GReturn SetMasterVolume(float _value) override
-            {
+			GReturn SetMasterVolume(float _value) override
+			{
 				if (_value < 0.0f)
 					return GReturn::INVALID_ARGUMENT;
 
@@ -45697,7 +54726,7 @@ namespace GW
 				gEvent.Write(Events::MASTER_VOLUME_CHANGED, eventData);
 
 				return this->Push(gEvent);
-            }
+			}
 
 			GReturn SetGlobalSoundVolume(float _value) override
 			{
@@ -45739,8 +54768,8 @@ namespace GW
 				return this->Push(gEvent);
 			}
 
-            GReturn SetSoundsChannelVolumes(const float* _values, unsigned int _numChannels) override
-            {
+			GReturn SetSoundsChannelVolumes(const float* _values, unsigned int _numChannels) override
+			{
 				if (_values == nullptr)
 					return GReturn::INVALID_ARGUMENT;
 
@@ -45759,7 +54788,7 @@ namespace GW
 				gEvent.Write(Events::SOUND_CHANNEL_VOLUMES_CHANGED, eventData);
 
 				return this->Push(gEvent);
-            }
+			}
 
 			GReturn SetMusicChannelVolumes(const float* _values, unsigned int _numChannels) override
 			{
@@ -45788,41 +54817,41 @@ namespace GW
 			{
 				GEvent gEvent;
 				// EVENT_DATA is not required for this event
-				gEvent.Write(Events::PLAY_SOUNDS, nullptr_t());
+				gEvent.Write(Events::PLAY_SOUNDS, std::nullptr_t());
 
 				return this->Push(gEvent);
 			}
-            GReturn PauseSounds() override
-            {
+			GReturn PauseSounds() override
+			{
 				GEvent gEvent;
 				// EVENT_DATA is not required for this event
-				gEvent.Write(Events::PAUSE_SOUNDS, nullptr_t());
-				
-                return this->Push(gEvent);
-            }
+				gEvent.Write(Events::PAUSE_SOUNDS, std::nullptr_t());
+
+				return this->Push(gEvent);
+			}
 			GReturn ResumeSounds() override
 			{
 				GEvent gEvent;
 				// EVENT_DATA is not required for this event
-				gEvent.Write(Events::RESUME_SOUNDS, nullptr_t());
+				gEvent.Write(Events::RESUME_SOUNDS, std::nullptr_t());
 
 				return this->Push(gEvent);
 			}
-            GReturn StopSounds() override
-            {
+			GReturn StopSounds() override
+			{
 				GEvent gEvent;
 				// EVENT_DATA is not required for this event
-				gEvent.Write(Events::STOP_SOUNDS, nullptr_t());
+				gEvent.Write(Events::STOP_SOUNDS, std::nullptr_t());
 
 				return this->Push(gEvent);
-            }
+			}
 
 			// Music Events
 			GReturn PlayMusic() override
 			{
 				GEvent gEvent;
 				// EVENT_DATA is not required for this event
-				gEvent.Write(Events::PLAY_MUSIC, nullptr_t());
+				gEvent.Write(Events::PLAY_MUSIC, std::nullptr_t());
 
 				return this->Push(gEvent);
 			}
@@ -45830,7 +54859,7 @@ namespace GW
 			{
 				GEvent gEvent;
 				// EVENT_DATA is not required for this event
-				gEvent.Write(Events::PAUSE_MUSIC, nullptr_t());
+				gEvent.Write(Events::PAUSE_MUSIC, std::nullptr_t());
 
 				return this->Push(gEvent);
 			}
@@ -45838,7 +54867,7 @@ namespace GW
 			{
 				GEvent gEvent;
 				// EVENT_DATA is not required for this event
-				gEvent.Write(Events::RESUME_MUSIC, nullptr_t());
+				gEvent.Write(Events::RESUME_MUSIC, std::nullptr_t());
 
 				return this->Push(gEvent);
 			}
@@ -45846,16 +54875,19 @@ namespace GW
 			{
 				GEvent gEvent;
 				// EVENT_DATA is not required for this event
-				gEvent.Write(Events::STOP_MUSIC, nullptr_t());
+				gEvent.Write(Events::STOP_MUSIC, std::nullptr_t());
 
 				return this->Push(gEvent);
 			}
-        };
-    }// end I
+		};
+	}// end I
 }// end GW
 
+
 #elif defined(_WIN32)
-    #if _MSC_VER >= 1700
+    #include <winapifamily.h>
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #if _MSC_VER >= 1700
 	#pragma comment(lib, "xaudio2.lib")
 #endif
 
@@ -46105,7 +55137,269 @@ namespace GW
     }// end I
 }// end GW
 
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        #if _MSC_VER >= 1700
+#pragma comment(lib, "xaudio2.lib")
 #endif
+
+#include <xaudio2.h>
+#include <xaudio2fx.h>
+#include <atomic>
+#include <math.h>
+#include <roapi.h>
+
+namespace GW
+{
+	namespace I
+	{
+		class GAudioImplementation : public virtual GAudioInterface,
+			protected GEventGeneratorImplementation
+		{
+			struct PlatformAudio
+			{
+				IXAudio2* myAudio = nullptr;
+				IXAudio2MasteringVoice* theMasterVoice = nullptr;
+			};
+		public:
+			float masterVolume = 1.0f;
+			float soundsVolume = 1.0f;
+			float musicVolume = 1.0f;
+			float soundsChannelVolumes[6] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+			float musicChannelVolumes[6] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+			PlatformAudio XAudioData;
+
+			virtual ~GAudioImplementation()
+			{
+				// Broadcast DESTROY here
+				GEvent gEvent;
+				// EVENT_DATA is not required for this event
+				gEvent.Write(Events::DESTROY, nullptr_t());
+				this->Push(gEvent);
+
+				if (XAudioData.theMasterVoice)
+					XAudioData.theMasterVoice->DestroyVoice();
+
+				if (XAudioData.myAudio)
+				{
+					XAudioData.myAudio->StopEngine();
+					XAudioData.myAudio->Release();
+				}
+			}
+
+			// Main class
+			GReturn Create()
+			{
+				if (XAudioData.myAudio != nullptr)
+					return GReturn::FAILURE;
+
+				//HRESULT theResult = CoInitialize(NULL);
+				HRESULT theResult = CoInitializeEx(NULL, NULL);
+				if (FAILED(theResult = XAudio2Create(&XAudioData.myAudio)))
+					return GReturn::HARDWARE_UNAVAILABLE;
+
+				if (FAILED(theResult = XAudioData.myAudio->CreateMasteringVoice(&XAudioData.theMasterVoice)))
+					return GReturn::HARDWARE_UNAVAILABLE;
+
+				// Initalize GAudio's volumes
+				masterVolume = 1.0f;
+				soundsVolume = 1.0f;
+				musicVolume = 1.0f;
+
+				return GEventGeneratorImplementation::Create();
+			}
+
+			GReturn SetMasterVolume(float _value) override
+			{
+				if (_value < 0.0f)
+					return GReturn::INVALID_ARGUMENT;
+
+				if (fabsf(_value - masterVolume) < FLT_EPSILON)
+					return GReturn::REDUNDANT;
+
+				masterVolume = (_value > 1.0f) ? 1.0f : _value;
+
+				GEvent gEvent;
+				EVENT_DATA eventData;
+				// Set the first value of a passed array to our actual master volume
+				eventData.channelVolumes[0] = masterVolume;
+				eventData.numOfChannels = 0; // we are not using channels in this event
+				gEvent.Write(Events::MASTER_VOLUME_CHANGED, eventData);
+
+				return this->Push(gEvent);
+			}
+
+			GReturn SetGlobalSoundVolume(float _value) override
+			{
+				if (_value < 0.0f)
+					return GReturn::INVALID_ARGUMENT;
+
+				if (fabsf(_value - soundsVolume) < FLT_EPSILON)
+					return GReturn::REDUNDANT;
+
+				soundsVolume = (_value > 1.0f) ? 1.0f : _value;
+
+				GEvent gEvent;
+				EVENT_DATA eventData;
+				// Set the first value of a passed array to our actual master volume
+				eventData.channelVolumes[0] = soundsVolume;
+				eventData.numOfChannels = 0; // we are not using channels in this event
+				gEvent.Write(Events::SOUNDS_VOLUME_CHANGED, eventData);
+
+				return this->Push(gEvent);
+			}
+
+			GReturn SetGlobalMusicVolume(float _value) override
+			{
+				if (_value < 0.0f)
+					return GReturn::INVALID_ARGUMENT;
+
+				if (fabsf(_value - musicVolume) < FLT_EPSILON)
+					return GReturn::REDUNDANT;
+
+				musicVolume = (_value > 1.0f) ? 1.0f : _value;
+
+				GEvent gEvent;
+				EVENT_DATA eventData;
+				// Set the first value of a passed array to our actual master volume
+				eventData.channelVolumes[0] = musicVolume;
+				eventData.numOfChannels = 0; // we are not using channels in this event
+				gEvent.Write(Events::MUSIC_VOLUME_CHANGED, eventData);
+
+				return this->Push(gEvent);
+			}
+
+			GReturn SetSoundsChannelVolumes(const float* _values, unsigned int _numChannels) override
+			{
+				if (_values == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				if (_numChannels == 0 || _numChannels > 6)
+					return GReturn::INVALID_ARGUMENT;
+
+				for (unsigned int i = 0; i < 6; ++i)
+				{
+					soundsChannelVolumes[i] = (i < _numChannels) ? _values[i] : 0.0f;
+				}
+
+				GEvent gEvent;
+				EVENT_DATA eventData;
+				memcpy(eventData.channelVolumes, soundsChannelVolumes, 6 * sizeof(float));
+				eventData.numOfChannels = _numChannels;
+				gEvent.Write(Events::SOUND_CHANNEL_VOLUMES_CHANGED, eventData);
+
+				return this->Push(gEvent);
+			}
+
+			GReturn SetMusicChannelVolumes(const float* _values, unsigned int _numChannels) override
+			{
+				if (_values == nullptr)
+					return GReturn::INVALID_ARGUMENT;
+
+				if (_numChannels == 0 || _numChannels > 6)
+					return GReturn::INVALID_ARGUMENT;
+
+				for (unsigned int i = 0; i < 6; ++i)
+				{
+					musicChannelVolumes[i] = (i < _numChannels) ? _values[i] : 0.0f;
+				}
+
+				GEvent gEvent;
+				EVENT_DATA eventData;
+				memcpy(eventData.channelVolumes, musicChannelVolumes, 6 * sizeof(float));
+				eventData.numOfChannels = _numChannels;
+				gEvent.Write(Events::MUSIC_CHANNEL_VOLUMES_CHANGED, eventData);
+
+				return this->Push(gEvent);
+			}
+
+			// Sound Events
+			GReturn PlaySounds() override
+			{
+				GEvent gEvent;
+				// EVENT_DATA is not required for this event
+				gEvent.Write(Events::PLAY_SOUNDS, nullptr_t());
+
+				return this->Push(gEvent);
+			}
+			GReturn PauseSounds() override
+			{
+				GEvent gEvent;
+				// EVENT_DATA is not required for this event
+				gEvent.Write(Events::PAUSE_SOUNDS, nullptr_t());
+
+				return this->Push(gEvent);
+			}
+			GReturn ResumeSounds() override
+			{
+				GEvent gEvent;
+				// EVENT_DATA is not required for this event
+				gEvent.Write(Events::RESUME_SOUNDS, nullptr_t());
+
+				return this->Push(gEvent);
+			}
+			GReturn StopSounds() override
+			{
+				GEvent gEvent;
+				// EVENT_DATA is not required for this event
+				gEvent.Write(Events::STOP_SOUNDS, nullptr_t());
+
+				return this->Push(gEvent);
+			}
+
+			// Music Events
+			GReturn PlayMusic() override
+			{
+				GEvent gEvent;
+				// EVENT_DATA is not required for this event
+				gEvent.Write(Events::PLAY_MUSIC, nullptr_t());
+
+				return this->Push(gEvent);
+			}
+			GReturn PauseMusic() override
+			{
+				GEvent gEvent;
+				// EVENT_DATA is not required for this event
+				gEvent.Write(Events::PAUSE_MUSIC, nullptr_t());
+
+				return this->Push(gEvent);
+			}
+			GReturn ResumeMusic() override
+			{
+				GEvent gEvent;
+				// EVENT_DATA is not required for this event
+				gEvent.Write(Events::RESUME_MUSIC, nullptr_t());
+
+				return this->Push(gEvent);
+			}
+			GReturn StopMusic() override
+			{
+				GEvent gEvent;
+				// EVENT_DATA is not required for this event
+				gEvent.Write(Events::STOP_MUSIC, nullptr_t());
+
+				return this->Push(gEvent);
+			}
+
+			// Events
+			GReturn Register(CORE::GInterface _observer, void(*_callback)(const GEvent&, CORE::GInterface&)) override
+			{
+				return GEventGeneratorImplementation::Register(_observer, _callback);
+			}
+			GReturn Observers(unsigned int& _outCount) const override
+			{
+				return GEventGeneratorImplementation::Observers(_outCount);
+			}
+			GReturn Push(const GEvent& _newEvent) override
+			{
+				return GEventGeneratorImplementation::Push(_newEvent);
+			}
+		};
+	}// end I
+}// end GW
+
+    #endif
+#endif
+
 
 
 
@@ -46134,6 +55428,11 @@ namespace GW
 			GATEWARE_FUNCTION(PauseMusic)
 			GATEWARE_FUNCTION(ResumeMusic)
 			GATEWARE_FUNCTION(StopMusic)
+
+			// reimplemented functions
+			GATEWARE_FUNCTION(Register);
+			GATEWARE_CONST_FUNCTION(Observers);
+			GATEWARE_FUNCTION(Push);
 
 			// This area does not contain actual code, it is only for the benefit of documentation generation.
 		}; 
@@ -46264,6 +55563,7 @@ namespace GW
 #endif
 
 
+
 namespace GW
 {
 	namespace AUDIO
@@ -46292,6 +55592,11 @@ namespace GW
 			GATEWARE_FUNCTION(PauseMusic)
 			GATEWARE_FUNCTION(ResumeMusic)
 			GATEWARE_FUNCTION(StopMusic)
+
+			// more reimplemented functions
+			GATEWARE_FUNCTION(Register);
+			GATEWARE_CONST_FUNCTION(Observers);
+			GATEWARE_FUNCTION(Push);
 
 			// This area does not contain actual code, it is only for the benefit of documentation generation.
 		};
@@ -46328,14 +55633,14 @@ namespace GW
     }
 }
 
-// Implementaion for GSound.h
+// Implementation for GSound.h
 // *IMPORTANT* End users of Gateware may ignore the contents of these files if they please.(Developers Only)
 // File not included in Doxygen, these files will be compiled directly into associated header file when deployed
 // Developers: Do NOT assume the contents of this file are within the scope of the related interface's namespace
 // Developers: These are NOT cpp files do not use "using namespace" or unprotected global variables (prefer static members)
 // Developers: If you MUST use a non-static global, use the "internal_gw" namespace to store them. (only on approval)
 
-// Gateware platform specific implementations are seperated into different files to keep things clean and flexible
+// Gateware platform specific implementations are separated into different files to keep things clean and flexible
 // As new platforms come online or are deprecated (or upgraded) we can modify their selection through this file
 // When adding implementations please try to condense redundant file includes where possible.
 // This will reduce size/redundancy when the library is tool compressed into single header form.
@@ -46350,7 +55655,7 @@ namespace GW
         {
         public:
             // Main class
-            GReturn Create(const char* _path, GW::AUDIO::GAudio _audio, float _value)
+            GReturn Create(const char* _path, GW::AUDIO::GAudio _audio, float _value = 1.0f)
             {
                 return GReturn::INTERFACE_UNSUPPORTED;
             }
@@ -46440,8 +55745,111 @@ namespace GW
     }
 }
 
+
 #elif defined(__APPLE__)
-    #define G_NUM_OF_OUTPUTS 6
+    #include <TargetConditionals.h>
+    #if TARGET_OS_IOS
+        namespace GW
+{
+    namespace I
+    {
+        class GSoundImplementation : public virtual GSoundInterface
+        {
+        public:
+            // Main class
+            GReturn Create(const char* _path, GW::AUDIO::GAudio _audio, float _value = 1.0f)
+            {
+                return GReturn::INTERFACE_UNSUPPORTED;
+            }
+            GReturn SetChannelVolumes(const float* _values, unsigned int _numChannels) override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn SetVolume(float _newVolume) override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn Play() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn Pause() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn Resume() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn Stop() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn GetSourceChannels(unsigned int& returnedChannelNum) const override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn GetOutputChannels(unsigned int& returnedChannelNum) const override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn isPlaying(bool& _returnedBool) const override
+            {
+                return GReturn::FAILURE;
+            }
+            //// ThreadShared
+            //GReturn LockAsyncRead() const override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+            //GReturn UnlockAsyncRead() const override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+            //GReturn LockSyncWrite() override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+            //GReturn UnlockSyncWrite() override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+            //// Events
+            //GReturn Append(const GEvent& _inEvent) override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+            //GReturn Waiting(unsigned int& _outCount) const override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+            //GReturn Pop(GEvent& _outEvent) override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+            //GReturn Peek(GEvent& _outEvent) const override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+            //GReturn Missed(unsigned int& _outCount) const override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+            //GReturn Clear() override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+            //GReturn Invoke() const override
+            //{
+            //    return GReturn::FAILURE;
+            //}
+        };
+    }
+}
+
+
+    #elif TARGET_OS_MAC
+        #define G_NUM_OF_OUTPUTS 6
 
 namespace GW
 {
@@ -46976,6 +56384,7 @@ namespace GW
 #undef G_NUM_OF_OUTPUTS
 
 
+    #endif
 #elif defined(__linux__)
     #include <pulse/mainloop.h>
 #include <pulse/thread-mainloop.h>
@@ -47002,22 +56411,22 @@ namespace GW
         class GSoundImplementation : public virtual GSoundInterface,
             protected GThreadSharedImplementation
         {
-			/* this enum is here to prevent compiler warning -Wmultichar
-			 * previously, this file used a series of #defines that caused
-			 * the warning to occur in a switch statement later on. So instead
-			 * of the #defines (initiallizing an int to a series of 4 chars), 
-			 * i just declare them here to be the integer they would be 
-			 * interpreted as by the compiler internally. */
-			enum WaveTag {
-				RIFF = 1179011410, // = 'FFIR'
-				DATA = 1635017060, // = 'atad'
-				FMT  =  544501094, // = ' tmf'
-				WAVE = 1163280727, // = 'EVAW'
-				JUNK = 1263424842, // = 'KNUJ'
-				XWMA = 1095587672, // = 'AMWX'
-				DPDS = 1935962212  // = 'sdpd'
-			};
-			
+            /* this enum is here to prevent compiler warning -Wmultichar
+             * previously, this file used a series of #defines that caused
+             * the warning to occur in a switch statement later on. So instead
+             * of the #defines (initializing an int to a series of 4 chars),
+             * i just declare them here to be the integer they would be
+             * interpreted as by the compiler internally. */
+            enum WaveTag {
+                RIFF = 1179011410, // = 'FFIR'
+                DATA = 1635017060, // = 'atad'
+                FMT = 544501094, // = ' tmf'
+                WAVE = 1163280727, // = 'EVAW'
+                JUNK = 1263424842, // = 'KNUJ'
+                XWMA = 1095587672, // = 'AMWX'
+                DPDS = 1935962212  // = 'sdpd'
+            };
+
             struct PCM_FORMAT_INFO
             {
                 unsigned short mFormatTag = 0;
@@ -47069,24 +56478,24 @@ namespace GW
             void Destroy()
             {
                 if (myMainLoop) pa_threaded_mainloop_lock(myMainLoop);
-				 {
-					// Disconnects and decrements/unreferences the stream
-					if (myStream)
-					{
-						pa_stream_disconnect(myStream);
-						pa_stream_unref(myStream);
-						myStream = nullptr;
-					}
+                {
+                    // Disconnects and decrements/unreferences the stream
+                    if (myStream)
+                    {
+                        pa_stream_disconnect(myStream);
+                        pa_stream_unref(myStream);
+                        myStream = nullptr;
+                    }
 
-					// Disconnects and decrements/unreferences the context
-					if (myContext)
-					{
-						pa_context_kill_sink_input(myContext, sinkIndex, NULL, NULL);
-						pa_context_disconnect(myContext);
-						pa_context_unref(myContext);
-						myContext = nullptr;
-					}
-				}
+                    // Disconnects and decrements/unreferences the context
+                    if (myContext)
+                    {
+                        pa_context_kill_sink_input(myContext, sinkIndex, NULL, NULL);
+                        pa_context_disconnect(myContext);
+                        pa_context_unref(myContext);
+                        myContext = nullptr;
+                    }
+                }
                 if (myMainLoop) pa_threaded_mainloop_unlock(myMainLoop);
 
                 // Stops the mainloop (after the context is disconnected) and releases memory
@@ -47098,13 +56507,13 @@ namespace GW
                 }
 
                 if (myMainLoop) pa_threaded_mainloop_lock(myMainLoop);
-				{
-					if (myMap)
-					{
-						delete myMap;
-						myMap = nullptr;
-					}
-				}
+                {
+                    if (myMap)
+                    {
+                        delete myMap;
+                        myMap = nullptr;
+                    }
+                }
                 if (myMainLoop) pa_threaded_mainloop_unlock(myMainLoop);
 
                 if (myFile.myBuffer.bytes)
@@ -47116,107 +56525,107 @@ namespace GW
 
             GReturn LoadWav(const char* path, WAVE_FILE& returnedWave)
             {
-				// default the return value
-				GReturn result = GReturn::SUCCESS;
+                // default the return value
+                GReturn result = GReturn::SUCCESS;
 
-				// create our gfile object
-				GW::SYSTEM::GFile file;
-				file.Create();
+                // create our gfile object
+                GW::SYSTEM::GFile file;
+                file.Create();
 
-				// open the audio file in binary read mode. wav is a binary format with tags that can be interpreted as text
-				if (-file.OpenBinaryRead(path)) {
-					result = GReturn::FILE_NOT_FOUND;
-					return result;
-				}
-				
-				// variables for determinning data information
+                // open the audio file in binary read mode. wav is a binary format with tags that can be interpreted as text
+                if (-file.OpenBinaryRead(path)) {
+                    result = GReturn::FILE_NOT_FOUND;
+                    return result;
+                }
+
+                // variables for determining data information
                 unsigned long dwChunktype = 0;
                 unsigned long dwChunkDataSize = 0;
                 unsigned long dwRiffDataSize = 0;
                 unsigned long dwFileType = 0;
-				unsigned long dwIsWave = 0;
+                unsigned long dwIsWave = 0;
                 unsigned long throwAwayValue = 0;
-				bool foundAudioData = false;
-                
+                bool foundAudioData = false;
+
                 while (result == GReturn::SUCCESS && foundAudioData == false)
                 {
-					if (-file.Read(reinterpret_cast<char*>(&dwChunktype), 4)) {
-						// could not aquire chunk type
-						result = GReturn::FAILURE;
-						break;
-					}
+                    if (-file.Read(reinterpret_cast<char*>(&dwChunktype), 4)) {
+                        // could not acquire chunk type
+                        result = GReturn::FAILURE;
+                        break;
+                    }
 
-					if (-file.Read(reinterpret_cast<char*>(&dwChunkDataSize), 4)) {
-						// could not aquire chunk size
-						result = GReturn::FAILURE;
-						break;
-					}
+                    if (-file.Read(reinterpret_cast<char*>(&dwChunkDataSize), 4)) {
+                        // could not acquire chunk size
+                        result = GReturn::FAILURE;
+                        break;
+                    }
 
                     switch (dwChunktype) {
-                        case WaveTag::RIFF:
-                        {
-                            dwRiffDataSize = dwChunkDataSize;
-                            dwChunkDataSize = 4;
+                    case WaveTag::RIFF:
+                    {
+                        dwRiffDataSize = dwChunkDataSize;
+                        dwChunkDataSize = 4;
 
-                            if (-file.Read(reinterpret_cast<char*>(&dwFileType), dwChunkDataSize)) {
-								// could not aquire the file type
-								result = GReturn::FAILURE;
-								break;
-							}
-							break;
+                        if (-file.Read(reinterpret_cast<char*>(&dwFileType), dwChunkDataSize)) {
+                            // could not acquire the file type
+                            result = GReturn::FAILURE;
+                            break;
                         }
-						
-                        case WaveTag::WAVE:
-                        {
+                        break;
+                    }
 
-                            if (-file.Read(reinterpret_cast<char*>(&dwIsWave), dwChunkDataSize)) {
-								// the file is not a wav file
-								result = GReturn::FAILURE;
-								break;
-							}
-							break;
-                        }
-						
-                        case WaveTag::FMT:
-                        {
-                            if (-file.Read(reinterpret_cast<char*>(&returnedWave.myFormat.mFormatTag), dwChunkDataSize)) {
-								// could not read the chunk data
-								result = GReturn::FAILURE;
-								break;
-							}
-							break;
-                        }
-						
-                        case WaveTag::DATA:
-                        {
-							returnedWave.myBuffer.bytes = new uint8_t[dwChunkDataSize];
-							if (-file.Read(reinterpret_cast<char*>(returnedWave.myBuffer.bytes), dwChunkDataSize)) {
-								// could not read the audio data
-								result = GReturn::FAILURE;
-								break;
-							}
+                    case WaveTag::WAVE:
+                    {
 
-							returnedWave.myBuffer.byteSize = dwChunkDataSize;	// contains size of the audio buffer in bytes
-							foundAudioData = true;
-							break;
+                        if (-file.Read(reinterpret_cast<char*>(&dwIsWave), dwChunkDataSize)) {
+                            // the file is not a wav file
+                            result = GReturn::FAILURE;
+                            break;
                         }
-						
-                        default:
-                        {
-                            char* pThrowawayDataBuffer = new char[dwChunkDataSize];
-							if (-file.Read(pThrowawayDataBuffer, dwChunkDataSize)) {
-								// something unknown happened that caused the data to not be read
-								result = GReturn::FAILURE;
-							}
+                        break;
+                    }
 
-							delete[] pThrowawayDataBuffer;
-							break;
+                    case WaveTag::FMT:
+                    {
+                        if (-file.Read(reinterpret_cast<char*>(&returnedWave.myFormat.mFormatTag), dwChunkDataSize)) {
+                            // could not read the chunk data
+                            result = GReturn::FAILURE;
+                            break;
                         }
+                        break;
+                    }
+
+                    case WaveTag::DATA:
+                    {
+                        returnedWave.myBuffer.bytes = new uint8_t[dwChunkDataSize];
+                        if (-file.Read(reinterpret_cast<char*>(returnedWave.myBuffer.bytes), dwChunkDataSize)) {
+                            // could not read the audio data
+                            result = GReturn::FAILURE;
+                            break;
+                        }
+
+                        returnedWave.myBuffer.byteSize = dwChunkDataSize;	// contains size of the audio buffer in bytes
+                        foundAudioData = true;
+                        break;
+                    }
+
+                    default:
+                    {
+                        char* pThrowawayDataBuffer = new char[dwChunkDataSize];
+                        if (-file.Read(pThrowawayDataBuffer, dwChunkDataSize)) {
+                            // something unknown happened that caused the data to not be read
+                            result = GReturn::FAILURE;
+                        }
+
+                        delete[] pThrowawayDataBuffer;
+                        break;
+                    }
                     }
                 }
                 file.CloseFile();
-				returnedWave.isSigned = (returnedWave.myFormat.mBitsPerSample != 8);
-				return result;
+                returnedWave.isSigned = (returnedWave.myFormat.mBitsPerSample != 8);
+                return result;
             }
 
             static void OnStateChange(pa_context* c, void* userdata)
@@ -47225,37 +56634,37 @@ namespace GW
 
                 switch (pa_context_get_state(c))
                 {
-                    case PA_CONTEXT_UNCONNECTED:
-                    {
-                        break;
-                    }
-                    case PA_CONTEXT_CONNECTING:
-                    {
-                        break;
-                    }
-                    case PA_CONTEXT_AUTHORIZING:
-                    {
-                        break;
-                    }
-                    case PA_CONTEXT_SETTING_NAME:
-                    {
-                        break;
-                    }
-                    case PA_CONTEXT_FAILED:
-                    {
-                        *pa_ready = -1;
-                        break;
-                    }
-                    case PA_CONTEXT_TERMINATED:
-                    {
-                        *pa_ready = -1;
-                        break;
-                    }
-                    case PA_CONTEXT_READY:
-                    {
-                        * pa_ready = 1;
-                        break;
-                    }
+                case PA_CONTEXT_UNCONNECTED:
+                {
+                    break;
+                }
+                case PA_CONTEXT_CONNECTING:
+                {
+                    break;
+                }
+                case PA_CONTEXT_AUTHORIZING:
+                {
+                    break;
+                }
+                case PA_CONTEXT_SETTING_NAME:
+                {
+                    break;
+                }
+                case PA_CONTEXT_FAILED:
+                {
+                    *pa_ready = -1;
+                    break;
+                }
+                case PA_CONTEXT_TERMINATED:
+                {
+                    *pa_ready = -1;
+                    break;
+                }
+                case PA_CONTEXT_READY:
+                {
+                    *pa_ready = 1;
+                    break;
+                }
                 }
             }
 
@@ -47297,89 +56706,89 @@ namespace GW
                 if (myMainLoop == NULL)
                     return GReturn::FAILURE;
 
-				pa_threaded_mainloop_lock(myMainLoop);
-				{
-					myContext = pa_context_new(pa_threaded_mainloop_get_api(myMainLoop), "Sound");
+                pa_threaded_mainloop_lock(myMainLoop);
+                {
+                    myContext = pa_context_new(pa_threaded_mainloop_get_api(myMainLoop), "Sound");
 
-					if (myContext == NULL)
-					{
-						pa_threaded_mainloop_unlock(myMainLoop);					
-						return GReturn::FAILURE;
-					}
+                    if (myContext == NULL)
+                    {
+                        pa_threaded_mainloop_unlock(myMainLoop);
+                        return GReturn::FAILURE;
+                    }
 
-					pa_ready = 0;
-					pa_context_connect(myContext, NULL, PA_CONTEXT_NOFLAGS, NULL);
-					pa_context_set_state_callback(myContext, OnStateChange, &pa_ready);
-				}
-				pa_threaded_mainloop_unlock(myMainLoop);
+                    pa_ready = 0;
+                    pa_context_connect(myContext, NULL, PA_CONTEXT_NOFLAGS, NULL);
+                    pa_context_set_state_callback(myContext, OnStateChange, &pa_ready);
+                }
+                pa_threaded_mainloop_unlock(myMainLoop);
 
                 pa_threaded_mainloop_start(myMainLoop);
 
                 while (pa_ready == 0)
                     std::this_thread::yield();
-                
+
                 if (pa_ready != 1)
                     return GReturn::FAILURE;
 
-				switch (myFile.myFormat.mBitsPerSample)
-				{
-					case 8:
-						myPulseFormat = PA_SAMPLE_U8;
-						break;
-					case 16:
-						myPulseFormat = PA_SAMPLE_S16LE;
-						break;
-					case 24:
-						myPulseFormat = PA_SAMPLE_S24LE;
-						break;
-					case 32:
-						myPulseFormat = (myFile.myFormat.mFormatTag > 1) ? PA_SAMPLE_FLOAT32LE : PA_SAMPLE_S32LE; // Float type for IEEE and Signed 32int for PCM
-						break;
-					default:
-						myPulseFormat = PA_SAMPLE_INVALID;
-						return GReturn::FAILURE;
-						break;
-				}
+                switch (myFile.myFormat.mBitsPerSample)
+                {
+                case 8:
+                    myPulseFormat = PA_SAMPLE_U8;
+                    break;
+                case 16:
+                    myPulseFormat = PA_SAMPLE_S16LE;
+                    break;
+                case 24:
+                    myPulseFormat = PA_SAMPLE_S24LE;
+                    break;
+                case 32:
+                    myPulseFormat = (myFile.myFormat.mFormatTag > 1) ? PA_SAMPLE_FLOAT32LE : PA_SAMPLE_S32LE; // Float type for IEEE and Signed 32int for PCM
+                    break;
+                default:
+                    myPulseFormat = PA_SAMPLE_INVALID;
+                    return GReturn::FAILURE;
+                    break;
+                }
 
-				pa_sample_spec mySampleSpec;
-				mySampleSpec.format = myPulseFormat;
-				mySampleSpec.rate = myFile.myFormat.mSamples;
-				mySampleSpec.channels = myFile.myFormat.mNumChannels;
-			
-				if (pa_channels_valid(mySampleSpec.channels) == 0)
-					return GReturn::FAILURE;
-				
-				pa_threaded_mainloop_lock(myMainLoop);
-				{
-					myMap = new pa_channel_map();
-					myMap = pa_channel_map_init_extend(myMap, mySampleSpec.channels, PA_CHANNEL_MAP_WAVEEX);
-					if (myMap == nullptr)
-					{
-						pa_threaded_mainloop_unlock(myMainLoop);						
-						return GReturn::FAILURE;
-					}
-					
-					myStream = pa_stream_new(myContext, "GSound", &mySampleSpec, myMap);
-					if (myStream == nullptr)
-					{						
-						pa_threaded_mainloop_unlock(myMainLoop);
-						return GReturn::FAILURE;
-					}
+                pa_sample_spec mySampleSpec;
+                mySampleSpec.format = myPulseFormat;
+                mySampleSpec.rate = myFile.myFormat.mSamples;
+                mySampleSpec.channels = myFile.myFormat.mNumChannels;
 
-					if (pa_stream_connect_playback(myStream, NULL, NULL, (pa_stream_flags_t)0, NULL, NULL) != 0)
-					{
-						pa_threaded_mainloop_unlock(myMainLoop);						
-						return GReturn::FAILURE;
-					}
-				}
-				pa_threaded_mainloop_unlock(myMainLoop);
-				
+                if (pa_channels_valid(mySampleSpec.channels) == 0)
+                    return GReturn::FAILURE;
+
+                pa_threaded_mainloop_lock(myMainLoop);
+                {
+                    myMap = new pa_channel_map();
+                    myMap = pa_channel_map_init_extend(myMap, mySampleSpec.channels, PA_CHANNEL_MAP_WAVEEX);
+                    if (myMap == nullptr)
+                    {
+                        pa_threaded_mainloop_unlock(myMainLoop);
+                        return GReturn::FAILURE;
+                    }
+
+                    myStream = pa_stream_new(myContext, "GSound", &mySampleSpec, myMap);
+                    if (myStream == nullptr)
+                    {
+                        pa_threaded_mainloop_unlock(myMainLoop);
+                        return GReturn::FAILURE;
+                    }
+
+                    if (pa_stream_connect_playback(myStream, NULL, NULL, (pa_stream_flags_t)0, NULL, NULL) != 0)
+                    {
+                        pa_threaded_mainloop_unlock(myMainLoop);
+                        return GReturn::FAILURE;
+                    }
+                }
+                pa_threaded_mainloop_unlock(myMainLoop);
+
                 globalSoundsVolume = audioImplementation->soundsVolume;
                 masterVolume = audioImplementation->masterVolume;
                 memcpy(masterChannelVolumes, audioImplementation->soundsChannelVolumes, 6 * sizeof(float));
 
-				pa_cvolume_init(&vol);
-				
+                pa_cvolume_init(&vol);
+
                 result = SetVolume(_volume);
                 if (result != GReturn::SUCCESS)
                     return result;
@@ -47389,16 +56798,16 @@ namespace GW
                     return result;
 
                 return gReceiver.Create(_audio, [&]()
-                {
-                    GW::GEvent gEvent;
-                    GW::AUDIO::GAudio::Events audioEvent;
-                    GW::AUDIO::GAudio::EVENT_DATA audioEventData;
-                    // Process the event message
-                    gReceiver.Pop(gEvent);
-                    gEvent.Read(audioEvent);
-
-                    switch (audioEvent)
                     {
+                        GW::GEvent gEvent;
+                        GW::AUDIO::GAudio::Events audioEvent;
+                        GW::AUDIO::GAudio::EVENT_DATA audioEventData;
+                        // Process the event message
+                        gReceiver.Pop(gEvent);
+                        gEvent.Read(audioEvent);
+
+                        switch (audioEvent)
+                        {
                         case GW::AUDIO::GAudio::Events::DESTROY:
                         {
                             Stop();
@@ -47454,8 +56863,8 @@ namespace GW
                         {
                             break;
                         }
-                    }
-                });
+                        }
+                    });
             }
 
             GReturn SetChannelVolumes(const float* _values, unsigned int _numChannels) override
@@ -47479,28 +56888,28 @@ namespace GW
 
                         switch (i)
                         {
-                            case 2: // Front Center
-                            {
-                                channelVolumes[0] += channelVolumes[2] * 0.5f;
-                                channelVolumes[1] += channelVolumes[2] * 0.5f;
-                                break;
-                            }
-                            case 3: // LFE
-                            {
-                                channelVolumes[0] += channelVolumes[3] * 0.3f;
-                                channelVolumes[1] += channelVolumes[3] * 0.3f;
-                                break;
-                            }
-                            case 4: // Rear Left
-                            {
-                                channelVolumes[0] += channelVolumes[4] * 0.7f;
-                                break;
-                            }
-                            case 5: //Rear Right
-                            {
-                                channelVolumes[1] += channelVolumes[5] * 0.7f;
-                                break;
-                            }
+                        case 2: // Front Center
+                        {
+                            channelVolumes[0] += channelVolumes[2] * 0.5f;
+                            channelVolumes[1] += channelVolumes[2] * 0.5f;
+                            break;
+                        }
+                        case 3: // LFE
+                        {
+                            channelVolumes[0] += channelVolumes[3] * 0.3f;
+                            channelVolumes[1] += channelVolumes[3] * 0.3f;
+                            break;
+                        }
+                        case 4: // Rear Left
+                        {
+                            channelVolumes[0] += channelVolumes[4] * 0.7f;
+                            break;
+                        }
+                        case 5: //Rear Right
+                        {
+                            channelVolumes[1] += channelVolumes[5] * 0.7f;
+                            break;
+                        }
                         }
 
                         // clamp stereo to max of 1.0f
@@ -47508,8 +56917,8 @@ namespace GW
                         {
                             channelVolumes[0] = (channelVolumes[0] > 1.0f) ? 1.0f : channelVolumes[0];
                             channelVolumes[1] = (channelVolumes[1] > 1.0f) ? 1.0f : channelVolumes[1];
-							vol.values[0] = pa_sw_volume_from_linear(adjustedVolume * channelVolumes[0] * masterChannelVolumes[0]);
-							vol.values[1] = pa_sw_volume_from_linear(adjustedVolume * channelVolumes[1] * masterChannelVolumes[1]);	
+                            vol.values[0] = pa_sw_volume_from_linear(adjustedVolume * channelVolumes[0] * masterChannelVolumes[0]);
+                            vol.values[1] = pa_sw_volume_from_linear(adjustedVolume * channelVolumes[1] * masterChannelVolumes[1]);
                             break;
                         }
                     }
@@ -47518,35 +56927,35 @@ namespace GW
                         channelVolumes[i] = (_values[i] > 1.0f) ? 1.0f : _values[i];
 
                         // apply clamping and master volume multiplier
-						vol.values[i] = pa_sw_volume_from_linear(adjustedVolume * channelVolumes[i] * masterChannelVolumes[i]);
+                        vol.values[i] = pa_sw_volume_from_linear(adjustedVolume * channelVolumes[i] * masterChannelVolumes[i]);
                     }
                 }
 
                 LockSyncWrite();
-				while (sinkIndex == UINT32_MAX)
-				{
-					pa_threaded_mainloop_lock(myMainLoop);
-						sinkIndex = pa_stream_get_index(myStream); //Returns the sink resp. source output index this stream is identified in the server with
-					pa_threaded_mainloop_unlock(myMainLoop);
-				}
+                while (sinkIndex == UINT32_MAX)
+                {
+                    pa_threaded_mainloop_lock(myMainLoop);
+                    sinkIndex = pa_stream_get_index(myStream); //Returns the sink resp. source output index this stream is identified in the server with
+                    pa_threaded_mainloop_unlock(myMainLoop);
+                }
                 UnlockSyncWrite();
 
-				vol.channels = G_NUM_OF_OUTPUTS;
-                
-				//Set the volume of a sink input stream.
-				pa_threaded_mainloop_lock(myMainLoop);
-				{
-					pa_operation* o = pa_context_set_sink_input_volume(myContext, sinkIndex, &vol, NULL, NULL);
+                vol.channels = G_NUM_OF_OUTPUTS;
 
-					if (!o)
-					{						
-						pa_threaded_mainloop_unlock(myMainLoop);
-						return GReturn::FAILURE;
-					}
+                //Set the volume of a sink input stream.
+                pa_threaded_mainloop_lock(myMainLoop);
+                {
+                    pa_operation* o = pa_context_set_sink_input_volume(myContext, sinkIndex, &vol, NULL, NULL);
 
-					pa_operation_unref(o);
-				}
-				pa_threaded_mainloop_unlock(myMainLoop);
+                    if (!o)
+                    {
+                        pa_threaded_mainloop_unlock(myMainLoop);
+                        return GReturn::FAILURE;
+                    }
+
+                    pa_operation_unref(o);
+                }
+                pa_threaded_mainloop_unlock(myMainLoop);
 
                 return GReturn::SUCCESS;
             }
@@ -47564,34 +56973,34 @@ namespace GW
                 volume = _newVolume;
 
                 // Apply master volume ratio to the sound volume (Doesn't need to be normalized, since masterVolume is always < 1.0f)
-                _newVolume *= masterVolume * globalSoundsVolume;				
-				vol.channels = G_NUM_OF_OUTPUTS;
-				for (int i = 0; i < vol.channels; ++i)
-					vol.values[i] = pa_sw_volume_from_linear(_newVolume * channelVolumes[i] * masterChannelVolumes[i]);
+                _newVolume *= masterVolume * globalSoundsVolume;
+                vol.channels = G_NUM_OF_OUTPUTS;
+                for (int i = 0; i < vol.channels; ++i)
+                    vol.values[i] = pa_sw_volume_from_linear(_newVolume * channelVolumes[i] * masterChannelVolumes[i]);
 
                 LockSyncWrite();
-				while (sinkIndex == UINT32_MAX)
-				{
-					pa_threaded_mainloop_lock(myMainLoop);
-						sinkIndex = pa_stream_get_index(myStream); //Returns the sink resp. source output index this stream is identified in the server with
-					pa_threaded_mainloop_unlock(myMainLoop);
-				}
+                while (sinkIndex == UINT32_MAX)
+                {
+                    pa_threaded_mainloop_lock(myMainLoop);
+                    sinkIndex = pa_stream_get_index(myStream); //Returns the sink resp. source output index this stream is identified in the server with
+                    pa_threaded_mainloop_unlock(myMainLoop);
+                }
                 UnlockSyncWrite();
-                
-				pa_threaded_mainloop_lock(myMainLoop);
-				{					
-					//Set the volume of a sink input stream.
-					pa_operation* o = pa_context_set_sink_input_volume(myContext, sinkIndex, &vol, NULL, NULL);
 
-					if (!o)
-					{
-						pa_threaded_mainloop_unlock(myMainLoop);					
-						return GReturn::FAILURE;
-					}
+                pa_threaded_mainloop_lock(myMainLoop);
+                {
+                    //Set the volume of a sink input stream.
+                    pa_operation* o = pa_context_set_sink_input_volume(myContext, sinkIndex, &vol, NULL, NULL);
 
-					pa_operation_unref(o);
-				}
-				pa_threaded_mainloop_unlock(myMainLoop);
+                    if (!o)
+                    {
+                        pa_threaded_mainloop_unlock(myMainLoop);
+                        return GReturn::FAILURE;
+                    }
+
+                    pa_operation_unref(o);
+                }
+                pa_threaded_mainloop_unlock(myMainLoop);
 
                 return GReturn::SUCCESS;
             }
@@ -47615,57 +57024,57 @@ namespace GW
                     atomic_isPaused = false;
                     atomic_isPlaying = true;
                     gConcurrent.BranchSingular([&]()
-                    {
-                        unsigned int playBackPt = 0;
-                        pa_stream_state_t state;
-                        while (true)
                         {
-                            if (atomic_stopFlag == true)
+                            unsigned int playBackPt = 0;
+                            pa_stream_state_t state;
+                            while (true)
                             {
-								pa_threaded_mainloop_lock(myMainLoop);
-									pa_stream_cancel_write(myStream);
-								pa_threaded_mainloop_unlock(myMainLoop);
-                                break;
-                            }
-                            else if (atomic_isPlaying == true)
-                            {
-                                pa_threaded_mainloop_lock(myMainLoop);
-									state = pa_stream_get_state(myStream); // synchronous call, requires locking
-                                pa_threaded_mainloop_unlock(myMainLoop);
-
-                                if (state == PA_STREAM_READY)
+                                if (atomic_stopFlag == true)
                                 {
-									pa_threaded_mainloop_lock(myMainLoop);
-										const size_t writeableSize = pa_stream_writable_size(myStream);
-									pa_threaded_mainloop_unlock(myMainLoop);
-									
-                                    const size_t sizeRemain = myFile.myBuffer.byteSize - playBackPt;
-                                    const size_t writeSize = (sizeRemain < writeableSize ? sizeRemain : writeableSize);
+                                    pa_threaded_mainloop_lock(myMainLoop);
+                                    pa_stream_cancel_write(myStream);
+                                    pa_threaded_mainloop_unlock(myMainLoop);
+                                    break;
+                                }
+                                else if (atomic_isPlaying == true)
+                                {
+                                    pa_threaded_mainloop_lock(myMainLoop);
+                                    state = pa_stream_get_state(myStream); // synchronous call, requires locking
+                                    pa_threaded_mainloop_unlock(myMainLoop);
 
-                                    if (writeSize > 0)
+                                    if (state == PA_STREAM_READY)
                                     {
-										pa_threaded_mainloop_lock(myMainLoop);
-											pa_stream_write(myStream, myFile.myBuffer.bytes + playBackPt, writeSize, nullptr, 0, PA_SEEK_RELATIVE);
-										pa_threaded_mainloop_unlock(myMainLoop);
-										
-                                        playBackPt += writeSize;
-                                    }
-                                    else if (writeableSize > 0 && atomic_isComplete == false)
-                                    {
-										pa_threaded_mainloop_lock(myMainLoop);
-										{											
-											pa_operation* o = pa_stream_drain(myStream, FinishedDrainOp, this);
+                                        pa_threaded_mainloop_lock(myMainLoop);
+                                        const size_t writeableSize = pa_stream_writable_size(myStream);
+                                        pa_threaded_mainloop_unlock(myMainLoop);
 
-											if (o)
-												pa_operation_unref(o);
-										}
-										pa_threaded_mainloop_unlock(myMainLoop);
-                                        break;
+                                        const size_t sizeRemain = myFile.myBuffer.byteSize - playBackPt;
+                                        const size_t writeSize = (sizeRemain < writeableSize ? sizeRemain : writeableSize);
+
+                                        if (writeSize > 0)
+                                        {
+                                            pa_threaded_mainloop_lock(myMainLoop);
+                                            pa_stream_write(myStream, myFile.myBuffer.bytes + playBackPt, writeSize, nullptr, 0, PA_SEEK_RELATIVE);
+                                            pa_threaded_mainloop_unlock(myMainLoop);
+
+                                            playBackPt += writeSize;
+                                        }
+                                        else if (writeableSize > 0 && atomic_isComplete == false)
+                                        {
+                                            pa_threaded_mainloop_lock(myMainLoop);
+                                            {
+                                                pa_operation* o = pa_stream_drain(myStream, FinishedDrainOp, this);
+
+                                                if (o)
+                                                    pa_operation_unref(o);
+                                            }
+                                            pa_threaded_mainloop_unlock(myMainLoop);
+                                            break;
+                                        }
                                     }
                                 }
                             }
-                        }
-                    });
+                        });
                 }
 
                 return GReturn::SUCCESS;
@@ -47679,24 +57088,24 @@ namespace GW
                 if (atomic_isPaused == false)
                 {
                     pa_threaded_mainloop_lock(myMainLoop);
-						int value = pa_stream_is_corked(myStream); // 1 = paused, 0 = resumed
+                    int value = pa_stream_is_corked(myStream); // 1 = paused, 0 = resumed
                     pa_threaded_mainloop_unlock(myMainLoop);
 
                     if (value == 0) // if not paused
                     {
-						pa_threaded_mainloop_lock(myMainLoop);
-						{
-							pa_operation* o = pa_stream_cork(myStream, 1, [](pa_stream*, int, void*) {}, NULL);
+                        pa_threaded_mainloop_lock(myMainLoop);
+                        {
+                            pa_operation* o = pa_stream_cork(myStream, 1, [](pa_stream*, int, void*) {}, NULL);
 
-							if (!o)
-							{
-								pa_threaded_mainloop_unlock(myMainLoop);
-								return GReturn::FAILURE;
-							}
+                            if (!o)
+                            {
+                                pa_threaded_mainloop_unlock(myMainLoop);
+                                return GReturn::FAILURE;
+                            }
 
-							pa_operation_unref(o);
-						}
-						pa_threaded_mainloop_unlock(myMainLoop);
+                            pa_operation_unref(o);
+                        }
+                        pa_threaded_mainloop_unlock(myMainLoop);
                     }
 
                     atomic_isPaused = true;
@@ -47714,23 +57123,23 @@ namespace GW
                 if (atomic_isPaused == true)
                 {
                     pa_threaded_mainloop_lock(myMainLoop);
-						int value = pa_stream_is_corked(myStream); // 1 = paused, 0 = resumed
+                    int value = pa_stream_is_corked(myStream); // 1 = paused, 0 = resumed
                     pa_threaded_mainloop_unlock(myMainLoop);
 
                     if (value == 1) // if paused
                     {
                         pa_threaded_mainloop_lock(myMainLoop);
-						{
-							pa_operation* o = pa_stream_cork(myStream, 0, [](pa_stream*, int, void*) {}, NULL);
+                        {
+                            pa_operation* o = pa_stream_cork(myStream, 0, [](pa_stream*, int, void*) {}, NULL);
 
-							if (!o)
-							{
-								pa_threaded_mainloop_unlock(myMainLoop);
-								return GReturn::FAILURE;
-							}
+                            if (!o)
+                            {
+                                pa_threaded_mainloop_unlock(myMainLoop);
+                                return GReturn::FAILURE;
+                            }
 
-							pa_operation_unref(o);							
-						}
+                            pa_operation_unref(o);
+                        }
                         pa_threaded_mainloop_unlock(myMainLoop);
                     }
 
@@ -47815,7 +57224,9 @@ namespace GW
 
 
 #elif defined(_WIN32)
-    #define G_NUM_OF_OUTPUTS 6
+    #include <winapifamily.h>
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #define G_NUM_OF_OUTPUTS 6
 
 namespace GW
 {
@@ -47851,7 +57262,7 @@ namespace GW
 					return result;
 				}
 
-				// variables for determinning data information
+				// variables for determining data information
 				unsigned long dwChunktype = 0;
 				unsigned long dwChunkDataSize = 0;
 				unsigned long dwRiffDataSize = 0;
@@ -47862,13 +57273,13 @@ namespace GW
 				while (result == GReturn::SUCCESS && foundAudioData == false)
 				{
 					if (-file.Read(reinterpret_cast<char*>(&dwChunktype), 4)) {
-						// could not aquire chunk type
+						// could not acquire chunk type
 						result = GReturn::FAILURE;
 						break;
 					}
 
 					if (-file.Read(reinterpret_cast<char*>(&dwChunkDataSize), 4)) {
-						// could not aquire chunk size
+						// could not acquire chunk size
 						result = GReturn::FAILURE;
 						break;
 					}
@@ -47879,7 +57290,7 @@ namespace GW
 							dwRiffDataSize = dwChunkDataSize;
 							dwChunkDataSize = 4;
 							if (-file.Read(reinterpret_cast<char*>(&dwFileType), 4) || dwFileType != WaveTag::WAVE) {
-								// could not aquire the file type
+								// could not acquire the file type
 								result = GReturn::FAILURE;
 								break;
 							}
@@ -48382,6 +57793,603 @@ namespace GW
 //#undef G_DPDScc
 #undef G_NUM_OF_OUTPUTS
 
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        #define G_RIFFcc 'FFIR'
+#define G_DATAcc 'atad'
+#define G_FMTcc  ' tmf'
+#define G_WAVEcc 'EVAW'
+//#define G_JUNKcc 'KNUJ'
+//#define G_XWMAcc 'AMWX'
+//#define G_DPDScc 'sdpd'
+#define G_NUM_OF_OUTPUTS 6
+
+namespace GW
+{
+    namespace I
+    {
+        class GSoundImplementation : public virtual GSoundInterface,
+            protected GThreadSharedImplementation,
+            protected IXAudio2VoiceCallback
+        {
+            HRESULT LoadWaveData(const char* path, WAVEFORMATEXTENSIBLE& myWFX, XAUDIO2_BUFFER& myAudioBuffer)
+            {
+                HRESULT theResult = S_OK;
+
+                wchar_t tpath[1024];
+                MultiByteToWideChar(CP_ACP, 0, path, -1, tpath, 1024);
+
+                // if can't find file for unit tests, use : _wgetcwd to see where to put test file
+                HANDLE theFile = CreateFile2(tpath, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, NULL);
+
+                if (theFile == INVALID_HANDLE_VALUE)
+                    return HRESULT_FROM_WIN32(GetLastError());
+
+                if (SetFilePointer(theFile, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+                    return HRESULT_FROM_WIN32(GetLastError());
+
+                int result = 0; // zero is good
+                unsigned long dwChunktype = 0;
+                unsigned long dwChunkDataSize = 0;
+                unsigned long dwRiffDataSize = 0;
+                unsigned long dwFileType = 0;
+                unsigned long bytesRead = 0;
+
+                unsigned long dwIsWave = 0;
+                unsigned long throwAwayValue = 0;
+
+                bool foundAudioData = false;
+                while (result == 0 && foundAudioData == false)
+                {
+                    unsigned long dwRead = 0;
+                    if (ReadFile(theFile, &dwChunktype, 4, &dwRead, NULL) == 0 || dwRead != 4)
+                    {
+                        result = -1;
+                        break;
+                    }
+                    bytesRead += dwRead;
+
+                    if (ReadFile(theFile, &dwChunkDataSize, 4, &dwRead, NULL) == 0 || dwRead != 4)
+                    {
+                        result = -2;
+                        break;
+                    }
+                    bytesRead += dwRead;
+
+                    switch (dwChunktype)
+                    {
+                    case G_RIFFcc:
+                    {
+                        dwRiffDataSize = dwChunkDataSize;
+                        dwChunkDataSize = 4;
+                        if (ReadFile(theFile, &dwFileType, 4, &dwRead, NULL) == 0 || dwRead != 4 || dwFileType != G_WAVEcc)
+                        {
+                            result = -3;
+                            break;
+                        }
+                        bytesRead += dwRead;
+
+                        break;
+                    }
+                    case G_WAVEcc:
+                    {
+                        if (ReadFile(theFile, &dwIsWave, 4, &dwRead, NULL) == 0 || dwRead != 4)
+                        {
+                            result = -4;
+                            break;
+                        }
+                        bytesRead += dwRead;
+
+                        break;
+                    }
+                    case G_FMTcc:
+                    {
+                        if (ReadFile(theFile, &myWFX, dwChunkDataSize, &dwRead, NULL) == 0 || dwRead != dwChunkDataSize)
+                        {
+                            result = -5;
+                            break;
+                        }
+                        bytesRead += dwRead;
+
+                        break;
+                    }
+                    case G_DATAcc:
+                    {
+                        BYTE* pDataBuffer = new BYTE[dwChunkDataSize];
+                        if (ReadFile(theFile, pDataBuffer, dwChunkDataSize, &dwRead, NULL) == 0 || dwRead != dwChunkDataSize)
+                        {
+                            result = -6;
+                            delete[] pDataBuffer;
+                            pDataBuffer = nullptr;
+                            break;
+                        }
+
+                        myAudioBuffer.AudioBytes = dwChunkDataSize;  // contains size of the audio buffer in bytes
+                        myAudioBuffer.pAudioData = pDataBuffer;		 // this buffer contains all audio data
+                        myAudioBuffer.Flags = XAUDIO2_END_OF_STREAM; // tells source this is EOF and should stop
+                        bytesRead += dwRead;
+                        foundAudioData = true;
+
+                        break;
+                    }
+                    default:
+                    {
+                        int sizeToRead = sizeof(throwAwayValue);
+                        int totalChunkData = dwChunkDataSize;
+                        while (totalChunkData > 0)
+                        {
+                            if (sizeToRead > totalChunkData)
+                                sizeToRead = totalChunkData;
+
+                            if (ReadFile(theFile, &throwAwayValue, sizeToRead, &dwRead, NULL) == 0 || dwRead != sizeToRead)
+                            {
+                                result = -7;
+                                totalChunkData = 0;
+                            }
+
+                            bytesRead += dwRead;
+                            totalChunkData -= dwRead;
+                        }
+
+                        break;
+                    }
+                    }
+
+                    if (bytesRead - 8 >= dwRiffDataSize) // excludes the first 8 byte header information
+                    {
+
+                        break;
+                    }
+                }
+                CloseHandle(theFile);
+
+                if (result < 0)
+                    theResult = S_FALSE;
+
+                return theResult;
+            }
+
+            void STDMETHODCALLTYPE OnStreamEnd()
+            {
+                // When stream ends, the sound gets flagged as complete
+                atomic_isComplete = true;
+                atomic_isPaused = false;
+                atomic_isPlaying = false;
+                SetEvent(hStreamEndEvent);
+            }
+            // Required studs as IXAudio2VoiceCallback is an abstract class
+            void STDMETHODCALLTYPE OnBufferEnd(void*) {}
+            void STDMETHODCALLTYPE OnBufferStart(void*) {}
+            void STDMETHODCALLTYPE OnVoiceProcessingPassStart(UINT32) {}
+            void STDMETHODCALLTYPE OnVoiceProcessingPassEnd() {}
+            void STDMETHODCALLTYPE OnVoiceError(void*, HRESULT) {}
+            void STDMETHODCALLTYPE OnLoopEnd(void*) {}
+
+            std::atomic_bool atomic_isPlaying = false;
+            std::atomic_bool atomic_isPaused = false;
+            std::atomic_bool atomic_isComplete = false;
+            float masterVolume = 1.0f; // global master volume
+            float globalSoundsVolume = 1.0f; // global sounds volume
+            float volume = 1.0f; // volume of this sound
+            unsigned int numOfChannels = 0;
+
+            IXAudio2SourceVoice* mySourceVoice = nullptr;
+            IXAudio2SubmixVoice* mySubmixVoice = nullptr;
+            HANDLE hStreamEndEvent;
+
+            float       channelVolumes[6] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }; // channel volumes of this sound
+            float masterChannelVolumes[6] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }; // global master volumes
+            GW::AUDIO::GAudio gAudio;
+            GW::CORE::GEventReceiver gReceiver;
+            XAUDIO2_BUFFER myAudioBuffer = { 0 };
+
+        public:
+            virtual ~GSoundImplementation()
+            {
+                Stop();
+
+                // We do not need to check for GAudio proxy here, since those handles would get cleaned up 
+                // in the event callback if GAudio gets deleted first
+                LockSyncWrite();
+                if (mySourceVoice)
+                    mySourceVoice->DestroyVoice();
+
+                if (mySubmixVoice)
+                    mySubmixVoice->DestroyVoice();
+                UnlockSyncWrite();
+
+                if (myAudioBuffer.pAudioData)
+                    delete[] myAudioBuffer.pAudioData;
+
+                if (hStreamEndEvent)
+                    CloseHandle(hStreamEndEvent);
+            }
+
+            GReturn Create(const char* _path, GW::AUDIO::GAudio _audio, float _volume = 1.0f)
+            {
+                if (!_path || !_audio)
+                    return GReturn::INVALID_ARGUMENT;
+
+                if (_volume < 0.0f || _volume > 1.0f)
+                    return GReturn::INVALID_ARGUMENT;
+
+                hStreamEndEvent = CreateEventEx(nullptr, nullptr, CREATE_EVENT_MANUAL_RESET, EVENT_MODIFY_STATE | SYNCHRONIZE);
+                if (!hStreamEndEvent)
+                    return GReturn::FAILURE;
+
+                WAVEFORMATEXTENSIBLE wfmx;
+                if (LoadWaveData(_path, wfmx, myAudioBuffer) != S_OK)
+                    return GReturn::FAILURE;
+
+                //if (wfmx.Format.nChannels > maxChannels)
+                //    maxChannels = wfmx.Format.nChannels;
+
+                gAudio = _audio;
+                auto audioImplementation = std::dynamic_pointer_cast<GW::I::GAudioImplementation>(*_audio);
+
+                if (audioImplementation->XAudioData.myAudio->CreateSubmixVoice(&mySubmixVoice, G_NUM_OF_OUTPUTS, wfmx.Format.nSamplesPerSec) != S_OK)
+                    return GReturn::FAILURE;
+
+                XAUDIO2_SEND_DESCRIPTOR sndSendDcsp = { 0, mySubmixVoice };
+                XAUDIO2_VOICE_SENDS sndSendList = { 1, &sndSendDcsp };
+
+                // Size, in bytes, of extra format information appended to the end of the WAVEFORMATEX structure. (for non-PCM formats)
+                wfmx.Format.cbSize = (wfmx.Format.wFormatTag > 1) ? 22 : 0;
+                numOfChannels = static_cast<unsigned int>(wfmx.Format.nChannels);
+                if (audioImplementation->XAudioData.myAudio->CreateSourceVoice(&mySourceVoice, &wfmx.Format, 0, XAUDIO2_DEFAULT_FREQ_RATIO, this, &sndSendList) != S_OK)
+                    return GReturn::FAILURE;
+
+                if (FAILED(mySourceVoice->SubmitSourceBuffer(&myAudioBuffer)))
+                    return GReturn::FAILURE;
+
+                globalSoundsVolume = audioImplementation->soundsVolume;
+                masterVolume = audioImplementation->masterVolume;
+                memcpy(masterChannelVolumes, audioImplementation->soundsChannelVolumes, 6 * sizeof(float));
+
+                GReturn result = SetVolume(_volume);
+                if (result != GReturn::SUCCESS)
+                    return result;
+
+                result = SetChannelVolumes(channelVolumes, 6);
+                if (result != GReturn::SUCCESS)
+                    return result;
+
+                result = GThreadSharedImplementation::Create();
+                if (result != GReturn::SUCCESS)
+                    return result;
+
+                return gReceiver.Create(_audio, [&]()
+                    {
+                        GW::GEvent gEvent;
+                        GW::AUDIO::GAudio::Events audioEvent;
+                        GW::AUDIO::GAudio::EVENT_DATA audioEventData;
+                        // Process the event message
+                        gReceiver.Pop(gEvent);
+                        gEvent.Read(audioEvent);
+
+                        switch (audioEvent)
+                        {
+                        case GW::AUDIO::GAudio::Events::DESTROY:
+                        {
+                            //printf("DESTROY RECEIVED IN SOUND\n");
+                            Stop();
+                            // Need to cleanup XAudio handles before GAudio is deleted
+                            LockSyncWrite();
+                            if (mySourceVoice)
+                            {
+                                mySourceVoice->DestroyVoice();
+                                mySourceVoice = nullptr;
+                            }
+
+                            if (mySubmixVoice)
+                            {
+                                mySubmixVoice->DestroyVoice();
+                                mySubmixVoice = nullptr;
+                            }
+                            UnlockSyncWrite();
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::PLAY_SOUNDS:
+                        {
+                            Play();
+                            //bool playing;
+                            //isPlaying(playing);
+                            //printf("SOUND PLAY %d\n", playing);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::PAUSE_SOUNDS:
+                        {
+                            Pause();
+                            //bool playing;
+                            //isPlaying(playing);
+                            //printf("SOUND PAUSE %d\n", !playing);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::RESUME_SOUNDS:
+                        {
+                            Resume();
+                            //bool playing;
+                            //isPlaying(playing);
+                            //printf("SOUND RESUME %d\n", playing);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::STOP_SOUNDS:
+                        {
+                            Stop();
+                            //bool playing;
+                            //isPlaying(playing);
+                            //printf("SOUND STOP: %d\n", !playing);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::MASTER_VOLUME_CHANGED:
+                        {
+                            gEvent.Read(audioEventData);
+                            masterVolume = audioEventData.channelVolumes[0];
+                            // Update the current volume with a new master volume
+                            SetVolume(volume);
+                            //printf("MASTER_VOLUME: %f | VOLUME: %f\n", masterVolume, volume * globalSoundsVolume * masterVolume);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::SOUNDS_VOLUME_CHANGED:
+                        {
+                            gEvent.Read(audioEventData);
+                            globalSoundsVolume = audioEventData.channelVolumes[0];
+                            // Update the current volume with a new master volume
+                            SetVolume(volume);
+                            //printf("GLOBAL SOUND VOLUME: %f | VOLUME: %f\n", globalSoundsVolume, volume * globalSoundsVolume * masterVolume);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::SOUND_CHANNEL_VOLUMES_CHANGED:
+                        {
+                            gEvent.Read(audioEventData);
+                            memcpy(masterChannelVolumes, audioEventData.channelVolumes, audioEventData.numOfChannels * sizeof(float));
+                            SetChannelVolumes(channelVolumes, audioEventData.numOfChannels);
+                            //printf("SOUND CHANNEL VOLUMES: { %f, %f, %f, %f, %f, %f }\n", channelVolumes[0] * masterChannelVolumes[0], channelVolumes[1] * masterChannelVolumes[1], channelVolumes[2] * masterChannelVolumes[2], channelVolumes[3] * masterChannelVolumes[3], channelVolumes[4] * masterChannelVolumes[4], channelVolumes[5] * masterChannelVolumes[5]);
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                        }
+                    });
+            }
+
+            GReturn SetChannelVolumes(const float* _values, unsigned int _numChannels) override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                if (_numChannels == 0 || _numChannels > 6 || _values == nullptr)
+                    return GReturn::INVALID_ARGUMENT;
+
+                for (unsigned int i = 0; i < _numChannels; i++)
+                {
+                    if (_values[i] < 0.0f)
+                        return GReturn::INVALID_ARGUMENT;
+
+                    // apply clamping and master volume multiplier
+                    channelVolumes[i] = (_values[i] > 1.0f) ? 1.0f : _values[i];
+                }
+
+                // can only support up to 6 outputs
+                float matrix[12] = { 0 };
+                unsigned int trueIndex = 0;
+                for (unsigned int i = 0; i < 12;)
+                {
+                    if (trueIndex < _numChannels)
+                    {
+                        float matrixVolume = channelVolumes[trueIndex] * masterChannelVolumes[trueIndex];
+                        matrix[i] = matrixVolume;
+                        matrix[i + 1] = matrixVolume;
+                        trueIndex++;
+                        i += 2;
+                    }
+                    else
+                    {
+                        matrix[i] = 0;
+                        i++;
+                    }
+                }
+
+                LockSyncWrite();
+                if (mySourceVoice == nullptr || FAILED(mySourceVoice->SetOutputMatrix(mySubmixVoice, numOfChannels, G_NUM_OF_OUTPUTS, matrix)))
+                {
+                    UnlockSyncWrite();
+                    return GReturn::FAILURE;
+                }
+                UnlockSyncWrite();
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn SetVolume(float _newVolume) override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                if (_newVolume < 0.0f)
+                    return GReturn::INVALID_ARGUMENT;
+
+                // Clip the passed volume to max
+                volume = (_newVolume > 1.0f) ? 1.0f : _newVolume;
+
+                // Apply master volume ratio to the sound volume (Doesn't need to be normalized, since masterVolume is always < 1.0f)
+                LockSyncWrite();
+                if (mySourceVoice == nullptr || FAILED(mySourceVoice->SetVolume(volume * globalSoundsVolume * masterVolume)))
+                {
+                    UnlockSyncWrite();
+                    return GReturn::FAILURE;
+                }
+                UnlockSyncWrite();
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn Play() override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                if (atomic_isPlaying || atomic_isComplete)
+                {
+                    GReturn result = Stop();
+
+                    if (result != GReturn::SUCCESS)
+                        return result;
+                }
+
+                if (atomic_isPlaying == false)
+                {
+                    LockSyncWrite();
+                    if (mySourceVoice == nullptr || FAILED(mySourceVoice->Start()))
+                    {
+                        UnlockSyncWrite();
+                        return GReturn::FAILURE;
+                    }
+                    UnlockSyncWrite();
+
+                    atomic_isPlaying = true;
+                    atomic_isPaused = false;
+                }
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn Pause() override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                if (atomic_isPaused == false)
+                {
+                    LockSyncWrite();
+                    if (mySourceVoice == nullptr || FAILED(mySourceVoice->Stop()))
+                    {
+                        UnlockSyncWrite();
+                        return GReturn::FAILURE;
+                    }
+                    UnlockSyncWrite();
+
+                    atomic_isPlaying = false;
+                    atomic_isPaused = true;
+                }
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn Resume() override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                if (atomic_isPaused == true)
+                {
+                    LockSyncWrite();
+                    if (mySourceVoice == nullptr || FAILED(mySourceVoice->Start()))
+                    {
+                        UnlockSyncWrite();
+                        return GReturn::FAILURE;
+                    }
+                    UnlockSyncWrite();
+
+                    atomic_isPlaying = true;
+                    atomic_isPaused = false;
+                }
+                else
+                    return GReturn::REDUNDANT;
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn Stop() override
+            {
+                atomic_isPlaying = false;
+                atomic_isPaused = false;
+                atomic_isComplete = false;
+
+                LockSyncWrite();
+                if (mySourceVoice == nullptr || FAILED(mySourceVoice->Stop()))
+                {
+                    UnlockSyncWrite();
+                    return GReturn::FAILURE;
+                }
+                mySourceVoice->FlushSourceBuffers();
+                if (FAILED(mySourceVoice->SubmitSourceBuffer(&myAudioBuffer)))
+                {
+                    UnlockSyncWrite();
+                    return GReturn::FAILURE;
+                }
+                UnlockSyncWrite();
+
+                // Critical function, all the code must be executed even in PREMATURE_DEALLOCATION state
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetSourceChannels(unsigned int& returnedChannelNum) const override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                returnedChannelNum = numOfChannels;
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetOutputChannels(unsigned int& returnedChannelNum) const override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                returnedChannelNum = G_NUM_OF_OUTPUTS;
+                return GReturn::SUCCESS;
+            }
+
+            GReturn isPlaying(bool& _returnedBool) const override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                _returnedBool = atomic_isPlaying;
+                return GReturn::SUCCESS;
+            }
+
+        protected:
+            // ThreadShared
+            GReturn LockAsyncRead() const override
+            {
+                return GThreadSharedImplementation::LockAsyncRead();
+            }
+
+            GReturn UnlockAsyncRead() const override
+            {
+                return GThreadSharedImplementation::UnlockAsyncRead();
+            }
+
+            GReturn LockSyncWrite() override
+            {
+                return GThreadSharedImplementation::LockSyncWrite();
+            }
+
+            GReturn UnlockSyncWrite() override
+            {
+                return GThreadSharedImplementation::UnlockSyncWrite();
+            }
+        };
+    }// end I
+}// end GW
+
+#undef G_RIFFcc
+#undef G_DATAcc
+#undef G_FMTcc 
+#undef G_WAVEcc
+//#undef G_JUNKcc
+//#undef G_XWMAcc
+//#undef G_DPDScc
+#undef G_NUM_OF_OUTPUTS
+
+    #endif
 #endif
 
 
@@ -48452,14 +58460,14 @@ namespace GW
     }
 }
 
-// Implementaion for GMusic.h
+// Implementation for GMusic.h
 // *IMPORTANT* End users of Gateware may ignore the contents of these files if they please.(Developers Only)
 // File not included in Doxygen, these files will be compiled directly into associated header file when deployed
 // Developers: Do NOT assume the contents of this file are within the scope of the related interface's namespace
 // Developers: These are NOT cpp files do not use "using namespace" or unprotected global variables (prefer static members)
 // Developers: If you MUST use a non-static global, use the "internal_gw" namespace to store them. (only on approval)
 
-// Gateware platform specific implementations are seperated into different files to keep things clean and flexible
+// Gateware platform specific implementations are separated into different files to keep things clean and flexible
 // As new platforms come online or are deprecated (or upgraded) we can modify their selection through this file
 // When adding implementations please try to condense redundant file includes where possible.
 // This will reduce size/redundancy when the library is tool compressed into single header form.
@@ -48474,7 +58482,7 @@ namespace GW
         {
         public:
             // Main class
-            GReturn Create(const char* _path, GW::AUDIO::GAudio _audio, float _value)
+            GReturn Create(const char* _path, GW::AUDIO::GAudio _audio, float _value = 1.0f)
             {
                 return GReturn::INTERFACE_UNSUPPORTED;
             }
@@ -48518,8 +58526,65 @@ namespace GW
     }
 }
 
+
 #elif defined(__APPLE__)
-    #define G_NUM_OF_OUTPUTS 6
+    #include <TargetConditionals.h>
+    #if TARGET_OS_IOS
+        namespace GW
+{
+    namespace I
+    {
+        class GMusicImplementation : public virtual GMusicInterface
+        {
+        public:
+            // Main class
+            GReturn Create(const char* _path, GW::AUDIO::GAudio _audio, float _value = 1.0f)
+            {
+                return GReturn::INTERFACE_UNSUPPORTED;
+            }
+            GReturn SetChannelVolumes(const float* _values, unsigned int _numChannels) override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn SetVolume(float _newVolume) override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn Play(bool _loop = false) override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn Pause() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn Resume() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn Stop() override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn GetSourceChannels(unsigned int& returnedChannelNum) const override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn GetOutputChannels(unsigned int& returnedChannelNum) const override
+            {
+                return GReturn::FAILURE;
+            }
+            GReturn isPlaying(bool& _returnedBool) const override
+            {
+                return GReturn::FAILURE;
+            }
+        };
+    }
+}
+
+
+    #elif TARGET_OS_MAC
+        #define G_NUM_OF_OUTPUTS 6
 #define G_STREAMING_BUFFER_SIZE 63553
 #define G_MAX_BUFFER_COUNT 3
 
@@ -49226,6 +59291,7 @@ namespace internal_gw
 #undef G_MAX_BUFFER_COUNT
 
 
+    #endif
 #elif defined(__linux__)
     #include <pulse/mainloop.h>
 #include <pulse/thread-mainloop.h>
@@ -49254,7 +59320,7 @@ namespace GW
 			/* this enum is here to prevent compiler warning -Wmultichar
 			 * previously, this file used a series of #defines that caused
 			 * the warning to occur in a switch statement later on. So instead
-			 * of the #defines (initiallizing an int to a series of 4 chars), 
+			 * of the #defines (initializing an int to a series of 4 chars), 
 			 * i just declare them here to be the integer they would be 
 			 * interpreted as by the compiler internally. */
 			enum WaveTag {
@@ -49460,14 +59526,14 @@ namespace GW
 
 				while (result == GReturn::SUCCESS && foundAudioData == false) {
 					if (-file.Read(reinterpret_cast<char*>(&dwChunkType), 4)) {
-						// could not aquire chunk type
+						// could not acquire chunk type
 						result = GReturn::FAILURE;
 						break;
 					}
 					bytesRead += 4;
 
 					if (-file.Read(reinterpret_cast<char*>(&dwChunkDataSize), 4)) {
-						// could not aquire chunk size
+						// could not acquire chunk size
 						result = GReturn::FAILURE;
 						break;
 					}
@@ -50132,8 +60198,11 @@ namespace GW
 #undef G_STREAMING_BUFFER_SIZE
 #undef G_MAX_BUFFER_COUNT
 
+
 #elif defined(_WIN32)
-    #define G_NUM_OF_OUTPUTS 6
+#include <winapifamily.h>
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #define G_NUM_OF_OUTPUTS 6
 #define G_STREAMING_BUFFER_SIZE 65536
 #define G_MAX_BUFFER_COUNT 3
 
@@ -50171,7 +60240,7 @@ namespace GW
 					return result;
 				}
 				
-				// variables for determinning data information
+				// variables for determining data information
 				unsigned long dwChunktype = 0;
 				unsigned long dwChunkDataSize = 0;
 				unsigned long dwRiffDataSize = 0;
@@ -50182,13 +60251,13 @@ namespace GW
 				while (result == GReturn::SUCCESS && foundAudioData == false)
 				{
 					if (-file.Read(reinterpret_cast<char*>(&dwChunktype), 4)) {
-						// could not aquire chunk type
+						// could not acquire chunk type
 						result = GReturn::FAILURE;
 						break;
 					}
 
 					if (-file.Read(reinterpret_cast<char*>(&dwChunkDataSize), 4)) {
-						// could not aquire chunk size
+						// could not acquire chunk size
 						result = GReturn::FAILURE;
 						break;
 					}
@@ -50199,7 +60268,7 @@ namespace GW
 							dwRiffDataSize = dwChunkDataSize;
 							dwChunkDataSize = 4;
 							if (-file.Read(reinterpret_cast<char*>(&dwFileType), 4) || dwFileType != WaveTag::WAVE) {
-								// could not aquire the file type
+								// could not acquire the file type
 								result = GReturn::FAILURE;
 								break;
 							}
@@ -50270,14 +60339,14 @@ namespace GW
 
 				while (result == GReturn::SUCCESS && foundAudioData == false) {
 					if (-file.Read(reinterpret_cast<char*>(&dwChunkType), 4)) {
-						// could not aquire chunk type
+						// could not acquire chunk type
 						result = GReturn::FAILURE;
 						break;
 					}
 					bytesRead += 4;
 
 					if (-file.Read(reinterpret_cast<char*>(&dwChunkDataSize), 4)) {
-						// could not aquire chunk size
+						// could not acquire chunk size
 						result = GReturn::FAILURE;
 						break;
 					}
@@ -50948,7 +61017,867 @@ namespace GW
 #undef G_MAX_BUFFER_COUNT
 
 
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        #define G_RIFFcc 'FFIR'
+#define G_DATAcc 'atad'
+#define G_FMTcc  ' tmf'
+#define G_WAVEcc 'EVAW'
+#define G_JUNKcc 'KNUJ'
+//#define G_XWMAcc 'AMWX'
+//#define G_DPDScc 'sdpd'
+#define G_NUM_OF_OUTPUTS 6
+#define G_STREAMING_BUFFER_SIZE 65536
+#define G_MAX_BUFFER_COUNT 3
+
+
+
+namespace GW
+{
+    namespace I
+    {
+        class GMusicImplementation : public virtual GMusicInterface,
+            protected GThreadSharedImplementation,
+            protected IXAudio2VoiceCallback
+        {
+            HRESULT LoadOnlyWaveHeaderData(const char* path, WAVEFORMATEXTENSIBLE& myWFX)
+            {
+                HANDLE returnedHandle;
+                wchar_t tpath[1024];
+                MultiByteToWideChar(CP_ACP, 0, path, -1, tpath, 1024);
+                // if can't find file for unit tests, use : _wgetcwd to see where to put test file
+
+                returnedHandle = CreateFile2(tpath, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, NULL);
+
+                if (returnedHandle == INVALID_HANDLE_VALUE)
+                    return HRESULT_FROM_WIN32(GetLastError());
+
+                if (SetFilePointer(returnedHandle, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+                    return HRESULT_FROM_WIN32(GetLastError());
+
+                int result = 0; // zero is good
+                unsigned long dwChunktype = 0;
+                unsigned long dwChunkDataSize = 0;
+                unsigned long dwRiffDataSize = 0;
+                unsigned long dwFileType = 0;
+                unsigned long bytesRead = 0;
+                unsigned long dwIsWave = 0;
+
+                while (result == 0)
+                {
+                    unsigned long dwRead;
+                    if (ReadFile(returnedHandle, &dwChunktype, 4, &dwRead, NULL) == 0 || dwRead != 4)
+                    {
+                        result = -1;
+                        break;
+                    }
+                    bytesRead += dwRead;
+
+                    if (ReadFile(returnedHandle, &dwChunkDataSize, 4, &dwRead, NULL) == 0 || dwRead != 4)
+                    {
+                        result = -2;
+                        break;
+                    }
+                    bytesRead += dwRead;
+
+                    switch (dwChunktype)
+                    {
+                    case G_RIFFcc:
+                    {
+                        dwRiffDataSize = dwChunkDataSize;
+                        dwChunkDataSize = 4;
+                        if (ReadFile(returnedHandle, &dwFileType, 4, &dwRead, NULL) == 0 || dwRead != 4 || dwFileType != G_WAVEcc)
+                        {
+                            result = -3;
+                            break;
+                        }
+                        bytesRead += dwRead;
+
+                        break;
+                    }
+                    case G_WAVEcc:
+                    case G_JUNKcc: // FIX: added to support WAV files exported from various applications
+                    {
+                        if (ReadFile(returnedHandle, &dwIsWave, 4, &dwRead, NULL) == 0 || dwRead != 4)
+                        {
+                            result = -4;
+                            break;
+                        }
+                        bytesRead += dwRead;
+
+                        break;
+                    }
+                    case G_FMTcc:
+                    {
+                        if (ReadFile(returnedHandle, &myWFX, dwChunkDataSize, &dwRead, NULL) == 0 || dwRead != dwChunkDataSize)
+                        {
+                            result = -5;
+                            break;
+                        }
+                        bytesRead += dwRead;
+                        result = 1; // break us out of loop
+                        break;
+                    }
+                    }
+                }
+                CloseHandle(returnedHandle);
+
+                if (result < 0)
+                    return S_FALSE;
+
+                return S_OK;
+            }
+
+            HRESULT FindStreamData(HANDLE _file, unsigned long& _outDataChunk, OVERLAPPED& _overLap)
+            {
+                // Assumes that the file is opened.
+                if (_file == INVALID_HANDLE_VALUE)
+                    return HRESULT_FROM_WIN32(GetLastError());
+
+                if (SetFilePointer(_file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+                    return HRESULT_FROM_WIN32(GetLastError());
+
+                HRESULT theResult = S_OK;
+                WAVEFORMATEXTENSIBLE myWFX;
+
+                int result = 0; // zero is good
+                unsigned long dwChunktype = 0;
+                unsigned long dwChunkDataSize = 0;
+                unsigned long dwRiffDataSize = 0;
+                unsigned long dwFileType = 0;
+                unsigned long bytesRead = 0;
+
+                unsigned long dwIsWave = 0;
+                unsigned long throwAwayValue = 0;
+                bool foundAudioData = false;
+
+                while (result == 0 && foundAudioData == false)
+                {
+                    unsigned long dwRead;
+                    if (ReadFile(_file, &dwChunktype, 4, &dwRead, NULL) == 0 || dwRead != 4)
+                    {
+                        result = -1;
+                        break;
+                    }
+                    bytesRead += dwRead;
+
+
+                    if (ReadFile(_file, &dwChunkDataSize, 4, &dwRead, NULL) == 0 || dwRead != 4)
+                    {
+                        result = -2;
+                        break;
+                    }
+                    bytesRead += dwRead;
+
+                    switch (dwChunktype)
+                    {
+                    case G_RIFFcc:
+                    {
+                        dwRiffDataSize = dwChunkDataSize;
+                        dwChunkDataSize = 4;
+                        if (ReadFile(_file, &dwFileType, 4, &dwRead, NULL) == 0 || dwRead != 4 || dwFileType != G_WAVEcc)
+                        {
+                            result = -3;
+                            break;
+                        }
+                        bytesRead += dwRead;
+                        break;
+                    }
+                    case G_WAVEcc:
+                    {
+                        if (ReadFile(_file, &dwIsWave, 4, &dwRead, NULL) == 0 || dwRead != 4)
+                        {
+                            result = -4;
+                            break;
+                        }
+                        bytesRead += dwRead;
+                        break;
+                    }
+                    case G_FMTcc:
+                    {
+                        if (ReadFile(_file, &myWFX, dwChunkDataSize, &dwRead, NULL) == 0 || dwRead != dwChunkDataSize)
+                        {
+                            result = -5;
+                            break;
+                        }
+                        bytesRead += dwRead;
+                        break;
+                    }
+                    case G_DATAcc:
+                    {
+                        // Found the Audio data
+                        _outDataChunk = dwChunkDataSize; // contains size of the audio buffer in bytes
+                        _overLap.Offset = bytesRead;	 // Sets the overlap to where we are
+                        foundAudioData = true;			 // We found the data now to exit the function
+                        break;
+                    }
+                    default:
+                    {
+                        int sizeToRead = sizeof(throwAwayValue);
+                        int totalChunkData = dwChunkDataSize;
+                        while (totalChunkData > 0)
+                        {
+                            if (sizeToRead > totalChunkData)
+                                sizeToRead = totalChunkData;
+
+                            if (ReadFile(_file, &throwAwayValue, sizeToRead, &dwRead, NULL) == 0 || dwRead != sizeToRead)
+                            {
+                                result = -7;
+                                totalChunkData = 0;
+                            }
+
+                            bytesRead += dwRead;
+                            totalChunkData -= dwRead;
+                        }
+                        break;
+                    }
+                    }
+
+                    if (bytesRead - 8 >= dwRiffDataSize) // excludes the first 8 byte header information
+                        break;
+                }
+
+                // If there was a result error OR no Audio data was found return S_FALSE
+                if (result < 0 || foundAudioData == false)
+                    theResult = S_FALSE;
+
+                return theResult;
+            }
+
+            void STDMETHODCALLTYPE OnBufferStart(void*) { ResetEvent(hBufferEndEvent); }
+            void STDMETHODCALLTYPE OnBufferEnd(void*) { SetEvent(hBufferEndEvent); }
+            // Required studs as IXAudio2VoiceCallback is an abstract class
+            void STDMETHODCALLTYPE OnVoiceProcessingPassStart(UINT32) {}
+            void STDMETHODCALLTYPE OnVoiceProcessingPassEnd() {}
+            void STDMETHODCALLTYPE OnVoiceError(void*, HRESULT) {}
+            void STDMETHODCALLTYPE OnStreamEnd() {}
+            void STDMETHODCALLTYPE OnLoopEnd(void*) {}
+
+            std::atomic_bool atomic_isPlaying = false;
+            std::atomic_bool atomic_isPaused = false;
+            std::atomic_bool atomic_isComplete = false;
+            std::atomic_bool atomic_isLooping = false;
+            std::atomic_bool atomic_stopFlag = false;
+            float masterVolume = 1.0f; // global master volume
+            float globalMusicVolume = 1.0f; // global music volume
+            float volume = 1.0f; // volume of this sound
+            unsigned int numOfChannels = 0;
+            OVERLAPPED overlap = { 0 };
+
+            IXAudio2SourceVoice* mySourceVoice = nullptr;
+            IXAudio2SubmixVoice* mySubmixVoice = nullptr;
+            char* filePath;
+            HANDLE hBufferEndEvent;
+
+            float       channelVolumes[6] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }; // channel volumes of this sound
+            float masterChannelVolumes[6] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }; // global master volumes
+            GW::AUDIO::GAudio gAudio;
+            GW::CORE::GEventReceiver gReceiver;
+            GW::SYSTEM::GConcurrent gConcurrent;
+            BYTE buffers[G_MAX_BUFFER_COUNT][G_STREAMING_BUFFER_SIZE];
+
+            char* CreateFilePath(const char* _constCharArray)
+            {
+                int size = 0;
+                for (; size < 1024; ++size)
+                {
+                    if (_constCharArray[size] == '\0')
+                    {
+                        ++size;
+                        break;
+                    }
+                }
+
+                if (size >= 1024)
+                    return nullptr;
+
+                char* charArray = new char[size];
+                memcpy(charArray, _constCharArray, size); // char is 1 byte
+
+                return charArray;
+            }
+
+        public:
+            virtual ~GMusicImplementation()
+            {
+                Stop();
+
+                // We do not need to check for GAudio proxy here, since those handles would get cleaned up 
+                // in the event callback if GAudio gets deleted first
+                LockSyncWrite();
+                if (mySourceVoice)
+                    mySourceVoice->DestroyVoice();
+
+                if (mySubmixVoice)
+                    mySubmixVoice->DestroyVoice();
+                UnlockSyncWrite();
+
+                if (filePath)
+                    delete[] filePath;
+
+                if (hBufferEndEvent)
+                    CloseHandle(hBufferEndEvent);
+            }
+
+            GReturn Create(const char* _path, GW::AUDIO::GAudio _audio, float _volume = 1.0f)
+            {
+                if (!_path || !_audio)
+                    return GReturn::INVALID_ARGUMENT;
+
+                if (_volume < 0.0f || _volume > 1.0f)
+                    return GReturn::INVALID_ARGUMENT;
+
+                filePath = CreateFilePath(_path);
+                // if _path is > 1024 chars
+                if (filePath == nullptr)
+                    return GReturn::INVALID_ARGUMENT;
+
+                gAudio = _audio;
+                auto audioImplementation = std::dynamic_pointer_cast<GW::I::GAudioImplementation>(*_audio);
+                hBufferEndEvent = CreateEventEx(nullptr, nullptr, CREATE_EVENT_MANUAL_RESET, EVENT_MODIFY_STATE | SYNCHRONIZE);
+                if (!hBufferEndEvent)
+                    return GReturn::FAILURE;
+
+                WAVEFORMATEXTENSIBLE wfmx;
+                if (LoadOnlyWaveHeaderData(filePath, wfmx) != S_OK)
+                    return GReturn::FAILURE;
+
+                // Size, in bytes, of extra format information appended to the end of the WAVEFORMATEX structure. (for non-PCM formats)
+                wfmx.Format.cbSize = (wfmx.Format.wFormatTag > 1) ? 22 : 0;
+                numOfChannels = static_cast<unsigned int>(wfmx.Format.nChannels);
+                if (audioImplementation->XAudioData.myAudio->CreateSubmixVoice(&mySubmixVoice, G_NUM_OF_OUTPUTS, wfmx.Format.nSamplesPerSec) != S_OK)
+                    return GReturn::FAILURE;
+
+                XAUDIO2_SEND_DESCRIPTOR mscSendDcsp = { 0, mySubmixVoice };
+                XAUDIO2_VOICE_SENDS mscSendList = { 1, &mscSendDcsp };
+
+                if (audioImplementation->XAudioData.myAudio->CreateSourceVoice(&mySourceVoice, &wfmx.Format, 0, XAUDIO2_DEFAULT_FREQ_RATIO, this, &mscSendList) != S_OK)
+                    return GReturn::FAILURE;
+
+                globalMusicVolume = audioImplementation->musicVolume;
+                masterVolume = audioImplementation->masterVolume;
+                memcpy(masterChannelVolumes, audioImplementation->musicChannelVolumes, 6 * sizeof(float));
+
+                GReturn result = SetVolume(_volume);
+                if (result != GReturn::SUCCESS)
+                    return result;
+
+                result = SetChannelVolumes(channelVolumes, 6);
+                if (result != GReturn::SUCCESS)
+                    return result;
+
+                result = GThreadSharedImplementation::Create();
+                if (result != GReturn::SUCCESS)
+                    return result;
+
+                result = gConcurrent.Create(true);
+                if (result != GReturn::SUCCESS) // Events are suppressed
+                    return result;
+
+                overlap.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+                return gReceiver.Create(_audio, [&]()
+                    {
+                        GW::GEvent gEvent;
+                        GW::AUDIO::GAudio::Events audioEvent;
+                        GW::AUDIO::GAudio::EVENT_DATA audioEventData;
+                        // Process the event message
+                        gReceiver.Pop(gEvent);
+                        gEvent.Read(audioEvent);
+
+                        switch (audioEvent)
+                        {
+                        case GW::AUDIO::GAudio::Events::DESTROY:
+                        {
+                            //printf("DESTROY RECEIVED IN MUSIC\n");
+                            Stop();
+                            // Need to cleanup XAudio handles before GAudio is deleted
+                            LockSyncWrite();
+                            if (mySourceVoice)
+                            {
+                                mySourceVoice->DestroyVoice();
+                                mySourceVoice = nullptr;
+                            }
+
+                            if (mySubmixVoice)
+                            {
+                                mySubmixVoice->DestroyVoice();
+                                mySubmixVoice = nullptr;
+                            }
+                            UnlockSyncWrite();
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::PLAY_MUSIC:
+                        {
+                            Play();
+                            //bool playing;
+                            //isPlaying(playing);
+                            //printf("MUSIC PLAY %d\n", playing);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::PAUSE_MUSIC:
+                        {
+                            Pause();
+                            //bool playing;
+                            //isPlaying(playing);
+                            //printf("MUSIC PAUSE %d\n", !playing);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::RESUME_MUSIC:
+                        {
+                            Resume();
+                            //bool playing;
+                            //isPlaying(playing);
+                            //printf("MUSIC RESUME %d\n", playing);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::STOP_MUSIC:
+                        {
+                            Stop();
+                            //bool playing;
+                            //isPlaying(playing);
+                            //printf("MUSIC STOP: %d\n", !playing);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::MASTER_VOLUME_CHANGED:
+                        {
+                            gEvent.Read(audioEventData);
+                            masterVolume = audioEventData.channelVolumes[0];
+                            // Update the current volume with a new master volume
+                            SetVolume(volume);
+                            //printf("MASTER_VOLUME: %f | VOLUME: %f\n", masterVolume, volume * globalMusicVolume * masterVolume);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::MUSIC_VOLUME_CHANGED:
+                        {
+                            gEvent.Read(audioEventData);
+                            globalMusicVolume = audioEventData.channelVolumes[0];
+                            // Update the current volume with a new master volume
+                            SetVolume(volume);
+                            //printf("GLOBAL MUSIC VOLUME: %f | VOLUME: %f\n", globalMusicVolume, volume * globalMusicVolume * masterVolume);
+                            break;
+                        }
+                        case GW::AUDIO::GAudio::Events::MUSIC_CHANNEL_VOLUMES_CHANGED:
+                        {
+                            gEvent.Read(audioEventData);
+                            memcpy(masterChannelVolumes, audioEventData.channelVolumes, audioEventData.numOfChannels * sizeof(float));
+                            SetChannelVolumes(channelVolumes, audioEventData.numOfChannels);
+                            //printf("MUSIC CHANNEL VOLUMES: { %f, %f, %f, %f, %f, %f }\n", channelVolumes[0] * masterChannelVolumes[0], channelVolumes[1] * masterChannelVolumes[1], channelVolumes[2] * masterChannelVolumes[2], channelVolumes[3] * masterChannelVolumes[3], channelVolumes[4] * masterChannelVolumes[4], channelVolumes[5] * masterChannelVolumes[5]);
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                        }
+                    });
+            }
+
+            GReturn SetChannelVolumes(const float* _values, unsigned int _numChannels) override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                if (_numChannels == 0 || _numChannels > 6 || _values == nullptr)
+                    return GReturn::INVALID_ARGUMENT;
+
+                for (unsigned int i = 0; i < _numChannels; i++)
+                {
+                    if (_values[i] < 0.0f)
+                        return GReturn::INVALID_ARGUMENT;
+
+                    // apply clamping and master volume multiplier
+                    channelVolumes[i] = (_values[i] > 1.0f) ? 1.0f : _values[i];
+                }
+
+                unsigned int sourceChannels = 0;
+                GetSourceChannels(sourceChannels);
+
+                // can only support up to 6 outputs
+                float matrix[12] = { 0 };
+                unsigned int trueIndex = 0;
+                for (unsigned int i = 0; i < 12;)
+                {
+                    if (trueIndex < _numChannels)
+                    {
+                        float matrixVolume = channelVolumes[trueIndex] * masterChannelVolumes[trueIndex];
+                        matrix[i] = matrixVolume;
+                        matrix[i + 1] = matrixVolume;
+                        trueIndex++;
+                        i += 2;
+                    }
+                    else
+                    {
+                        matrix[i] = 0;
+                        i++;
+                    }
+                }
+
+                LockSyncWrite();
+                if (mySourceVoice == nullptr || FAILED(mySourceVoice->SetOutputMatrix(mySubmixVoice, sourceChannels, G_NUM_OF_OUTPUTS, matrix)))
+                {
+                    UnlockSyncWrite();
+                    return GReturn::FAILURE;
+                }
+                UnlockSyncWrite();
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn SetVolume(float _newVolume) override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                if (_newVolume < 0.0f)
+                    return GReturn::INVALID_ARGUMENT;
+
+                // Clip the passed volume to max
+                _newVolume = (_newVolume > 1.0f) ? 1.0f : _newVolume;
+                volume = _newVolume;
+
+                // Apply master volume ratio to the sound volume (Doesn't need to be normalized, since masterVolume is always < 1.0f)
+                LockSyncWrite();
+                if (mySourceVoice == nullptr || FAILED(mySourceVoice->SetVolume(volume * globalMusicVolume * masterVolume)))
+                {
+                    UnlockSyncWrite();
+                    return GReturn::FAILURE;
+                }
+                UnlockSyncWrite();
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn Play(bool _loop = false) override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                atomic_isLooping = _loop;
+
+                if (atomic_isPlaying || atomic_isComplete)
+                {
+                    GReturn result = Stop();
+
+                    if (result != GReturn::SUCCESS)
+                        return result;
+                }
+
+                if (atomic_isPlaying == false)
+                {
+                    LockSyncWrite();
+                    if (mySourceVoice == nullptr || FAILED(mySourceVoice->Start(0, 0)))
+                    {
+                        UnlockSyncWrite();
+                        return GReturn::FAILURE;
+                    }
+                    UnlockSyncWrite();
+
+                    atomic_stopFlag = false;
+                    atomic_isPaused = false;
+                    atomic_isPlaying = true;
+
+                    gConcurrent.BranchSingular([&]()
+                        {
+                            wchar_t tpath[1024];
+                            MultiByteToWideChar(CP_ACP, 0, filePath, -1, tpath, 1024);
+                            // if can't find file for unit tests, use : _wgetcwd to see where to put test file
+
+                            HANDLE theFile = CreateFile2(tpath, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, NULL);
+
+                            if (theFile == INVALID_HANDLE_VALUE)
+                                return GReturn::FAILURE;
+
+                            if (SetFilePointer(theFile, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+                                return GReturn::FAILURE;
+
+                            int CurrentDiskReadBuffer = 0;
+                            DWORD CurrentPosition = 0;
+                            DWORD cbWaveSize = 0;
+
+                            if (FindStreamData(theFile, cbWaveSize, overlap) != S_OK)
+                                return GReturn::FAILURE;
+
+                            //GW::AUDIO::GAudio::burst_r burstAudio = *gAudio; // hold onto GAudio
+                            while (CurrentPosition < cbWaveSize && atomic_stopFlag == false)
+                            {
+                                if (atomic_isPlaying)
+                                {
+                                    DWORD dwRead;
+                                    DWORD cbValid = (G_STREAMING_BUFFER_SIZE < (cbWaveSize - CurrentPosition))
+                                        ? G_STREAMING_BUFFER_SIZE // if less
+                                        : (cbWaveSize - CurrentPosition); // if greater or equal
+
+                                    if (ReadFile(theFile, buffers[CurrentDiskReadBuffer], G_STREAMING_BUFFER_SIZE, &dwRead, &overlap) == 0)
+                                        continue;
+
+                                    overlap.Offset += cbValid;
+
+                                    // update the file position to where it will be once the read finishes
+                                    CurrentPosition += cbValid;
+
+                                    DWORD NumberBytesTransfered;
+                                    GetOverlappedResult(theFile, &overlap, &NumberBytesTransfered, true);
+                                    XAUDIO2_VOICE_STATE state = { 0 };
+
+
+                                    while (atomic_isPlaying)
+                                    {
+                                        LockAsyncRead();
+                                        if (mySourceVoice == nullptr)
+                                        {
+                                            UnlockAsyncRead();
+                                            return GReturn::FAILURE;
+                                        }
+                                        mySourceVoice->GetState(&state);
+                                        UnlockAsyncRead();
+
+                                        if (state.BuffersQueued >= G_MAX_BUFFER_COUNT - 1)
+                                        {
+                                            if (WaitForSingleObjectEx(hBufferEndEvent, INFINITE, TRUE) == WAIT_FAILED)
+                                                break; // if deadlocks on pause check here <REMINDER>
+                                        }
+                                        else break;
+                                    }
+
+                                    /*
+                                    FOR FUTURE AUDIO DEVELOPER
+                                    PCM FUNCTION POINTER GOES HERE
+                                    for(int i = 0; i < cbValid; i++)
+                                    {
+                                        dataFunction(buffers[CurrentDiskReadBuffer][i]);
+                                    }
+                                    */
+
+                                    XAUDIO2_BUFFER buf = { 0 };
+                                    buf.AudioBytes = cbValid;
+                                    buf.pAudioData = buffers[CurrentDiskReadBuffer];
+
+                                    if (CurrentPosition >= cbWaveSize)
+                                    {
+                                        if (atomic_isLooping)
+                                        {
+                                            LockSyncWrite();
+                                            if (mySourceVoice == nullptr || FAILED(mySourceVoice->SubmitSourceBuffer(&buf)))
+                                            {
+                                                UnlockSyncWrite();
+                                                return GReturn::FAILURE;
+                                            }
+                                            UnlockSyncWrite();
+                                            ++CurrentDiskReadBuffer %= G_MAX_BUFFER_COUNT;
+                                            CurrentPosition = 0;
+                                            if (SetFilePointer(theFile, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+                                                return GReturn::FAILURE;
+                                            // sets the offset to skip right to the streaming data. Used to be overlap.offset = 0; and that caused a pop.
+                                            if (FindStreamData(theFile, cbWaveSize, overlap) != S_OK)
+                                                break;
+
+                                            continue;
+                                        }
+                                        else
+                                            buf.Flags = XAUDIO2_END_OF_STREAM;
+                                    }
+
+                                    LockSyncWrite();
+                                    if (mySourceVoice == nullptr || FAILED(mySourceVoice->SubmitSourceBuffer(&buf)))
+                                    {
+                                        UnlockSyncWrite();
+                                        return GReturn::FAILURE;
+                                    }
+                                    UnlockSyncWrite();
+                                    ++CurrentDiskReadBuffer %= G_MAX_BUFFER_COUNT;
+                                }
+                            }
+                            // Closes the Handle since we are no longer using it
+                            CloseHandle(theFile);
+
+                            XAUDIO2_VOICE_STATE state;
+                            LockAsyncRead();
+                            if (mySourceVoice == nullptr)
+                            {
+                                UnlockAsyncRead();
+                                return GReturn::FAILURE;
+                            }
+                            mySourceVoice->GetState(&state);
+                            UnlockAsyncRead();
+
+                            // Waits for last buffers to finish playing
+                            while (state.BuffersQueued > 0)
+                            {
+                                if (atomic_stopFlag == true)
+                                    break;
+
+                                LockAsyncRead();
+                                if (mySourceVoice == nullptr)
+                                {
+                                    UnlockAsyncRead();
+                                    return GReturn::FAILURE;
+                                }
+                                mySourceVoice->GetState(&state);
+                                UnlockAsyncRead();
+
+                                // [TODO:] needs testing
+                                if (WaitForSingleObjectEx(hBufferEndEvent, INFINITE, TRUE) == WAIT_FAILED)
+                                    break;
+                            }
+
+                            // Stops the voice from producing more sound
+                            LockSyncWrite();
+                            if (mySourceVoice == nullptr || FAILED(mySourceVoice->Stop()))
+                            {
+                                UnlockSyncWrite();
+                                return GReturn::FAILURE;
+                            }
+                            UnlockSyncWrite();
+
+                            // This needs to be reset so XAudio2 doesn't remember where it left off playing
+                            overlap.Offset = 0;
+
+                            // Updates information about playback state
+                            atomic_isPlaying = false;
+                            atomic_isPaused = false;
+                            atomic_isComplete = true;
+
+                            return GReturn::SUCCESS;
+                        });
+                }
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn Pause() override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                if (atomic_isPaused == false)
+                {
+                    LockSyncWrite();
+                    if (mySourceVoice == nullptr || FAILED(mySourceVoice->Stop()))
+                    {
+                        UnlockSyncWrite();
+                        return GReturn::FAILURE;
+                    }
+                    UnlockSyncWrite();
+                }
+
+                atomic_isPlaying = false;
+                atomic_isPaused = true;
+                SetEvent(hBufferEndEvent);
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn Resume() override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                if (atomic_isPaused == true)
+                {
+                    LockSyncWrite();
+                    if (mySourceVoice == nullptr || FAILED(mySourceVoice->Start()))
+                    {
+                        UnlockSyncWrite();
+                        return GReturn::FAILURE;
+                    }
+                    UnlockSyncWrite();
+
+                    atomic_isPlaying = true;
+                    atomic_isPaused = false;
+                }
+                else
+                    return GReturn::REDUNDANT;
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn Stop() override
+            {
+                atomic_isPlaying = false;
+                atomic_isPaused = false;
+                atomic_isComplete = false;
+                atomic_stopFlag = true;
+
+                LockSyncWrite();
+                if (mySourceVoice != nullptr)
+                    mySourceVoice->FlushSourceBuffers();
+                UnlockSyncWrite();
+
+                gConcurrent.Converge(0);
+
+                // Critical function, all the code must be executed even in PREMATURE_DEALLOCATION state
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetSourceChannels(unsigned int& returnedChannelNum) const override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                returnedChannelNum = numOfChannels;
+                return GReturn::SUCCESS;
+            }
+
+            GReturn GetOutputChannels(unsigned int& returnedChannelNum) const override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                returnedChannelNum = G_NUM_OF_OUTPUTS;
+                return GReturn::SUCCESS;
+            }
+
+            GReturn isPlaying(bool& _returnedBool) const override
+            {
+                if (!gAudio)
+                    return GReturn::PREMATURE_DEALLOCATION;
+
+                _returnedBool = atomic_isPlaying;
+                return GReturn::SUCCESS;
+            }
+
+        protected:
+            // ThreadShared
+            GReturn LockAsyncRead() const override
+            {
+                return GThreadSharedImplementation::LockAsyncRead();
+            }
+
+            GReturn UnlockAsyncRead() const override
+            {
+                return GThreadSharedImplementation::UnlockAsyncRead();
+            }
+
+            GReturn LockSyncWrite() override
+            {
+                return GThreadSharedImplementation::LockSyncWrite();
+            }
+
+            GReturn UnlockSyncWrite() override
+            {
+                return GThreadSharedImplementation::UnlockSyncWrite();
+            }
+        };
+    }// end I
+}// end GW
+
+#undef G_RIFFcc
+#undef G_DATAcc
+#undef G_FMTcc 
+#undef G_WAVEcc
+#undef G_JUNKcc
+//#undef G_XWMAcc
+//#undef G_DPDScc
+#undef G_NUM_OF_OUTPUTS
+#undef G_STREAMING_BUFFER_SIZE
+#undef G_MAX_BUFFER_COUNT
+
+    #endif
 #endif
+
 
 
 
@@ -51371,6 +62300,7 @@ namespace GW
 #endif
 
 
+
 namespace GW
 {
 	namespace AUDIO
@@ -51435,6 +62365,7 @@ namespace GW
 // This will reduce size/redundancy when the library is tool compressed into single header form.
 #if !defined(GATEWARE_ENABLE_AUDIO) || defined(GATEWARE_DISABLE_GMUSIC3D) || \
     (defined(GATEWARE_ENABLE_AUDIO) && !defined(GATEWARE_DISABLE_GMUSIC3D) && !defined(__APPLE__) && !defined(__linux__) && !defined(_WIN32))
+
     // Even if a platform does not support a library a dummy implementation must be present!
     namespace GW
 {
@@ -51787,6 +62718,7 @@ namespace GW
 #endif
 
 
+
 namespace GW
 {
 	namespace AUDIO
@@ -51855,8 +62787,8 @@ namespace GW
 // As new platforms come online or are deprecated (or upgraded) we can modify their selection through this file
 // When adding implementations please try to condense redundant file includes where possible.
 // This will reduce size/redundancy when the library is tool compressed into single header form.
-#if defined(GATEWARE_SKIP_CORE) || defined(GATEWARE_SKIP_GRASTERSURFACE) || \
-	(defined(GATEWARE_ENABLE_GRAPHICS) && !defined(GATEWARE_DISABLE_GRASTERSURFACE) && !defined(__APPLE__) && !defined(__linux__) && !defined(_WIN32))
+#if !defined(GATEWARE_ENABLE_GRAPHICS) || defined(GATEWARE_DISABLE_GRASTERSURFACE) || \
+	(defined(GATEWARE_ENABLE_GRAPHICS) && !defined(GATEWARE_DISABLE_GRASTERSURFACE) && !defined(__APPLE__) && !defined(__linux__) && !defined(_WIN32) && !defined(WINAPI_FAMILY))
 	// Even if a platform does not support a library a dummy implementation must be present!
 	namespace GW
 {
@@ -51882,6 +62814,32 @@ namespace GW
 
 
 #elif defined(__APPLE__)
+	#include <TargetConditionals.h>
+	#if TARGET_OS_IOS
+		namespace GW
+{
+	namespace I
+	{
+		class GRasterSurfaceImplementation : public virtual GRasterSurfaceInterface,
+			protected GEventResponderImplementation
+		{
+		public:
+			GReturn Create(GW::SYSTEM::GWindow _gwindow) { return GReturn::INTERFACE_UNSUPPORTED; }
+			GReturn Clear(unsigned int _xrgbColor) override { return GReturn::FAILURE; }
+			GReturn UpdateSurface(const unsigned int* _xrgbPixels, unsigned int _numPixels) override { return GReturn::FAILURE; }
+			GReturn UpdateSurfaceSubset(const unsigned int* _xrgbPixels, unsigned short _numRows, unsigned short _rowWidth, unsigned short _rowStride, int _destX, int _destY) override { return GReturn::FAILURE; }
+			GReturn SmartUpdateSurface(const unsigned int* _xrgbPixels, unsigned int _numPixels, unsigned short _rowWidth, unsigned int _drawOptionFlags) override { return GReturn::FAILURE; }
+			GReturn LockUpdateBufferWrite(unsigned int** _outMemoryBuffer, unsigned short& _outWidth, unsigned short& _outHeight) override { return GReturn::FAILURE; }
+			GReturn LockUpdateBufferRead(const unsigned int** _outMemoryBuffer, unsigned short& _outWidth, unsigned short& _outHeight) override { return GReturn::FAILURE; }
+			GReturn UnlockUpdateBufferWrite() override { return GReturn::FAILURE; }
+			GReturn UnlockUpdateBufferRead() override { return GReturn::FAILURE; }
+			GReturn Present() override { return GReturn::FAILURE; }
+		}; // end class GRasterSurfaceImplementation
+	} // end namespace I
+} // end namespace GW
+
+
+	#elif TARGET_OS_MAC
 	#ifdef __OBJC__
 @import Foundation;
 @import Cocoa;
@@ -52680,7 +63638,7 @@ namespace GW
 							} break;
 							default:
 							{
-								DebugPrint(2, "Create callback lambda - unknown event recieved\n");
+								DebugPrint(2, "Create callback lambda - unknown event received\n");
 							} break;
 						} // end switch (windowEvent)
 				});
@@ -53470,6 +64428,7 @@ namespace internal_gw
 #endif
 
 
+		#endif
 #elif defined(__linux__)
 	
 
@@ -53533,9 +64492,9 @@ namespace GW
 			// flags indicating the active state of the surface
 			enum class SurfaceState : int
 			{
-				INVALID		= -1, // GWindow has been destroyed and surface cannot work properly
-				INACTIVE	=  0, // surface is not active and will not draw
-				ACTIVE		=  1, // surface is active and can draw
+				INVALID = -1, // GWindow has been destroyed and surface cannot work properly
+				INACTIVE = 0, // surface is not active and will not draw
+				ACTIVE = 1, // surface is active and can draw
 			};
 
 			// class containing data unique to each buffer
@@ -53553,7 +64512,7 @@ namespace GW
 				}
 
 			public:
-				Color*						data = nullptr;
+				Color* data = nullptr;
 				unsigned int				numLocks = 0;
 				unsigned long long			frameNum = 0;
 				char						debugName[16];
@@ -53593,7 +64552,7 @@ namespace GW
 			// struct containing variables needed by SmartUpdateSurface
 			struct SmartUpdateData
 			{
-				const Color*			inputColors = nullptr;			// pointer to input colors to use for update
+				const Color* inputColors = nullptr;			// pointer to input colors to use for update
 				unsigned int			bitmapWidth = 0;				// local copy of bitmap width, since it could be altered during execution
 				unsigned int			bitmapHeight = 0;				// local copy of bitmap height, since it could be altered during execution
 				unsigned int			rawDataWidth = 0;				// width of raw data passed to function, in pixels
@@ -53618,14 +64577,14 @@ namespace GW
 			GW::SYSTEM::GConcurrent					m_gDrawThread;										// GConcurrent used for swapping buffers and drawing
 			GW::SYSTEM::GConcurrent					m_gSmartUpdateRowProcessThread;						// GConcurrent used for copying data in SmartUpdateSurface
 
-			Display*								m_xDisplay = nullptr;								// X11 display extracted from universal window handle
+			Display* m_xDisplay = nullptr;								// X11 display extracted from universal window handle
 			int										m_xScreen = -1;										// X11 screen extracted from X11 display
 			Window									m_xWindow;											// X11 window extracted from universal window handle
-			XImage*									m_xFrontBufferImage = nullptr;						// XImage used to draw to screen
+			XImage* m_xFrontBufferImage = nullptr;						// XImage used to draw to screen
 
 			SurfaceState							m_surfaceState = SurfaceState::INACTIVE;
 			unsigned long long						m_frameCount = 0;
-			Color*									m_bitmapData = nullptr;								// buffer color data (size is 2 * (width * height) since it contains both buffers' data)
+			Color* m_bitmapData = nullptr;								// buffer color data (size is 2 * (width * height) since it contains both buffers' data)
 			unsigned short							m_bitmapWidth = 0;									// width of surface data, as well as front and back buffers
 			unsigned short							m_bitmapHeight = 0;									// height of surface data, as well as front and back buffers;
 			Buffer									m_frontBuffer;										// buffer used to transfer the current frame to the screen
@@ -53871,13 +64830,13 @@ namespace GW
 				// swap buffers and draw to screen once no tasks are waiting
 				DebugPrint(2, "SwapBuffersAndDraw - draw thread branch singular\n");
 				m_gDrawThread.BranchSingular([&]() mutable
-				{
-					if (+SwapBackAndFrontBuffers()) // only draw front buffer if buffers were swapped
 					{
-						DebugPrint(2, "SwapBuffersAndDraw lambda - buffers were swapped; draw front buffer to screen\n");
-						DrawFrontBufferToScreen();
-					}
-				});
+						if (+SwapBackAndFrontBuffers()) // only draw front buffer if buffers were swapped
+						{
+							DebugPrint(2, "SwapBuffersAndDraw lambda - buffers were swapped; draw front buffer to screen\n");
+							DrawFrontBufferToScreen();
+						}
+					});
 				DebugPrint(2, "SwapBuffersAndDraw - return\n\n");
 				return GReturn::SUCCESS;
 			}
@@ -53894,15 +64853,15 @@ namespace GW
 				// split pixels into channels
 				ColorChannel a_channels[4] =
 				{
-					static_cast<ColorChannel>( (_a & 0x000000FF)),
-					static_cast<ColorChannel>(((_a & 0x0000FF00) >>  8)),
+					static_cast<ColorChannel>((_a & 0x000000FF)),
+					static_cast<ColorChannel>(((_a & 0x0000FF00) >> 8)),
 					static_cast<ColorChannel>(((_a & 0x00FF0000) >> 16)),
 					static_cast<ColorChannel>(((_a & 0xFF000000) >> 24)),
 				};
 				ColorChannel b_channels[4] =
 				{
-					static_cast<ColorChannel>( (_b & 0x000000FF)),
-					static_cast<ColorChannel>(((_b & 0x0000FF00) >>  8)),
+					static_cast<ColorChannel>((_b & 0x000000FF)),
+					static_cast<ColorChannel>(((_b & 0x0000FF00) >> 8)),
 					static_cast<ColorChannel>(((_b & 0x00FF0000) >> 16)),
 					static_cast<ColorChannel>(((_b & 0xFF000000) >> 24)),
 				};
@@ -53951,7 +64910,7 @@ namespace GW
 				unsigned int u0 = static_cast<unsigned int>(_u);
 				unsigned int v0 = static_cast<unsigned int>(_v);
 				// get bottom-right coordinates
-				unsigned int u1 = (u0 < _width - 1)  ? u0 + 1 : u0;
+				unsigned int u1 = (u0 < _width - 1) ? u0 + 1 : u0;
 				unsigned int v1 = (v0 < _height - 1) ? v0 + 1 : v0;
 				// calculate interpolation ratios
 				float rx = _u - u0;
@@ -54171,12 +65130,12 @@ namespace GW
 				// create event listener with callback function for GWindow to call
 				DebugPrint(2, "Create - create event listener\n");
 				GReturn gr = m_gEventListener.Create([&](GW::GEvent _event)
-				{
-					GW::SYSTEM::GWindow::Events windowEvent;
-					GW::SYSTEM::GWindow::EVENT_DATA windowEventData;
-					if (+_event.Read(windowEvent, windowEventData))
-						switch (windowEvent)
-						{
+					{
+						GW::SYSTEM::GWindow::Events windowEvent;
+						GW::SYSTEM::GWindow::EVENT_DATA windowEventData;
+						if (+_event.Read(windowEvent, windowEventData))
+							switch (windowEvent)
+							{
 							case GW::SYSTEM::GWindow::Events::MINIMIZE:
 							{
 								DebugPrint(2, "Create callback lambda - MINIMIZE event received\n");
@@ -54205,10 +65164,10 @@ namespace GW
 							} break;
 							default:
 							{
-								DebugPrint(2, "Create callback lambda - unknown event recieved\n");
+								DebugPrint(2, "Create callback lambda - unknown event received\n");
 							} break;
-						} // end switch (windowEvent)
-				});
+							} // end switch (windowEvent)
+					});
 				// register event listener with GWindow's event generator
 				DebugPrint(2, "Create - register event listener\n");
 				if (-m_gWindow.Register(m_gEventListener))
@@ -54267,7 +65226,7 @@ namespace GW
 					DebugPrint(2, "UpdateSurface - surface invalid; return\n\n");
 					return GReturn::PREMATURE_DEALLOCATION;
 				}
-				
+
 				// validate arguments
 				DebugPrint(2, "UpdateSurface - validate args\n");
 				// ensure valid pixel array was passed
@@ -54356,7 +65315,7 @@ namespace GW
 				DebugPrint(2, "UpdateSurfaceSubset - args valid\n");
 
 				// return immediately if subset is completely outside surface
-				if (   _destX >= static_cast<int>(bitmapWidth)
+				if (_destX >= static_cast<int>(bitmapWidth)
 					|| _destX + _rowWidth < 0
 					|| _destY >= static_cast<int>(bitmapHeight)
 					|| _destY + _numRows < 0)
@@ -54466,27 +65425,27 @@ namespace GW
 				}
 				// separate flags into sections and test each section
 				const unsigned int bitmaskAlignX =
-					  GW::GRAPHICS::GRasterUpdateFlags::ALIGN_X_LEFT
+					GW::GRAPHICS::GRasterUpdateFlags::ALIGN_X_LEFT
 					| GW::GRAPHICS::GRasterUpdateFlags::ALIGN_X_CENTER
 					| GW::GRAPHICS::GRasterUpdateFlags::ALIGN_X_RIGHT;
 				const unsigned int bitmaskAlignY =
-					  GW::GRAPHICS::GRasterUpdateFlags::ALIGN_Y_TOP
+					GW::GRAPHICS::GRasterUpdateFlags::ALIGN_Y_TOP
 					| GW::GRAPHICS::GRasterUpdateFlags::ALIGN_Y_CENTER
 					| GW::GRAPHICS::GRasterUpdateFlags::ALIGN_Y_BOTTOM;
 				const unsigned int bitmaskUpscale =
-					  GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_2X
+					GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_2X
 					| GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_3X
 					| GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_4X
 					| GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_8X
 					| GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_16X
 					| GW::GRAPHICS::GRasterUpdateFlags::STRETCH_TO_FIT;
 				const unsigned int bitmaskInterpolate =
-					  GW::GRAPHICS::GRasterUpdateFlags::INTERPOLATE_NEAREST
+					GW::GRAPHICS::GRasterUpdateFlags::INTERPOLATE_NEAREST
 					| GW::GRAPHICS::GRasterUpdateFlags::INTERPOLATE_BILINEAR;
 				unsigned int testFlags = 0;
 				// validate x alignment flags
 				testFlags = _drawOptionFlags & bitmaskAlignX;
-				if (( IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_X_LEFT)
+				if ((IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_X_LEFT)
 					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_X_CENTER)
 					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_X_RIGHT)
 					) > 1)
@@ -54496,7 +65455,7 @@ namespace GW
 				}
 				// validate y alignment flags
 				testFlags = _drawOptionFlags & bitmaskAlignY;
-				if (( IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_Y_TOP)
+				if ((IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_Y_TOP)
 					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_Y_CENTER)
 					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_Y_BOTTOM)
 					) > 1)
@@ -54506,7 +65465,7 @@ namespace GW
 				}
 				// validate upscaling flags
 				testFlags = _drawOptionFlags & bitmaskUpscale;
-				if ((  IsolateBit(testFlags, UpdateFlagBitPosition::BIT_UPSCALE_2X)
+				if ((IsolateBit(testFlags, UpdateFlagBitPosition::BIT_UPSCALE_2X)
 					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_UPSCALE_3X)
 					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_UPSCALE_4X)
 					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_UPSCALE_8X)
@@ -54519,7 +65478,7 @@ namespace GW
 				}
 				// validate interpolation flags
 				testFlags = _drawOptionFlags & bitmaskInterpolate;
-				if (( IsolateBit(testFlags, UpdateFlagBitPosition::BIT_INTERPOLATE_NEAREST)
+				if ((IsolateBit(testFlags, UpdateFlagBitPosition::BIT_INTERPOLATE_NEAREST)
 					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_INTERPOLATE_BILINEAR)
 					) > 1)
 				{
@@ -54547,34 +65506,34 @@ namespace GW
 				testFlags = _drawOptionFlags & bitmaskUpscale;
 				switch (testFlags)
 				{
-					case GW::GRAPHICS::UPSCALE_2X:
-						data.upscaledDataWidth = data.rawDataWidth << 1;
-						data.upscaledDataHeight = data.rawDataHeight << 1;
-						break;
-					case GW::GRAPHICS::UPSCALE_3X:
-						data.upscaledDataWidth = data.rawDataWidth * 3;
-						data.upscaledDataHeight = data.rawDataHeight * 3;
-						break;
-					case GW::GRAPHICS::UPSCALE_4X:
-						data.upscaledDataWidth = data.rawDataWidth << 2;
-						data.upscaledDataHeight = data.rawDataHeight << 2;
-						break;
-					case GW::GRAPHICS::UPSCALE_8X:
-						data.upscaledDataWidth = data.rawDataWidth << 3;
-						data.upscaledDataHeight = data.rawDataHeight << 3;
-						break;
-					case GW::GRAPHICS::UPSCALE_16X:
-						data.upscaledDataWidth = data.rawDataWidth << 4;
-						data.upscaledDataHeight = data.rawDataHeight << 4;
-						break;
-					case GW::GRAPHICS::STRETCH_TO_FIT:
-						data.upscaledDataWidth = bitmapWidth;
-						data.upscaledDataHeight = bitmapHeight;
-						break;
-					default:
-						data.upscaledDataWidth = data.rawDataWidth;
-						data.upscaledDataHeight = data.rawDataHeight;
-						break;
+				case GW::GRAPHICS::UPSCALE_2X:
+					data.upscaledDataWidth = data.rawDataWidth << 1;
+					data.upscaledDataHeight = data.rawDataHeight << 1;
+					break;
+				case GW::GRAPHICS::UPSCALE_3X:
+					data.upscaledDataWidth = data.rawDataWidth * 3;
+					data.upscaledDataHeight = data.rawDataHeight * 3;
+					break;
+				case GW::GRAPHICS::UPSCALE_4X:
+					data.upscaledDataWidth = data.rawDataWidth << 2;
+					data.upscaledDataHeight = data.rawDataHeight << 2;
+					break;
+				case GW::GRAPHICS::UPSCALE_8X:
+					data.upscaledDataWidth = data.rawDataWidth << 3;
+					data.upscaledDataHeight = data.rawDataHeight << 3;
+					break;
+				case GW::GRAPHICS::UPSCALE_16X:
+					data.upscaledDataWidth = data.rawDataWidth << 4;
+					data.upscaledDataHeight = data.rawDataHeight << 4;
+					break;
+				case GW::GRAPHICS::STRETCH_TO_FIT:
+					data.upscaledDataWidth = bitmapWidth;
+					data.upscaledDataHeight = bitmapHeight;
+					break;
+				default:
+					data.upscaledDataWidth = data.rawDataWidth;
+					data.upscaledDataHeight = data.rawDataHeight;
+					break;
 				}
 
 				// calculate pixel coordinate scaling ratios
@@ -54587,16 +65546,16 @@ namespace GW
 				testFlags = _drawOptionFlags & bitmaskAlignX;
 				switch (testFlags)
 				{
-					case GW::GRAPHICS::ALIGN_X_LEFT:
-						data.offsetX = 0;
-						break;
-					case GW::GRAPHICS::ALIGN_X_RIGHT:
-						data.offsetX = static_cast<int>(bitmapWidth) - static_cast<int>(data.upscaledDataWidth);
-						break;
-					case GW::GRAPHICS::ALIGN_X_CENTER:
-					default:
-						data.offsetX = (static_cast<int>(bitmapWidth) - static_cast<int>(data.upscaledDataWidth)) >> 1;
-						break;
+				case GW::GRAPHICS::ALIGN_X_LEFT:
+					data.offsetX = 0;
+					break;
+				case GW::GRAPHICS::ALIGN_X_RIGHT:
+					data.offsetX = static_cast<int>(bitmapWidth) - static_cast<int>(data.upscaledDataWidth);
+					break;
+				case GW::GRAPHICS::ALIGN_X_CENTER:
+				default:
+					data.offsetX = (static_cast<int>(bitmapWidth) - static_cast<int>(data.upscaledDataWidth)) >> 1;
+					break;
 				}
 
 				// determine Y alignment
@@ -54604,16 +65563,16 @@ namespace GW
 				testFlags = _drawOptionFlags & bitmaskAlignY;
 				switch (testFlags)
 				{
-					case GW::GRAPHICS::ALIGN_Y_TOP:
-						data.offsetY = 0;
-						break;
-					case GW::GRAPHICS::ALIGN_Y_BOTTOM:
-						data.offsetY = static_cast<int>(bitmapHeight) - static_cast<int>(data.upscaledDataHeight);
-						break;
-					case GW::GRAPHICS::ALIGN_Y_CENTER:
-					default:
-						data.offsetY = (static_cast<int>(bitmapHeight) - static_cast<int>(data.upscaledDataHeight)) >> 1;
-						break;
+				case GW::GRAPHICS::ALIGN_Y_TOP:
+					data.offsetY = 0;
+					break;
+				case GW::GRAPHICS::ALIGN_Y_BOTTOM:
+					data.offsetY = static_cast<int>(bitmapHeight) - static_cast<int>(data.upscaledDataHeight);
+					break;
+				case GW::GRAPHICS::ALIGN_Y_CENTER:
+				default:
+					data.offsetY = (static_cast<int>(bitmapHeight) - static_cast<int>(data.upscaledDataHeight)) >> 1;
+					break;
 				}
 
 				// lock self and back buffer to prevent read/write conflicts
@@ -54881,7 +65840,9 @@ namespace GW
 
 
 #elif defined(_WIN32)
-	
+	#include <winapifamily.h>
+	#if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+		
 
 
 
@@ -55586,7 +66547,7 @@ namespace GW
 							} break;
 							default:
 							{
-								DebugPrint(2, "Create callback lambda - unknown event recieved\n");
+								DebugPrint(2, "Create callback lambda - unknown event received\n");
 							} break;
 						} // end switch (windowEvent)
 				});
@@ -56049,7 +67010,7 @@ namespace GW
 					if (G_FAIL(convergeResult))
 					{
 						DebugPrint(2, "SmartUpdateSurface - converge failed, attempt to unlock back buffer for write\n");
-						if (+m_backBuffer.UnlockSyncWrite())
+						if (+m_backBuffer.UnlockSyncWrite()) // Why isn't the GRasterSurface being unlocked here too? 
 						{
 							DebugPrint(2, "SmartUpdateSurface - unlocked back buffer for write; return\n\n");
 							return convergeResult;
@@ -56062,6 +67023,9 @@ namespace GW
 					m_backBuffer.frameNum = ++m_frameCount;
 					// unlock and return
 					DebugPrint(2, "SmartUpdateSurface - unlock and return\n");
+
+
+
 					if (+m_backBuffer.UnlockSyncWrite()
 						&& +UnlockSyncWrite())
 					{
@@ -56275,6 +67239,1275 @@ namespace GW
 #endif
 
 
+	#elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+		
+
+
+
+
+
+
+
+#include <d3dcompiler.h>
+#include <stdlib.h>
+#include <cstring>
+#include <iostream>
+#include <assert.h>
+
+#include <Windows.h>
+#include <d3d11_3.h>
+#include <wrl/client.h>
+
+
+//#define GRASTERSURFACE_DEBUG_WIN32_VERBOSE_NEW					// uncomment this line to override the "new" keyword with a macro that stores additional data to track down memory leaks more easily (WIN32 Debug only)
+//#define GRASTERSURFACE_DEBUG_WIN32_SERIALIZE_SMARTUPDATE_COPY		// uncomment this line to disable multithreading in SmartUpdateSurface for debugging
+//#define GRASTERSURFACE_DEBUG_WIN32_ASSERTS						// uncomment this line to enable debug asserts
+//#define GRASTERSURFACE_DEBUG_WIN32_PRINTS							// uncomment this line to enable debug messages to be printed to the console
+//#define GRASTERSURFACE_DEBUG_WIN32_PRINT_PRIORITY_LEVEL 0			// use this to set the priority level of debug messages to print (lower number = higher priority, any priority levels greater than this will be ignored)
+
+#if defined(_WIN32) && !defined(NDEBUG) && defined(GRASTERSURFACE_DEBUG_WIN32_VERBOSE_NEW)
+#define new new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+
+
+namespace GW
+{
+	namespace I
+	{
+		class GRasterSurfaceImplementation : public virtual GRasterSurfaceInterface,
+			protected GEventResponderImplementation
+		{
+		private:
+
+#pragma region DEFINES
+
+			typedef unsigned int		Color; // XRGB quadruple
+			typedef unsigned char		ColorChannel; // single value from a Color (X, R, G, or B)
+
+#pragma endregion DEFINES
+#pragma region ENUMS_STRUCTS_AND_CLASSES
+
+			// GRasterUpdateFlags bit positions for left/right shifting
+			enum UpdateFlagBitPosition
+			{
+				BIT_ALIGN_X_LEFT = 0,
+				BIT_ALIGN_X_CENTER,
+				BIT_ALIGN_X_RIGHT,
+				BIT_ALIGN_Y_TOP,
+				BIT_ALIGN_Y_CENTER,
+				BIT_ALIGN_Y_BOTTOM,
+				BIT_UPSCALE_2X,
+				BIT_UPSCALE_3X,
+				BIT_UPSCALE_4X,
+				BIT_UPSCALE_8X,
+				BIT_UPSCALE_16X,
+				BIT_STRETCH_TO_FIT,
+				BIT_INTERPOLATE_NEAREST,
+				BIT_INTERPOLATE_BILINEAR,
+			};
+
+			// flags indicating the active state of the surface
+			enum class SurfaceState : int
+			{
+				INVALID = -1, // GWindow has been destroyed and surface cannot work properly
+				INACTIVE = 0, // surface is not active and will not draw
+				ACTIVE = 1, // surface is active and can draw
+			};
+
+			// struct containing variables needed by SmartUpdateSurface
+			struct SmartUpdateData
+			{
+				const Color*			inputColors = nullptr;			// pointer to input colors to use for update
+				unsigned int			bitmapWidth = 0;				// local copy of bitmap width since it could be altered during execution
+				unsigned int			bitmapHeight = 0;				// local copy of bitmap height, since it could be altered during execution
+				unsigned int			rawDataWidth = 0;				// width of raw data passed to function
+				unsigned int			rawDataHeight = 0;				// height of raw data passed to function
+				unsigned int			upscaledDataWidth = 0;			// width of data after upscaling
+				unsigned int			upscaledDataHeight = 0;			// height of data after upscaling
+				int						offsetX = 0;					// horizontal offset of processed data
+				int						offsetY = 0;					// vertical offset of processed data
+				float					coordScaleRatioX = 1.0f;		// horizontal pixel coordinate scaling ratio
+				float					coordScaleRatioY = 1.0f;		// vertical pixel coordinate scaling ratio
+			};
+
+#pragma endregion ENUMS_STRUCTS_AND_CLASSES
+#pragma region VARIABLES
+
+			const char* vertexShaderSource = R"(
+				struct VERTEX
+				{
+				    float2 pos : POSITION;
+				    float2 uv : TEXCOORD;
+				};
+
+				struct VERTEX_OUT
+				{
+				    float4 pos : SV_POSITION;
+				    float2 uv : TEXCOORD;
+				};
+
+				VERTEX_OUT main(VERTEX inputVertex)
+				{
+					VERTEX_OUT output;
+					output.pos = float4(inputVertex.pos, 0.0f, 1.0f);
+					output.uv = inputVertex.uv;
+					return output;
+				}
+				)";
+			// Simple Pixel Shader
+			const char* pixelShaderSource = R"(
+				Texture2D color : register(t0);
+				SamplerState filter : register(s0);
+
+				struct PS_IN
+				{
+					float4 pos : SV_POSITION;
+					float2 uv : TEXCOORD;
+				};
+
+				float4 main(PS_IN input) : SV_TARGET 
+				{	
+					return color.Sample(filter, input.uv); 
+				}
+				)";
+
+			// Gateware types are named as:		gVariableName
+			// Win32 types are named as:		wVariableName
+
+			GW::SYSTEM::GWindow						m_gWindow;											// parent GWindow
+			GW::CORE::GEventResponder				m_gEventListener;									// listener used to subscribe to GWindow events
+			GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE		m_gUniversalWindowHandle = { nullptr, nullptr };	// universal window handle extracted from GWindow
+			GW::SYSTEM::GConcurrent					m_gDrawThread;										// GConcurrent used for swapping buffers and drawing
+			GW::SYSTEM::GConcurrent					m_gSmartUpdateRowProcessThread;						// GConcurrent used for copying data in SmartUpdateSurface
+			GW::CORE::GThreadShared					m_thread;
+
+			HDC										m_wWindowDeviceContext = nullptr;					// window device context extracted from universal window handle
+
+			SurfaceState							m_surfaceState = SurfaceState::INACTIVE;
+			unsigned long long						m_frameCount = 0;
+			Color*									m_bitmapData;										// buffer color data
+			unsigned short							m_bitmapWidth = 0;									// width of surface data, as well as front and back buffers
+			unsigned short							m_bitmapHeight = 0;									// height of surface data, as well as front and back buffers
+			std::atomic_bool						lockChecker;
+
+			GW::GRAPHICS::GDirectX11Surface					m_d3d11Surface;
+			Microsoft::WRL::ComPtr<ID3D11Buffer>			m_d3d11VertBuff;
+			Microsoft::WRL::ComPtr<ID3D11VertexShader>		m_d3d11VertShad;
+			Microsoft::WRL::ComPtr<ID3D11PixelShader>		m_d3d11PixelShad;
+			Microsoft::WRL::ComPtr<ID3D11InputLayout>		m_d3d11VertexLayout;
+			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>m_d3d11ShaderResourceView;
+			Microsoft::WRL::ComPtr<ID3D11SamplerState>		m_d3d11SamplerState;
+			D3D11_MAPPED_SUBRESOURCE						m_d3d11MapSubRes;
+			Microsoft::WRL::ComPtr<ID3D11Texture2D>			m_d3d11Tex2D;
+
+#pragma endregion VARIABLES
+#pragma region PRIVATE_FUNCTIONS
+
+			// Prints a debug message to the console if GRASTERSURFACE_DEBUG_WIN32_PRINTS is defined.
+			/*
+			*	Used to assist with debugging, since multi-threading makes debugging tools harder to use.
+			*	If int arguments are passed, they will be inserted into the output if _msg is a format string.
+			*/
+			static inline void DebugPrint(int _priorityLevel, const char* _msg,
+				long long _intArg0 = 0, long long _intArg1 = 0, long long _intArg2 = 0, long long _intArg3 = 0,
+				long long _intArg4 = 0, long long _intArg5 = 0, long long _intArg6 = 0, long long _intArg7 = 0)
+			{
+#if defined(GRASTERSURFACE_DEBUG_WIN32_PRINTS) && defined(GRASTERSURFACE_DEBUG_WIN32_PRINT_PRIORITY_LEVEL)
+				if (_priorityLevel <= GRASTERSURFACE_DEBUG_WIN32_PRINT_PRIORITY_LEVEL)
+					std::printf(_msg, _intArg0, _intArg1, _intArg2, _intArg3, _intArg4, _intArg5, _intArg6, _intArg7);
+#endif
+			}
+
+			// Calls assert on the passed-in statement if GRASTERSURFACE_DEBUG_WIN32_ASSERTS is defined.
+			static inline void DebugAssert(bool _statement)
+			{
+#if defined(GRASTERSURFACE_DEBUG_LINUX_ASSERTS)
+				assert(_statement);
+#endif
+			}
+
+			// Destroys and recreates bitmap data with new dimensions.
+			/*
+			*	Makes the surface active.
+			*
+			*	retval GReturn::SUCCESS					Completed successfully.
+			*	retval GReturn::PREMATURE_DEALLOCATION	The associated GWindow was deallocated and the surface is now invalid.
+			*	retval GReturn::UNEXPECTED_RESULT		The function entered an area it was not supposed to be able to.
+			*/
+			GReturn ResizeBitmap(unsigned int _width, unsigned int _height)
+			{
+				DebugPrint(1, "\nResizeBitmap\n");
+				if (m_surfaceState == SurfaceState::INVALID)
+				{
+					DebugPrint(2, "ResizeBitmap - surface invalid; return\n\n");
+					return GReturn::PREMATURE_DEALLOCATION;
+				}
+
+				m_bitmapWidth = _width;
+				m_bitmapHeight = _height;
+
+				if (+m_thread.LockSyncWrite()) {
+
+					if (m_bitmapData)
+					{
+						delete[] m_bitmapData;
+						m_bitmapData = nullptr;
+					}
+
+					m_bitmapData = new Color[m_bitmapWidth * m_bitmapHeight];
+
+					m_thread.UnlockSyncWrite();
+				}
+
+				D3D11_TEXTURE2D_DESC desc = { 0 };
+				
+				desc.Width = m_bitmapWidth;
+				desc.Height = m_bitmapHeight;
+				desc.MipLevels = desc.ArraySize = 1;
+				desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+				desc.SampleDesc.Count = 1;
+				desc.Usage = D3D11_USAGE_DYNAMIC;
+				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+				desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+				desc.MiscFlags = 0;
+
+				ID3D11Device* device;
+				m_d3d11Surface.GetDevice((void**)&device);
+
+				Color* tempText = new Color[m_bitmapWidth * m_bitmapHeight];
+				memset(tempText, 0xffc99aff, m_bitmapWidth * m_bitmapHeight);
+
+				D3D11_SUBRESOURCE_DATA initData = { &tempText, sizeof(uint32_t), 0 };
+				HRESULT hr = device->CreateTexture2D(&desc, &initData, m_d3d11Tex2D.ReleaseAndGetAddressOf());
+
+				D3D11_SHADER_RESOURCE_VIEW_DESC SRVdesc = {};
+				SRVdesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+				SRVdesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+				SRVdesc.Texture2D.MipLevels = 1;
+
+				hr = device->CreateShaderResourceView(m_d3d11Tex2D.Get(), &SRVdesc, m_d3d11ShaderResourceView.ReleaseAndGetAddressOf());
+
+				device->Release();
+
+				return GReturn::SUCCESS;
+			}
+
+			// Returns the state of a single bit in a bitfield
+			static inline bool IsolateBit(unsigned int _flags, unsigned short _bit)
+			{
+				return (_flags >> _bit) & 1;
+			}
+
+			// Interpolates linearly between two pixel color values.
+			static inline Color LerpColor(Color _a, Color _b, float _r)
+			{
+				// split pixels into channels
+				ColorChannel a_channels[4] =
+				{
+					static_cast<ColorChannel>((_a & 0x000000FF)),
+					static_cast<ColorChannel>(((_a & 0x0000FF00) >> 8)),
+					static_cast<ColorChannel>(((_a & 0x00FF0000) >> 16)),
+					static_cast<ColorChannel>(((_a & 0xFF000000) >> 24)),
+				};
+				ColorChannel b_channels[4] =
+				{
+					static_cast<ColorChannel>((_b & 0x000000FF)),
+					static_cast<ColorChannel>(((_b & 0x0000FF00) >> 8)),
+					static_cast<ColorChannel>(((_b & 0x00FF0000) >> 16)),
+					static_cast<ColorChannel>(((_b & 0xFF000000) >> 24)),
+				};
+				// interpolate results
+				ColorChannel result[4] =
+				{
+					static_cast<ColorChannel>((G_LERP_PRECISE(a_channels[0], b_channels[0], _r))),
+					static_cast<ColorChannel>((G_LERP_PRECISE(a_channels[1], b_channels[1], _r))),
+					static_cast<ColorChannel>((G_LERP_PRECISE(a_channels[2], b_channels[2], _r))),
+					static_cast<ColorChannel>((G_LERP_PRECISE(a_channels[3], b_channels[3], _r))),
+				};
+				return *(reinterpret_cast<Color*>(result));
+			}
+
+			// Returns color at truncated integer coordinate; Faster.
+			/*
+				_xrgbColors				Array of colors to interpolate within
+				_width					Width of color array
+				_height					Height of color array
+				_u						Horizontal "texel" coordinate
+				_v						Vertical "texel" coordinate
+			*/
+			static inline Color InterpolateColorNearest(const Color* _xrgbColors,
+				unsigned int _width, unsigned int _height, float _u, float _v)
+			{
+				return _xrgbColors[static_cast<unsigned int>(_u) + static_cast<unsigned int>(_v) * _width];
+			}
+
+			// Returns color blended between nearest four pixels; Slower.
+			/*
+				_xrgbColors				Array of colors to interpolate within
+				_width					Width of color array
+				_height					Height of color array
+				_u						Horizontal "texel" coordinate
+				_v						Vertical "texel" coordinate
+			*/
+			static inline Color InterpolateColorBilinear(const Color* _xrgbColors,
+				unsigned int _width, unsigned int _height, float _u, float _v)
+			{
+				// offset coordinates to use pixel corners instead of centers
+				_u -= 0.5f;
+				_u = (_u < 0.0f) ? 0.0f : _u;
+				_v -= 0.5f;
+				_v = (_v < 0.0f) ? 0.0f : _v;
+				// get top-left coordinates
+				unsigned int u0 = static_cast<unsigned int>(_u);
+				unsigned int v0 = static_cast<unsigned int>(_v);
+				// get bottom-right coordinates
+				unsigned int u1 = (u0 < _width - 1) ? u0 + 1 : u0;
+				unsigned int v1 = (v0 < _height - 1) ? v0 + 1 : v0;
+				// calculate interpolation ratios
+				float rx = _u - u0;
+				float ry = _v - v0;
+				// interpolate results
+				return LerpColor(
+					LerpColor(_xrgbColors[u0 + (v0 * _width)], _xrgbColors[u1 + (v0 * _width)], rx),
+					LerpColor(_xrgbColors[u0 + (v1 * _width)], _xrgbColors[u1 + (v1 * _width)], rx),
+					ry);
+			}
+
+			// Iterates over a row of pixels and samples colors with nearest interpolation
+			static void ProcessPixelRowNearest(const void* _unused, Color* _output, unsigned int _y, const void* _data)
+			{
+				DebugPrint(3, "\nProcessPixelRowNearest, row %d\n", _y);
+				DebugAssert(_output != nullptr);
+				// convert user data to correct type
+				DebugAssert(_data != nullptr);
+				const SmartUpdateData data = *(reinterpret_cast<const SmartUpdateData*>(_data));
+				DebugAssert(data.inputColors != nullptr);
+				DebugPrint(4, "ProcessPixelRowNearest, row %d - bitmap width = %d\n", _y, data.bitmapWidth);
+				DebugPrint(4, "ProcessPixelRowNearest, row %d - bitmap height = %d\n", _y, data.bitmapHeight);
+				DebugAssert(data.bitmapWidth > 0);
+				DebugAssert(data.bitmapHeight > 0);
+				DebugAssert(_y >= 0);
+				DebugAssert(_y < data.bitmapHeight);
+				// get y position within rectangular area to draw (should only draw between 0 and upscaled data height)
+				int relativeY = _y - data.offsetY;
+				// skip this row if not in range
+				if (relativeY < 0 || relativeY >= static_cast<int>(data.upscaledDataHeight))
+				{
+					DebugPrint(5, "ProcessPixelRowNearest, row %d - row out of range\n", _y);
+					return;
+				}
+				// init nearest algorithm vars
+				float v = relativeY * data.coordScaleRatioY; // vertical "texel" to sample from in input data
+				DebugPrint(4, "ProcessPixelRowNearest, row %d - v = %d\n", _y, static_cast<unsigned int>(v));
+				DebugAssert(v >= 0);
+				DebugAssert(v < data.bitmapHeight);
+				// get x position within rectangular area to draw (should only draw between 0 and upscaled data width)
+				int relativeX = G_CLAMP_MIN(-data.offsetX, 0);
+				// iterate through pixel row and process pixels
+				for (int x = G_CLAMP_MIN(data.offsetX, 0); x < G_CLAMP_MAX(data.offsetX + static_cast<int>(data.upscaledDataWidth), static_cast<int>(data.bitmapWidth)); ++x, ++relativeX)
+				{
+					float u = relativeX * data.coordScaleRatioX; // horizontal "texel" to sample from in input data
+					DebugAssert(u >= 0);
+					DebugAssert(u < data.bitmapWidth);
+					_output[x] = InterpolateColorNearest(data.inputColors, data.rawDataWidth, data.rawDataHeight, u, v);
+				}
+				DebugPrint(3, "\n");
+			}
+
+			// Iterates over a row of pixels and samples colors with bilinear interpolation
+			static void ProcessPixelRowBilinear(const void* _unused, Color* _output, unsigned int _y, const void* _data)
+			{
+				DebugPrint(3, "\nProcessPixelRowBilinear, row %d\n", _y);
+				DebugAssert(_output != nullptr);
+				// convert user data to correct type
+				DebugAssert(_data != nullptr);
+				SmartUpdateData data = *(const_cast<SmartUpdateData*>(reinterpret_cast<const SmartUpdateData*>(_data)));
+				DebugAssert(data.inputColors != nullptr);
+				DebugPrint(4, "ProcessPixelRowBilinear, row %d - bitmap width = %d\n", _y, data.bitmapWidth);
+				DebugPrint(4, "ProcessPixelRowBilinear, row %d - bitmap height = %d\n", _y, data.bitmapHeight);
+				DebugAssert(data.bitmapWidth > 0);
+				DebugAssert(data.bitmapHeight > 0);
+				DebugAssert(_y >= 0);
+				DebugAssert(_y < data.bitmapHeight);
+				// get y position within rectangular area to draw (should only draw between 0 and upscaled data height)
+				int relativeY = _y - data.offsetY;
+				// skip this row if not in range
+				if (relativeY < 0 || relativeY >= static_cast<int>(data.upscaledDataHeight))
+				{
+					DebugPrint(5, "ProcessPixelRowBilinear, row %d - row out of range\n", _y);
+					return;
+				}
+				// get x position within rectangular area to draw (should only draw between 0 and upscaled data width)
+				int relativeX = G_CLAMP_MIN(-data.offsetX, 0);
+				// init bilinear algorithm vars
+				float v = relativeY * data.coordScaleRatioY; // vertical "texel" to sample from in input data
+				DebugPrint(4, "ProcessPixelRowNearest, row %d - v = %d\n", _y, static_cast<unsigned int>(v));
+				DebugAssert(v >= 0);
+				DebugAssert(v < data.bitmapHeight);
+				// iterate through row and process pixels
+				for (int x = G_CLAMP_MIN(data.offsetX, 0); x < G_CLAMP_MAX(data.offsetX + static_cast<int>(data.upscaledDataWidth), static_cast<int>(data.bitmapWidth)); ++x, ++relativeX)
+				{
+					float u = relativeX * data.coordScaleRatioX; // horizontal "texel" to sample from in input data
+					DebugAssert(u >= 0);
+					DebugAssert(u < data.bitmapWidth);
+					_output[x] = InterpolateColorBilinear(data.inputColors, data.rawDataWidth, data.rawDataHeight, u, v);
+				}
+				DebugPrint(3, "\n");
+			}
+
+			void Cleanup()
+			{
+				DebugPrint(1, "\nCleanup\n");
+				DebugPrint(2, "Cleanup - ensure all locks are released\n");	
+			}
+
+#pragma endregion PRIVATE_FUNCTIONS
+
+		public:
+
+#pragma region CREATE_AND_DESTROY_FUNCTIONS
+
+			~GRasterSurfaceImplementation()
+			{
+				DebugPrint(0, "\nGRasterSurface destructor\n");
+				Cleanup();
+			}
+
+			GReturn Create(GW::SYSTEM::GWindow _gWindow)
+			{
+				DebugPrint(0, "\nCreate\n");
+
+				// validate arguments
+				DebugPrint(2, "Create - validate args\n");
+				// ensure gwindow exists
+				if (_gWindow == nullptr)
+				{
+					DebugPrint(2, "Create - m_gWindow was nullptr; return\n\n");
+					return GW::GReturn::INVALID_ARGUMENT;
+				}
+				DebugPrint(2, "Create - args valid\n");
+
+				// store arguments
+				m_gWindow = _gWindow;
+
+				// create GConcurrent objects (false = no callbacks)
+				DebugPrint(2, "Create - create GConcurrent objects\n");
+				m_gDrawThread.Create(false);
+				m_gSmartUpdateRowProcessThread.Create(false);
+				// create event listener with callback function for GWindow to call
+				GReturn gr = m_gEventListener.Create([&](GW::GEvent _event)
+					{
+						GW::SYSTEM::GWindow::Events windowEvent;
+						GW::SYSTEM::GWindow::EVENT_DATA windowEventData;
+						if (+_event.Read(windowEvent, windowEventData))
+							switch (windowEvent)
+							{
+							case GW::SYSTEM::GWindow::Events::MINIMIZE:
+							{
+								DebugPrint(2, "Create callback lambda - MINIMIZE event received\n");
+								// deactivate raster when minimized to prevent updating while window is not visible
+								m_surfaceState = SurfaceState::INACTIVE;
+							} break;
+							case GW::SYSTEM::GWindow::Events::MAXIMIZE:
+							{
+								DebugPrint(2, "Create callback lambda - MAXIMIZE event received\n");
+								// get client dimensions from window and resize bitmap to fit
+								DebugPrint(2, "Create callback lambda - MAXIMIZE - resize bitmap\n");
+								ResizeBitmap(windowEventData.clientWidth, windowEventData.clientHeight); // makes surface active
+							} break;
+							case GW::SYSTEM::GWindow::Events::RESIZE:
+							{
+								DebugPrint(2, "Create callback lambda - RESIZE event received\n");
+								// get client dimensions from window and resize bitmap to fit
+								DebugPrint(2, "Create callback lambda - RESIZE - resize bitmap\n");
+								if (m_d3d11Surface)
+									ResizeBitmap(windowEventData.width, windowEventData.height); // makes surface active
+							} break;
+							case GW::SYSTEM::GWindow::Events::DESTROY:
+							{
+								DebugPrint(2, "Create callback lambda - DESTROY event received\n");
+								m_surfaceState = SurfaceState::INVALID;
+
+								Cleanup();
+							} break;
+							default:
+							{
+								DebugPrint(2, "Create callback lambda - unknown event received\n");
+							} break;
+							} // end switch (windowEvent)
+					});
+				// register event listener with GWindow's event generator
+				DebugPrint(2, "Create - register event listener\n");
+				if (-m_gWindow.Register(m_gEventListener))
+				{
+					DebugPrint(2, "Create - registering event listener failed; return\n\n");
+					Cleanup();
+					return GReturn::INVALID_ARGUMENT;
+				}
+
+				ID3D11Device* device;
+
+				if (G_FAIL(gr = m_d3d11Surface.Create(m_gWindow, 0)))
+					return gr;
+				m_d3d11Surface.GetDevice((void**)&device);
+				//m_d3d11Surface.GetImmediateContext((void**)&m_d3d11Context);
+				//m_d3d11Surface.GetSwapchain((void**)&m_d3d11Swapchain);
+				//m_d3d11Surface.GetRenderTargetView((void**)&m_d3d11rtv);
+
+				float verts[] = {
+					-1,  1, 0, 0,
+					 1,  1, 1, 0,
+					-1, -1, 0, 1,
+					 1, -1, 1, 1,
+				};
+				D3D11_SUBRESOURCE_DATA bData = { verts, 0, 0 };
+				CD3D11_BUFFER_DESC bDesc(sizeof(verts), D3D11_BIND_VERTEX_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+				//bDesc.CPUAccessFlags = UINT(D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ);
+				device->CreateBuffer(&bDesc, &bData, m_d3d11VertBuff.GetAddressOf());
+
+				// Create Vertex Shader
+				UINT compilerFlags = D3DCOMPILE_ENABLE_STRICTNESS;
+				Microsoft::WRL::ComPtr<ID3DBlob> vsBlob, errors;
+				if (SUCCEEDED(D3DCompile(vertexShaderSource, strlen(vertexShaderSource),
+					nullptr, nullptr, nullptr, "main", "vs_4_0", compilerFlags, 0,
+					vsBlob.GetAddressOf(), errors.GetAddressOf())))
+				{
+					device->CreateVertexShader(vsBlob->GetBufferPointer(),
+						vsBlob->GetBufferSize(), nullptr, m_d3d11VertShad.GetAddressOf());
+				}
+				else
+					std::cout << (char*)errors->GetBufferPointer() << std::endl;
+				// Create Pixel Shader
+				Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
+				errors.Reset();
+				if (SUCCEEDED(D3DCompile(pixelShaderSource, strlen(pixelShaderSource),
+					nullptr, nullptr, nullptr, "main", "ps_4_0", compilerFlags, 0,
+					psBlob.GetAddressOf(), errors.GetAddressOf())))
+				{
+					device->CreatePixelShader(psBlob->GetBufferPointer(),
+						psBlob->GetBufferSize(), nullptr, m_d3d11PixelShad.GetAddressOf());
+				}
+				else
+					std::cout << (char*)errors->GetBufferPointer() << std::endl;
+				// Create Input Layout
+				D3D11_INPUT_ELEMENT_DESC format[] = {
+					{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0,	D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+					{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,	D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+				};
+				device->CreateInputLayout(format, ARRAYSIZE(format),
+					vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
+					m_d3d11VertexLayout.GetAddressOf());
+
+				CD3D11_SAMPLER_DESC samp_desc = CD3D11_SAMPLER_DESC(CD3D11_DEFAULT());
+				device->CreateSamplerState(&samp_desc, m_d3d11SamplerState.GetAddressOf());
+
+				// free temporary handle
+				device->Release();
+
+				// Create the thread for locking and unlocking
+				m_thread.Create();
+
+				unsigned int newWidth, newHeight;
+				if (-m_gWindow.GetClientWidth(newWidth) || -m_gWindow.GetClientHeight(newHeight))
+				{
+					Cleanup();
+					return GReturn::INVALID_ARGUMENT;
+				}
+				DebugPrint(2, "Create - resize bitmap to client dimensions of window\n");
+				ResizeBitmap(newWidth, newHeight);
+
+				
+				DebugPrint(2, "Create - successful; return\n\n");
+				return gr;
+			}
+
+#pragma endregion CREATE_AND_DESTROY_FUNCTIONS
+#pragma region UPDATE_FUNCTIONS
+
+			GReturn Clear(Color _xrgbColor) override
+			{
+				DebugPrint(0, "\nClear\n");
+				if (m_surfaceState == SurfaceState::INVALID)
+				{
+					DebugPrint(2, "Clear - surface invalid; return\n\n");
+					return GReturn::PREMATURE_DEALLOCATION;
+				}
+
+				DebugPrint(2, "Clear - attempt to lock back buffer for write\n");
+				if (+m_thread.LockSyncWrite())
+				{
+					DebugPrint(2, "Clear - locked back buffer for write\n");
+					// store bitmap dimensions locally, since they could change
+					unsigned int bitmapWidth = m_bitmapWidth;
+					unsigned int bitmapHeight = m_bitmapHeight;
+					// fill back buffer with passed color
+					DebugPrint(2, "Clear - fill back buffer with color\n");
+
+					memset(m_bitmapData, _xrgbColor, static_cast<rsize_t>((bitmapWidth * bitmapHeight) * sizeof(Color)));
+					// unlock and return
+					DebugPrint(2, "Clear - attempt to unlock back buffer for write\n");
+					if (+m_thread.UnlockSyncWrite())
+					{
+						DebugPrint(2, "Clear - unlocked back buffer for write; successful; return\n\n");
+						return GReturn::SUCCESS;
+					}
+					DebugPrint(2, "Clear - unexpected result; return\n\n");
+					return GReturn::UNEXPECTED_RESULT; // should never reach here
+				}
+				DebugPrint(2, "Clear - unexpected result; return\n\n");
+				return GReturn::UNEXPECTED_RESULT; // should never reach here
+			}
+
+			GReturn UpdateSurface(const Color* _xrgbPixels, unsigned int _numPixels) override
+			{
+				DebugPrint(0, "\nUpdateSurface\n");
+				if (m_surfaceState == SurfaceState::INVALID)
+				{
+					DebugPrint(2, "UpdateSurface - surface invalid; return\n\n");
+					return GReturn::PREMATURE_DEALLOCATION;
+				}
+
+				// validate arguments
+				DebugPrint(2, "UpdateSurface - validate args\n");
+				// ensure valid pixel array was passed
+				if (_xrgbPixels == nullptr)
+				{
+					DebugPrint(2, "UpdateSurface - _xrgbPixels was nullptr; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// ensure pixel count is nonzero
+				if (_numPixels < 1)
+				{
+					DebugPrint(2, "UpdateSurface - _numPixels was < 1; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// ensure pixel count does not exceed surface pixel count
+				if (_numPixels > static_cast<unsigned int>(m_bitmapWidth * m_bitmapHeight))
+				{
+					DebugPrint(2, "UpdateSurface - _numPixels was > surface's pixel count; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				DebugPrint(2, "UpdateSurface - args valid\n");
+
+				// lock self and back buffer to prevent read/write conflicts
+				DebugPrint(2, "UpdateSurface - attempt to lock self, back buffer for write\n");
+				if (+m_thread.LockSyncWrite())
+				{
+					DebugPrint(2, "UpdateSurface - locked self, back buffer for write\n");
+					// BLIT pixel data to back buffer
+					DebugPrint(2, "UpdateSurface - BLIT input pixels to back buffer\n");
+					memcpy_s(m_bitmapData, static_cast<rsize_t>(_numPixels * sizeof(Color)),
+						_xrgbPixels, static_cast<rsize_t>(_numPixels * sizeof(Color)));
+					// unlock and return
+					DebugPrint(2, "UpdateSurface - unlock and return\n");
+					if (+m_thread.UnlockSyncWrite())
+					{
+						DebugPrint(2, "UpdateSurface - unlocked self, back buffer for write; successful; return\n\n");
+						return GReturn::SUCCESS;
+					}
+				}
+				DebugPrint(2, "UpdateSurface - unexpected result; return\n\n");
+				return GReturn::UNEXPECTED_RESULT; // should never reach here
+			}
+
+			GReturn UpdateSurfaceSubset(const Color* _xrgbPixels, unsigned short _numRows, unsigned short _rowWidth, unsigned short _rowStride, int _destX, int _destY) override
+			{
+				DebugPrint(0, "\nUpdateSurfaceSubset\n");
+				if (m_surfaceState == SurfaceState::INVALID)
+				{
+					DebugPrint(2, "UpdateSurfaceSubset - surface invalid; return\n\n");
+					return GReturn::PREMATURE_DEALLOCATION;
+				}
+
+				// store dimensions locally, since they could potentially change during execution
+				DebugPrint(2, "UpdateSurfaceSubset - store bitmap dimensions\n");
+				unsigned short bitmapWidth = m_bitmapWidth;
+				unsigned short bitmapHeight = m_bitmapHeight;
+				// validate arguments
+				DebugPrint(2, "UpdateSurfaceSubset - validate args\n");
+				// ensure valid pixel array was passed
+				if (_xrgbPixels == nullptr)
+				{
+					DebugPrint(2, "UpdateSurfaceSubset - _xrgbPixels was nullpt; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// ensure row count is nonzero
+				if (_numRows < 1)
+				{
+					DebugPrint(2, "UpdateSurfaceSubset - _numRows was < 1; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// ensure row width is nonzero
+				if (_rowWidth < 1)
+				{
+					DebugPrint(2, "UpdateSurfaceSubset - _numRows was < 1; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// ensure row stride is >= row width, if provided
+				if (_rowStride > 0 && _rowStride < _rowWidth)
+				{
+					DebugPrint(2, "UpdateSurfaceSubset - _rowStride was < _rowWidth; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				DebugPrint(2, "UpdateSurfaceSubset - args valid\n");
+
+				// return immediately if subset is completely outside surface
+				if (_destX >= static_cast<int>(bitmapWidth)
+					|| _destX + _rowWidth < 0
+					|| _destY >= static_cast<int>(bitmapHeight)
+					|| _destY + _numRows < 0)
+				{
+					DebugPrint(2, "UpdateSurfaceSubset - subset was outside surface; return\n\n");
+					return GReturn::REDUNDANT;
+				}
+
+				// get row stride
+				DebugPrint(2, "UpdateSurfaceSubset - get row stride\n");
+				if (_rowStride == 0) _rowStride = _rowWidth;
+				// clip subset to edges of surface
+				//   left side
+				DebugPrint(2, "UpdateSurfaceSubset - clip left side\n");
+				if (_destX < 0)
+				{
+					// move starting location in source data right and shorten rows
+					_xrgbPixels += -_destX;
+					_rowWidth += _destX; // add, because coord is negative
+					// clamp coord to surface edge
+					_destX = 0;
+				}
+				//   right side
+				DebugPrint(2, "UpdateSurfaceSubset - clip right side\n");
+				if (_destX + _rowWidth > bitmapWidth)
+				{
+					// shorten rows
+					_rowWidth -= (_destX + _rowWidth - bitmapWidth);
+				}
+				//   top side
+				DebugPrint(2, "UpdateSurfaceSubset - clip top side\n");
+				if (_destY < 0)
+				{
+					// move starting location in source data down and reduce row count
+					_xrgbPixels += -_destY * _rowStride;
+					_numRows += _destY; // add, because coord is negative
+					// clamp coord to surface edge
+					_destY = 0;
+				}
+				//   bottom side
+				DebugPrint(2, "UpdateSurfaceSubset - clip bottom side\n");
+				if (_destY + _numRows > bitmapHeight)
+				{
+					// reduce row count
+					_numRows -= (_destY + _numRows - bitmapHeight);
+				}
+				// calculate starting index from destination x/y coords
+				DebugPrint(2, "UpdateSurfaceSubset - calculate starting index\n");
+				unsigned int startIndex = _destX + (_destY * bitmapWidth);
+
+				// lock self and back buffer to prevent read/write conflicts
+				DebugPrint(2, "UpdateSurfaceSubset - attempt to lock self, back buffer for write\n");
+				if (+m_thread.LockSyncWrite())
+				{
+					DebugPrint(2, "UpdateSurfaceSubset - locked self, back buffer for write\n");
+					// calculate end index
+					DebugPrint(2, "UpdateSurfaceSubset - calculate end index\n");
+					unsigned int endIndex = startIndex + (bitmapWidth * (_numRows - 1)) + (_rowWidth - 1);
+					// BLIT rows of subset block to back buffer
+					DebugPrint(2, "UpdateSurfaceSubset - BLIT data to back buffer\n");
+					for (; startIndex < endIndex; startIndex += bitmapWidth, _xrgbPixels += _rowStride)
+						memcpy_s(&m_bitmapData[startIndex], static_cast<rsize_t>(_rowWidth * sizeof(Color)),
+							_xrgbPixels, static_cast<rsize_t>(_rowWidth * sizeof(Color)));
+					// unlock and return
+					DebugPrint(2, "UpdateSurfaceSubset - unlock and return\n");
+					if (+m_thread.UnlockSyncWrite())
+					{
+						DebugPrint(2, "UpdateSurfaceSubset - unlocked self, back buffer for write; successful; return\n\n");
+						return GReturn::SUCCESS;
+					}
+				}
+				DebugPrint(2, "UpdateSurfaceSubset - unexpected result; return\n\n");
+				return GReturn::UNEXPECTED_RESULT; // should never reach here
+			}
+
+			GReturn SmartUpdateSurface(const Color* _xrgbPixels, unsigned int _numPixels, unsigned short _rowWidth, unsigned int _drawOptionFlags) override
+			{
+				DebugPrint(0, "\nSmartUpdateSurface\n");
+				if (m_surfaceState == SurfaceState::INVALID)
+				{
+					DebugPrint(2, "SmartUpdateSurface - surface invalid; return\n\n");
+					return GReturn::PREMATURE_DEALLOCATION;
+				}
+
+				// validate arguments
+				DebugPrint(2, "SmartUpdateSurface - validate args\n");
+				// ensure valid pixel array was passed
+				if (_xrgbPixels == nullptr)
+				{
+					DebugPrint(2, "SmartUpdateSurface - _xrgbPixels was nullptr; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// ensure pixel count is nonzero
+				if (_numPixels < 1)
+				{
+					DebugPrint(2, "SmartUpdateSurface - _numPixels was < 1; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// ensure row width is nonzero
+				if (_rowWidth < 1)
+				{
+					DebugPrint(2, "SmartUpdateSurface - _rowWidth was < 1; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// separate flags into sections and test each section
+				const unsigned int bitmaskAlignX =
+					GW::GRAPHICS::GRasterUpdateFlags::ALIGN_X_LEFT
+					| GW::GRAPHICS::GRasterUpdateFlags::ALIGN_X_CENTER
+					| GW::GRAPHICS::GRasterUpdateFlags::ALIGN_X_RIGHT;
+				const unsigned int bitmaskAlignY =
+					GW::GRAPHICS::GRasterUpdateFlags::ALIGN_Y_TOP
+					| GW::GRAPHICS::GRasterUpdateFlags::ALIGN_Y_CENTER
+					| GW::GRAPHICS::GRasterUpdateFlags::ALIGN_Y_BOTTOM;
+				const unsigned int bitmaskUpscale =
+					GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_2X
+					| GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_3X
+					| GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_4X
+					| GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_8X
+					| GW::GRAPHICS::GRasterUpdateFlags::UPSCALE_16X
+					| GW::GRAPHICS::GRasterUpdateFlags::STRETCH_TO_FIT;
+				const unsigned int bitmaskInterpolate =
+					GW::GRAPHICS::GRasterUpdateFlags::INTERPOLATE_NEAREST
+					| GW::GRAPHICS::GRasterUpdateFlags::INTERPOLATE_BILINEAR;
+				unsigned int testFlags = 0;
+				// validate x alignment flags
+				testFlags = _drawOptionFlags & bitmaskAlignX;
+				if ((IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_X_LEFT)
+					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_X_CENTER)
+					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_X_RIGHT)
+					) > 1)
+				{
+					DebugPrint(2, "SmartUpdateSurface - _drawOptionFlags contains conflicting x alignment flags; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// validate y alignment flags
+				testFlags = _drawOptionFlags & bitmaskAlignY;
+				if ((IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_Y_TOP)
+					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_Y_CENTER)
+					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_ALIGN_Y_BOTTOM)
+					) > 1)
+				{
+					DebugPrint(2, "SmartUpdateSurface - _drawOptionFlags contains conflicting y alignment flags; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// validate upscaling flags
+				testFlags = _drawOptionFlags & bitmaskUpscale;
+				if ((IsolateBit(testFlags, UpdateFlagBitPosition::BIT_UPSCALE_2X)
+					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_UPSCALE_3X)
+					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_UPSCALE_4X)
+					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_UPSCALE_8X)
+					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_UPSCALE_16X)
+					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_STRETCH_TO_FIT)
+					) > 1)
+				{
+					DebugPrint(2, "SmartUpdateSurface - _drawOptionFlags contains conflicting upscaling flags; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// validate interpolation flags
+				testFlags = _drawOptionFlags & bitmaskInterpolate;
+				if ((IsolateBit(testFlags, UpdateFlagBitPosition::BIT_INTERPOLATE_NEAREST)
+					+ IsolateBit(testFlags, UpdateFlagBitPosition::BIT_INTERPOLATE_BILINEAR)
+					) > 1)
+				{
+					DebugPrint(2, "SmartUpdateSurface - _drawOptionFlags contains conflicting interpolation flags; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				DebugPrint(2, "SmartUpdateSurface - args valid\n");
+				// if arguments are valid, continue
+
+				// store surface dimensions and border color locally to avoid needing to read data more than once
+				unsigned int bitmapWidth = m_bitmapWidth;
+				unsigned int bitmapHeight = m_bitmapHeight;
+
+				// create struct to store data to use during processing
+				SmartUpdateData data = {};
+				// store color array and metadata
+				data.inputColors = _xrgbPixels;
+				data.bitmapWidth = bitmapWidth;
+				data.bitmapHeight = bitmapHeight;
+				data.rawDataWidth = _rowWidth;
+				data.rawDataHeight = _numPixels / _rowWidth;
+				// determine data dimensions after processing
+				DebugPrint(2, "SmartUpdateSurface - calculate upscaled dimensions\n");
+				testFlags = _drawOptionFlags & bitmaskUpscale;
+				switch (testFlags)
+				{
+				case GW::GRAPHICS::UPSCALE_2X:
+					data.upscaledDataWidth = data.rawDataWidth << 1;
+					data.upscaledDataHeight = data.rawDataHeight << 1;
+					break;
+				case GW::GRAPHICS::UPSCALE_3X:
+					data.upscaledDataWidth = data.rawDataWidth * 3;
+					data.upscaledDataHeight = data.rawDataHeight * 3;
+					break;
+				case GW::GRAPHICS::UPSCALE_4X:
+					data.upscaledDataWidth = data.rawDataWidth << 2;
+					data.upscaledDataHeight = data.rawDataHeight << 2;
+					break;
+				case GW::GRAPHICS::UPSCALE_8X:
+					data.upscaledDataWidth = data.rawDataWidth << 3;
+					data.upscaledDataHeight = data.rawDataHeight << 3;
+					break;
+				case GW::GRAPHICS::UPSCALE_16X:
+					data.upscaledDataWidth = data.rawDataWidth << 4;
+					data.upscaledDataHeight = data.rawDataHeight << 4;
+					break;
+				case GW::GRAPHICS::STRETCH_TO_FIT:
+					data.upscaledDataWidth = bitmapWidth;
+					data.upscaledDataHeight = bitmapHeight;
+					break;
+				default:
+					data.upscaledDataWidth = data.rawDataWidth;
+					data.upscaledDataHeight = data.rawDataHeight;
+					break;
+				}
+
+				// calculate pixel coordinate scaling ratios
+				DebugPrint(2, "SmartUpdateSurface - calculate coordinate scaling ratios\n");
+				data.coordScaleRatioX = data.rawDataWidth / static_cast<float>(data.upscaledDataWidth);
+				data.coordScaleRatioY = data.rawDataHeight / static_cast<float>(data.upscaledDataHeight);
+
+				// determine X alignment
+				DebugPrint(2, "SmartUpdateSurface - determine x alignment\n");
+				testFlags = _drawOptionFlags & bitmaskAlignX;
+				switch (testFlags)
+				{
+				case GW::GRAPHICS::ALIGN_X_LEFT:
+					data.offsetX = 0;
+					break;
+				case GW::GRAPHICS::ALIGN_X_RIGHT:
+					data.offsetX = static_cast<int>(bitmapWidth) - static_cast<int>(data.upscaledDataWidth);
+					break;
+				case GW::GRAPHICS::ALIGN_X_CENTER:
+				default:
+					data.offsetX = (static_cast<int>(bitmapWidth) - static_cast<int>(data.upscaledDataWidth)) >> 1;
+					break;
+				}
+
+				// determine Y alignment
+				DebugPrint(2, "SmartUpdateSurface - determine y alignment\n");
+				testFlags = _drawOptionFlags & bitmaskAlignY;
+				switch (testFlags)
+				{
+				case GW::GRAPHICS::ALIGN_Y_TOP:
+					data.offsetY = 0;
+					break;
+				case GW::GRAPHICS::ALIGN_Y_BOTTOM:
+					data.offsetY = static_cast<int>(bitmapHeight) - static_cast<int>(data.upscaledDataHeight);
+					break;
+				case GW::GRAPHICS::ALIGN_Y_CENTER:
+				default:
+					data.offsetY = (static_cast<int>(bitmapHeight) - static_cast<int>(data.upscaledDataHeight)) >> 1;
+					break;
+				}
+
+				// lock self and back buffer to prevent read/write conflicts
+				DebugPrint(2, "SmartUpdateSurface - attempt to lock self, back buffer for write\n");
+				if (+m_thread.LockSyncWrite())
+				{
+					DebugPrint(2, "SmartUpdateSurface - locked self, back buffer for write\n");
+#if !defined(GRASTERSURFACE_DEBUG_WIN32_SERIALIZE_SMARTUPDATE_COPY)
+					// calculate how many rows of the surface fit into 256 KB
+					DebugPrint(2, "SmartUpdateSurface - calculate rows per thread\n");
+					unsigned int rows = 262144 / (bitmapWidth * sizeof(Color));
+					if (rows == 0) rows = 1; // min of 1
+#endif
+
+					// iterate through surface and process pixels
+					if ((_drawOptionFlags & bitmaskInterpolate) == GW::GRAPHICS::INTERPOLATE_BILINEAR)
+					{
+#if defined(GRASTERSURFACE_DEBUG_WIN32_SERIALIZE_SMARTUPDATE_COPY)
+						DebugPrint(2, "SmartUpdateSurface - process rows w/ bilinear interp (SERIAL)\n");
+						for (unsigned int y = 0; y < bitmapHeight; ++y)
+							ProcessPixelRowBilinear(static_cast<const void*>(nullptr), &m_bitmapData[y * bitmapWidth], y, reinterpret_cast<const void*>(&data));
+#else
+						DebugPrint(2, "SmartUpdateSurface - process rows w/ bilinear interp (PARALLEL)\n");
+						m_gSmartUpdateRowProcessThread.BranchParallel(ProcessPixelRowBilinear,
+							rows, bitmapHeight, reinterpret_cast<const void*>(&data),
+							0, static_cast<const void*>(nullptr),
+							static_cast<int>(bitmapWidth * sizeof(Color)), m_bitmapData);
+#endif
+					}
+					else
+					{
+#if defined(GRASTERSURFACE_DEBUG_WIN32_SERIALIZE_SMARTUPDATE_COPY)
+						DebugPrint(2, "SmartUpdateSurface - process rows w/ nearest interp (SERIAL)\n");
+						for (unsigned int y = 0; y < bitmapHeight; ++y)
+							ProcessPixelRowNearest(static_cast<const void*>(nullptr), &m_bitmapData[y * bitmapWidth], y, reinterpret_cast<const void*>(&data));
+#else
+						DebugPrint(2, "SmartUpdateSurface - process rows w/ nearest interp (PARALLEL)\n");
+						m_gSmartUpdateRowProcessThread.BranchParallel(ProcessPixelRowNearest,
+							rows, bitmapHeight, reinterpret_cast<const void*>(&data),
+							0, static_cast<const void*>(nullptr),
+							static_cast<int>(bitmapWidth * sizeof(Color)), m_bitmapData);
+#endif
+					}
+
+#if !defined(GRASTERSURFACE_DEBUG_WIN32_SERIALIZE_SMARTUPDATE_COPY)
+					// wait for data to finish processing
+					DebugPrint(2, "SmartUpdateSurface - converge row processing threads\n");
+					GReturn convergeResult = m_gSmartUpdateRowProcessThread.Converge(0);
+					if (G_FAIL(convergeResult))
+					{
+						DebugPrint(2, "SmartUpdateSurface - converge failed, attempt to unlock back buffer for write\n");
+						if (+m_thread.UnlockSyncWrite()) // Why isn't the GRasterSurface being unlocked here too? 
+						{
+							DebugPrint(2, "SmartUpdateSurface - unlocked back buffer for write; return\n\n");
+							return convergeResult;
+						}
+					}
+#endif
+
+					// unlock and return
+					DebugPrint(2, "SmartUpdateSurface - unlock and return\n");
+
+
+
+					if (+m_thread.UnlockSyncWrite())
+					{
+						DebugPrint(2, "SmartUpdateSurface - unlocked self, back buffer for write; successful; return\n\n");
+						return GReturn::SUCCESS;
+					}
+				}
+				DebugPrint(2, "SmartUpdateSurface - unexpected result; return\n\n");
+				return GReturn::UNEXPECTED_RESULT; // should never reach here
+			}
+
+#pragma endregion UPDATE_FUNCTIONS
+#pragma region LOCK_AND_UNLOCK_FUNCTIONS
+
+			GReturn LockUpdateBufferWrite(Color** _outMemoryBuffer, unsigned short& _outWidth, unsigned short& _outHeight) override
+			{
+				DebugPrint(0, "\nLockUpdateBufferWrite\n");
+				if (m_surfaceState == SurfaceState::INVALID)
+				{
+					DebugPrint(2, "LockUpdateBufferWrite - surface invalid; return\n\n");
+					return GReturn::PREMATURE_DEALLOCATION;
+				}
+
+				// validate arguments
+				if (_outMemoryBuffer == nullptr)
+				{
+					DebugPrint(2, "LockUpdateBufferWrite - _outMemoryBuffer was nullptr; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// if args are valid, continue
+
+				// reject lock if already locked for writing
+				DebugPrint(2, "LockUpdateBufferWrite - check number of active write locks\n");
+				if (lockChecker)
+				{
+					DebugPrint(2, "LockUpdateBufferWrite - write lock already active; return\n\n");
+					return GReturn::FAILURE;
+				}
+				// otherwise, try to lock for writing
+				DebugPrint(2, "LockUpdateBufferWrite - attempt to lock back buffer for write\n");
+				if (+m_thread.LockSyncWrite())
+				{
+					DebugPrint(2, "LockUpdateBufferWrite - locked back buffer for write\n");
+					lockChecker = true;
+					// give buffer data pointer and dimensions to caller and return
+					DebugPrint(2, "LockUpdateBufferWrite - set return values\n");
+					*_outMemoryBuffer = m_bitmapData;
+					_outWidth = m_bitmapWidth;
+					_outHeight = m_bitmapHeight;
+					DebugPrint(2, "LockUpdateBufferWrite - successful; return\n\n");
+					return GReturn::SUCCESS;
+				}
+				DebugPrint(2, "LockUpdateBufferWrite - unexpected result; return\n\n");
+				return GReturn::UNEXPECTED_RESULT; // should never reach here
+			}
+			GReturn LockUpdateBufferRead(const Color** _outMemoryBuffer, unsigned short& _outWidth, unsigned short& _outHeight) override
+			{
+				DebugPrint(0, "\nLockUpdateBufferRead\n");
+				if (m_surfaceState == SurfaceState::INVALID)
+				{
+					DebugPrint(2, "LockUpdateBufferRead - surface invalid; return\n\n");
+					return GReturn::PREMATURE_DEALLOCATION;
+				}
+
+				// validate arguments
+				if (_outMemoryBuffer == nullptr)
+				{
+					DebugPrint(2, "LockUpdateBufferWrite - _outMemoryBuffer was nullptr; return\n\n");
+					return GReturn::INVALID_ARGUMENT;
+				}
+				// if args are valid, continue
+
+				// reject lock if already locked for reading
+				DebugPrint(2, "LockUpdateBufferRead - check number of active read locks\n");
+				if (lockChecker)
+				{
+					DebugPrint(2, "LockUpdateBufferRead - read lock already active; return\n\n");
+					return GReturn::FAILURE;
+				}
+				// otherwise, try to lock for reading
+				DebugPrint(2, "LockUpdateBufferRead - attempt to lock front buffer for read\n");
+				if (+m_thread.LockAsyncRead())
+				{
+					DebugPrint(2, "LockUpdateBufferRead - locked front buffer for read\n");
+					lockChecker = true;
+					// give buffer data pointer and dimensions to caller and return
+					DebugPrint(2, "LockUpdateBufferRead - set return values\n");
+					*_outMemoryBuffer = const_cast<const Color*>(m_bitmapData);
+					_outWidth = m_bitmapWidth;
+					_outHeight = m_bitmapHeight;
+					DebugPrint(2, "LockUpdateBufferRead - successful; return\n\n");
+					return GReturn::SUCCESS;
+				}
+				DebugPrint(2, "LockUpdateBufferRead - unexpected result; return\n\n");
+				return GReturn::UNEXPECTED_RESULT; // should never reach here
+			}
+
+			GReturn UnlockUpdateBufferWrite() override
+			{
+				DebugPrint(0, "\nUnlockUpdateBufferWrite\n");
+				if (m_surfaceState == SurfaceState::INVALID)
+				{
+					DebugPrint(2, "UnlockUpdateBufferWrite - surface invalid; return\n\n");
+					return GReturn::PREMATURE_DEALLOCATION;
+				}
+				// ignore unlock if not locked
+				if (!lockChecker)
+				{
+					DebugPrint(2, "UnlockUpdateBufferWrite - redundant; return\n\n");
+					return GReturn::REDUNDANT;
+				}
+
+				lockChecker = false;
+
+				// unlock and return
+				DebugPrint(2, "UnlockUpdateBufferWrite - attempt to unlock self, back buffer for write\n");
+				if (+m_thread.UnlockSyncWrite())
+				{
+					DebugPrint(2, "UnlockUpdateBufferWrite - unlocked self, back buffer for write; successful; return\n\n");
+					return GReturn::SUCCESS;
+				}
+
+				DebugPrint(2, "UnlockUpdateBufferWrite - unexpected result; return\n\n");
+				return GReturn::UNEXPECTED_RESULT; // should never reach here
+			}
+			GReturn UnlockUpdateBufferRead() override
+			{
+				DebugPrint(0, "\nUnlockUpdateBufferRead\n");
+				if (m_surfaceState == SurfaceState::INVALID)
+				{
+					DebugPrint(2, "UnlockUpdateBufferRead - surface invalid; return\n\n");
+					return GReturn::PREMATURE_DEALLOCATION;
+				}
+				// ignore unlock if not locked
+				if (!lockChecker)
+				{
+					DebugPrint(2, "UnlockUpdateBufferRead - redundant; return\n\n");
+					return GReturn::REDUNDANT;
+				}
+				// otherwise, unlock
+				lockChecker = false;
+				DebugPrint(2, "UnlockUpdateBufferRead - attempt to unlock front buffer for read\n");
+				if (+m_thread.UnlockAsyncRead())
+				{
+					DebugPrint(2, "UnlockUpdateBufferRead - unlocked front buffer for read\n");
+					return GReturn::SUCCESS;
+				}
+				DebugPrint(2, "UnlockUpdateBufferRead - unexpected result; return\n\n");
+				return GReturn::UNEXPECTED_RESULT; // should never reach here
+			}
+
+#pragma endregion LOCK_AND_UNLOCK_FUNCTIONS
+
+			GReturn Present() override
+			{
+				DebugPrint(0, "\nPresent\n");
+				if (m_surfaceState == SurfaceState::INVALID)
+				{
+					DebugPrint(2, "Present - surface invalid; return\n\n");
+					return GReturn::PREMATURE_DEALLOCATION;
+				}
+				DebugPrint(2, "Present - draw\n");
+
+				if (+m_thread.LockAsyncRead()) {
+					ID3D11DeviceContext* context;
+					m_d3d11Surface.GetImmediateContext((void**)&context);
+
+					context->Map(m_d3d11Tex2D.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &m_d3d11MapSubRes);
+
+					memcpy_s(m_d3d11MapSubRes.pData, static_cast<rsize_t>(m_bitmapWidth * m_bitmapHeight * sizeof(Color)),
+						m_bitmapData, static_cast<rsize_t>(m_bitmapWidth * m_bitmapHeight * sizeof(Color)));
+
+					context->Unmap(m_d3d11Tex2D.Get(), 0);
+
+					context->Release();
+
+					m_thread.UnlockAsyncRead();
+				}
+
+				// grab the context & render target
+				IDXGISwapChain* swap;
+				ID3D11DeviceContext* con;
+				ID3D11RenderTargetView* view;
+				m_d3d11Surface.GetImmediateContext((void**)&con);
+				m_d3d11Surface.GetRenderTargetView((void**)&view);
+				m_d3d11Surface.GetSwapchain((void**)&swap);
+				// setup the pipeline
+				ID3D11RenderTargetView* const views[] = { view };
+				con->OMSetRenderTargets(ARRAYSIZE(views), views, nullptr);
+				const UINT strides[] = { sizeof(float) * 4 };
+				const UINT offsets[] = { 0 };
+				ID3D11Buffer* const buffs[] = { m_d3d11VertBuff.Get() };
+				con->IASetVertexBuffers(0, ARRAYSIZE(buffs), buffs, strides, offsets);
+				con->VSSetShader(m_d3d11VertShad.Get(), nullptr, 0);
+				con->PSSetShader(m_d3d11PixelShad.Get(), nullptr, 0);
+				con->IASetInputLayout(m_d3d11VertexLayout.Get());
+				// set a texture (srv)
+				con->PSSetShaderResources(0, 1, m_d3d11ShaderResourceView.GetAddressOf());
+				con->PSSetSamplers(0, 1, m_d3d11SamplerState.GetAddressOf());
+				// now we can draw
+				con->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+				con->Draw(4, 0);
+				swap->Present(1, 0);
+				// release temp handles
+				view->Release();
+				con->Release();
+				swap->Release();
+
+				DebugPrint(2, "Present - successful; return\n");
+				return GReturn::SUCCESS;
+			}
+
+		}; // end class GRasterSurfaceImplementation
+	} // end namespace I
+} // end namespace GW
+
+
+#if defined(_WIN32) && !defined(NDEBUG) && defined(GRASTERSURFACE_DEBUG_WIN32_VERBOSE_NEW)
+#undef new
+#endif
+
+#if defined(GRASTERSURFACE_DEBUG_WIN32_VERBOSE_NEW)
+#undef GRASTERSURFACE_DEBUG_WIN32_VERBOSE_NEW
+#endif
+#if defined(GRASTERSURFACE_DEBUG_WIN32_SERIALIZE_SMARTUPDATE_COPY)
+#undef GRASTERSURFACE_DEBUG_WIN32_SERIALIZE_SMARTUPDATE_COPY
+#endif
+#if defined(GRASTERSURFACE_DEBUG_WIN32_ASSERTS)
+#undef GRASTERSURFACE_DEBUG_WIN32_ASSERTS
+#endif
+#if defined(GRASTERSURFACE_DEBUG_WIN32_PRINTS)
+#undef GRASTERSURFACE_DEBUG_WIN32_PRINTS
+#endif
+#if defined(GRASTERSURFACE_DEBUG_WIN32_PRINT_PRIORITY_LEVEL)
+#undef GRASTERSURFACE_DEBUG_WIN32_PRINT_PRIORITY_LEVEL
+#endif
+
+
+	#endif
 #endif
 
 
@@ -56298,6 +68531,11 @@ namespace GW
 			GATEWARE_FUNCTION(UnlockUpdateBufferWrite)
 			GATEWARE_FUNCTION(UnlockUpdateBufferRead)
 			GATEWARE_FUNCTION(Present)
+
+			// reimplemented functions
+			// from GEventResponderInterface
+			GATEWARE_FUNCTION(Assign)
+			GATEWARE_CONST_FUNCTION(Invoke)
 
 			// This area does not contain actual code, it is only for the benefit of documentation generation.
 		};
@@ -56390,7 +68628,9 @@ namespace GW
 }
 
 #elif defined(_WIN32)
-    #include <wrl/client.h>
+    #include <winapifamily.h>
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #include <wrl/client.h>
 #include <d3d11.h>
 #include <d2d1.h>
 #pragma comment(lib, "d3d11.lib")
@@ -56406,12 +68646,13 @@ namespace GW
 		private:
 			GW::SYSTEM::GWindow gwindow;
 			GW::CORE::GEventResponder responder;
-			GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE UWH = {nullptr, nullptr};
+			GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE UWH = { nullptr, nullptr };
 			Microsoft::WRL::ComPtr<ID3D11Device> pDevice = nullptr;
 			Microsoft::WRL::ComPtr<ID3D11DeviceContext> pImmediateContext = nullptr;
 			Microsoft::WRL::ComPtr<IDXGISwapChain> pSwapChain = nullptr;
 			Microsoft::WRL::ComPtr<ID3D11RenderTargetView> pBackBufferView = nullptr;
 			Microsoft::WRL::ComPtr<ID3D11DepthStencilView> pDepthStencilView = nullptr;
+			Microsoft::WRL::ComPtr<ID3D11RasterizerState> pRasterizerState = nullptr;
 			unsigned int width = 0;
 			unsigned int height = 0;
 			float aspectRatio = 0.0f;
@@ -56423,11 +68664,40 @@ namespace GW
 
 				gwindow = _gwindow;
 				//Check if valid _initMask was passed in
-				unsigned long long allowed = ~(GW::GRAPHICS::COLOR_10_BIT | GW::GRAPHICS::DEPTH_BUFFER_SUPPORT | GW::GRAPHICS::DEPTH_STENCIL_SUPPORT | GW::GRAPHICS::DIRECT2D_SUPPORT);
+				unsigned long long allowed = ~(
+					GW::GRAPHICS::COLOR_10_BIT |
+					GW::GRAPHICS::DEPTH_BUFFER_SUPPORT |
+					GW::GRAPHICS::DEPTH_STENCIL_SUPPORT |
+					GW::GRAPHICS::DIRECT2D_SUPPORT |
+					GW::GRAPHICS::MSAA_2X_SUPPORT |
+					GW::GRAPHICS::MSAA_4X_SUPPORT |
+					GW::GRAPHICS::MSAA_8X_SUPPORT |
+					GW::GRAPHICS::MSAA_16X_SUPPORT
+					);
 				if (allowed & _initMask)
 				{
 					return GReturn::FEATURE_UNSUPPORTED;
 				}
+
+				// If COLOR_10_BIT and any MSAA flag is set, return FEATURE_UNSUPPORTED
+				if ((_initMask & GW::GRAPHICS::COLOR_10_BIT) &&
+					(_initMask & GW::GRAPHICS::MSAA_2X_SUPPORT ||
+					_initMask & GW::GRAPHICS::MSAA_4X_SUPPORT ||
+					_initMask & GW::GRAPHICS::MSAA_8X_SUPPORT ||
+					_initMask & GW::GRAPHICS::MSAA_16X_SUPPORT))
+				{
+					return GReturn::FEATURE_UNSUPPORTED;
+				}
+
+				short msaaSample = 1;
+				if (_initMask & GW::GRAPHICS::MSAA_2X_SUPPORT)
+					msaaSample = 2;
+				else if (_initMask & GW::GRAPHICS::MSAA_4X_SUPPORT)
+					msaaSample = 4;
+				else if (_initMask & GW::GRAPHICS::MSAA_8X_SUPPORT)
+					msaaSample = 8;
+				else if (_initMask & GW::GRAPHICS::MSAA_16X_SUPPORT)
+					msaaSample = 16;
 
 				gwindow.GetWindowHandle(UWH);
 				gwindow.GetClientWidth(width);
@@ -56476,8 +68746,9 @@ namespace GW
 				swapChainStruct.OutputWindow = static_cast<HWND>(UWH.window);
 				swapChainStruct.Windowed = TRUE;
 				swapChainStruct.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-				swapChainStruct.SampleDesc.Count = 1;
-				swapChainStruct.SampleDesc.Quality = 0;
+
+				swapChainStruct.SampleDesc.Count = msaaSample;
+				swapChainStruct.SampleDesc.Quality = msaaSample > 1 ? D3D11_STANDARD_MULTISAMPLE_PATTERN : 0;
 
 				HRESULT hr = D3D11CreateDeviceAndSwapChain(
 					nullptr,
@@ -56495,6 +68766,28 @@ namespace GW
 				);
 				if (hr != S_OK)
 					return GReturn::HARDWARE_UNAVAILABLE;
+
+				// Create the rasterizer state
+				D3D11_RASTERIZER_DESC rasterizerDesc;
+				ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+				rasterizerDesc.AntialiasedLineEnable = true;
+				rasterizerDesc.CullMode = D3D11_CULL_BACK;
+				rasterizerDesc.DepthBias = 0;
+				rasterizerDesc.DepthBiasClamp = 0.0f;
+				rasterizerDesc.DepthClipEnable = true;
+				rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+				rasterizerDesc.FrontCounterClockwise = false;
+				rasterizerDesc.MultisampleEnable = true;
+				rasterizerDesc.ScissorEnable = false;
+				rasterizerDesc.SlopeScaledDepthBias = 0.0f;
+
+				// Create the rasterizer state object
+				hr = pDevice->CreateRasterizerState(&rasterizerDesc, &pRasterizerState);
+				if (hr != S_OK)
+					return GReturn::FAILURE;
+
+				// Set the rasterizer state
+				pImmediateContext->RSSetState(pRasterizerState.Get());
 
 				ID3D11Resource* buffer;
 				pSwapChain->GetBuffer(0, __uuidof(buffer), reinterpret_cast<void**>(&buffer));
@@ -56515,7 +68808,9 @@ namespace GW
 					depthTextureDesc.Height = height;
 					depthTextureDesc.ArraySize = 1;
 					depthTextureDesc.MipLevels = 1;
-					depthTextureDesc.SampleDesc.Count = 1;
+
+					depthTextureDesc.SampleDesc.Count = msaaSample;
+					depthTextureDesc.SampleDesc.Quality = msaaSample > 1 ? D3D11_STANDARD_MULTISAMPLE_PATTERN : 0;
 
 					if (_initMask & GW::GRAPHICS::DEPTH_STENCIL_SUPPORT)
 						depthTextureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -56539,7 +68834,10 @@ namespace GW
 					else
 						depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
 
-					depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+					if (msaaSample > 1)
+						depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+					else
+						depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 
 					if (depthBuffer)
 						hr = pDevice->CreateDepthStencilView(depthBuffer, &depthStencilViewDesc, &pDepthStencilView);
@@ -56552,84 +68850,99 @@ namespace GW
 				/////////////////////////
 
 				D3D11_VIEWPORT viewport;
+				viewport.TopLeftX = 0;
+				viewport.TopLeftY = 0;
 				viewport.Width = static_cast<float>(width);
 				viewport.Height = static_cast<float>(height);
 				viewport.MinDepth = 0.0f;
 				viewport.MaxDepth = 1.0f;
 
-				unsigned int nTopLeftX = 0;
-				unsigned int nTopLeftY = 0;
-				gwindow.GetClientTopLeft(nTopLeftX, nTopLeftY);
-
-				viewport.TopLeftX = static_cast<float>(nTopLeftX);
-				viewport.TopLeftY = static_cast<float>(nTopLeftY);
-
 				pImmediateContext->RSSetViewports(1, &viewport);
 				// Call back event handler for DX11
 				GReturn result = responder.Create([&](const GEvent& event)
-				{
-					GW::SYSTEM::GWindow::Events windowEvent;
-					GW::SYSTEM::GWindow::EVENT_DATA windowEventData;
-					if (+event.Read(windowEvent, windowEventData))
 					{
-						switch (windowEvent)
+						GW::SYSTEM::GWindow::Events windowEvent;
+						GW::SYSTEM::GWindow::EVENT_DATA windowEventData;
+						if (+event.Read(windowEvent, windowEventData))
 						{
-						case GW::SYSTEM::GWindow::Events::MINIMIZE: {} break;
-						case GW::SYSTEM::GWindow::Events::DESTROY: {} break;
+							switch (windowEvent)
+							{
+							case GW::SYSTEM::GWindow::Events::MINIMIZE: {} break;
+							case GW::SYSTEM::GWindow::Events::DESTROY: {} break;
 
-						case GW::SYSTEM::GWindow::Events::MAXIMIZE:
-						case GW::SYSTEM::GWindow::Events::RESIZE:
-						{
-							gwindow.GetClientWidth(width);
+							case GW::SYSTEM::GWindow::Events::MAXIMIZE:
+							case GW::SYSTEM::GWindow::Events::RESIZE:
+							{
+								gwindow.GetClientWidth(width);
 								gwindow.GetClientHeight(height);
 
-							aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+								aspectRatio = static_cast<float>(width) / static_cast<float>(height);
 
-							if (pSwapChain)
-							{
-								pBackBufferView.Reset();
-
-								HRESULT hr = pSwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-								if (hr != S_OK)
-									return;
-
-								ID3D11Texture2D* newRTVBuffer;
-								hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&newRTVBuffer));
-
-								if (hr != S_OK)
-									return;
-
-								hr = pDevice->CreateRenderTargetView(newRTVBuffer, nullptr, &pBackBufferView);
-								newRTVBuffer->Release();
-
-								if (hr != S_OK)
-									return;
-
-								D3D11_TEXTURE2D_DESC depthTextureDesc = { 0 };
-								depthTextureDesc.Width = width;
-								depthTextureDesc.Height = height;
-								depthTextureDesc.ArraySize = 1;
-								depthTextureDesc.MipLevels = 1;
-								depthTextureDesc.SampleDesc.Count = 1;
-								depthTextureDesc.Format = DXGI_FORMAT_D32_FLOAT;
-								depthTextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-
-								if (pDepthStencilView)
+								if (pSwapChain)
 								{
-									pDepthStencilView.Reset();
-									ID3D11Texture2D* depthBuffer;
-									pDevice->CreateTexture2D(&depthTextureDesc, nullptr, &depthBuffer);
+									pBackBufferView.Reset();
 
-									D3D11_DEPTH_STENCIL_VIEW_DESC newDSVdesc;
-									ZeroMemory(&newDSVdesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-									newDSVdesc.Format = DXGI_FORMAT_D32_FLOAT;
-									newDSVdesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+									HRESULT hr = pSwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
+									if (hr != S_OK)
+										return;
 
-									if (depthBuffer)
-										pDevice->CreateDepthStencilView(depthBuffer, &newDSVdesc, &pDepthStencilView);
+									ID3D11Texture2D* newRTVBuffer;
+									hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&newRTVBuffer));
 
-									depthBuffer->Release();
+									if (hr != S_OK)
+										return;
+
+									hr = pDevice->CreateRenderTargetView(newRTVBuffer, nullptr, &pBackBufferView);
+									newRTVBuffer->Release();
+
+									if (hr != S_OK)
+										return;
+
+									D3D11_TEXTURE2D_DESC depthTextureDesc = { 0 };
+									depthTextureDesc.Width = width;
+									depthTextureDesc.Height = height;
+									depthTextureDesc.ArraySize = 1;
+									depthTextureDesc.MipLevels = 1;
+									depthTextureDesc.Format = DXGI_FORMAT_D32_FLOAT;
+									depthTextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+									depthTextureDesc.SampleDesc.Count = msaaSample;
+									depthTextureDesc.SampleDesc.Quality = msaaSample > 1 ? D3D11_STANDARD_MULTISAMPLE_PATTERN : 0;
+
+									if (pDepthStencilView)
+									{
+										pDepthStencilView.Reset();
+										ID3D11Texture2D* depthBuffer;
+										pDevice->CreateTexture2D(&depthTextureDesc, nullptr, &depthBuffer);
+
+										D3D11_DEPTH_STENCIL_VIEW_DESC newDSVdesc;
+										ZeroMemory(&newDSVdesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+										newDSVdesc.Format = DXGI_FORMAT_D32_FLOAT;
+										newDSVdesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+
+										if (depthBuffer)
+											pDevice->CreateDepthStencilView(depthBuffer, &newDSVdesc, &pDepthStencilView);
+
+										depthBuffer->Release();
+									}
+
+									D3D11_VIEWPORT viewport;
+									viewport.TopLeftX = 0;
+									viewport.TopLeftY = 0;
+									viewport.Width = static_cast<float>(width);
+									viewport.Height = static_cast<float>(height);
+									viewport.MinDepth = 0.0f;
+									viewport.MaxDepth = 1.0f;
+
+									pImmediateContext->RSSetViewports(1, &viewport);
 								}
+							}
+							break;
+
+							case GW::SYSTEM::GWindow::Events::MOVE:
+							{
+								gwindow.GetClientWidth(width);
+								gwindow.GetClientHeight(height);
 
 								D3D11_VIEWPORT viewport;
 								viewport.TopLeftX = 0;
@@ -56641,28 +68954,10 @@ namespace GW
 
 								pImmediateContext->RSSetViewports(1, &viewport);
 							}
+							break;
+							}
 						}
-						break;
-
-						case GW::SYSTEM::GWindow::Events::MOVE:
-						{
-							gwindow.GetClientWidth(width);
-							gwindow.GetClientHeight(height);
-
-							D3D11_VIEWPORT viewport;
-							viewport.TopLeftX = 0;
-							viewport.TopLeftY = 0;
-							viewport.Width = static_cast<float>(width);
-							viewport.Height = static_cast<float>(height);
-							viewport.MinDepth = 0.0f;
-							viewport.MaxDepth = 1.0f;
-
-							pImmediateContext->RSSetViewports(1, &viewport);
-						}
-						break;
-						}
-					}
-				});
+					});
 				if (G_PASS(result))
 				{
 					gwindow.Register(responder);
@@ -56745,7 +69040,649 @@ namespace GW
 	}
 }
 
+
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        
+#include <wrl/client.h>
+#include <d3d11_3.h>
+#include <d2d1_3.h>
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.Graphics.Display.h>
+#include <winrt/Windows.UI.Core.h>
+#include <winrt/Windows.Foundation.h>
+// This file contains defines for platform-specific code
+// Authors: Jacob Morales
+#ifndef GENVIRONMENT_HPP
+#define GENVIRONMENT_HPP
+
+#if defined(__APPLE__)
+
+    #include <TargetConditionals.h>
+
+    #if TARGET_OS_IOS
+
+        #define GATEWARE_ENV_APP
+
+    #elif TARGET_OS_MAC
+
+        #define GATEWARE_ENV_DESKTOP
+
+    #endif //TARGET_OS_MAC/IOS
+
+#elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+    #include <gamingdeviceinformation.h>
+
+    #define GATEWARE_ENV_APP
+
+#elif defined(__linux__) || defined(_WIN32)
+
+    #define GATEWARE_ENV_DESKTOP
+
+#else
+
+    #define GATEWARE_ENV_UNKNOWN
+
+#endif //__APPLE__
+
+
+
+#endif //GENVIRONMENT_HPP
+
+
+
+
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "d2d1.lib")
+
+namespace GW
+{
+	namespace I
+	{
+		class GDirectX11SurfaceImplementation : public virtual GDirectX11SurfaceInterface,
+			private virtual GEventResponderImplementation, private virtual GThreadSharedImplementation
+		{
+		private:
+			GW::SYSTEM::GWindow gwindow;
+			GW::CORE::GEventResponder responder;
+			GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE UWH;
+			winrt::com_ptr<ID3D11Device3> pDevice = nullptr;
+			winrt::com_ptr<ID3D11DeviceContext3> pImmediateContext = nullptr;
+			winrt::com_ptr<IDXGISwapChain1> pSwapChain = nullptr;
+			Microsoft::WRL::ComPtr<ID3D11RenderTargetView> pBackBufferView = nullptr;
+			Microsoft::WRL::ComPtr<ID3D11DepthStencilView> pDepthStencilView = nullptr;
+			Microsoft::WRL::ComPtr<ID3D11RasterizerState> pRasterizerState = nullptr;
+			std::atomic_bool m_Deallocated = false;
+			unsigned int width = 0;
+			unsigned int height = 0;
+			float aspectRatio = 0.0f;
+			// Cached reference to the Window
+			winrt::Windows::UI::Core::CoreWindow* m_window = nullptr;
+			winrt::event_token trim;
+			//winrt::Windows::Graphics::Display::DisplayInformation currentDisplayInfo{ nullptr };
+			//winrt::Windows::Foundation::Size m_logicalSize;
+			//winrt::Windows::Graphics::Display::DisplayOrientations m_nativeOrientation;
+			//winrt::Windows::Graphics::Display::DisplayOrientations m_currentOrientation;
+			float m_dpi;
+			//std::mutex contextMutex;
+			std::atomic_int resizeCounter = 0;
+
+			// for orientation changing
+
+			// 0-degree Z-rotation
+			//const DirectX::XMFLOAT4X4 Rotation0{
+			//	1.0f, 0.0f, 0.0f, 0.0f,
+			//	0.0f, 1.0f, 0.0f, 0.0f,
+			//	0.0f, 0.0f, 1.0f, 0.0f,
+			//	0.0f, 0.0f, 0.0f, 1.0f
+			//};
+
+			//// 90-degree Z-rotation
+			//const DirectX::XMFLOAT4X4 Rotation90{
+			//	0.0f, 1.0f, 0.0f, 0.0f,
+			//	-1.0f, 0.0f, 0.0f, 0.0f,
+			//	0.0f, 0.0f, 1.0f, 0.0f,
+			//	0.0f, 0.0f, 0.0f, 1.0f
+			//};
+
+			//// 180-degree Z-rotation
+			//const DirectX::XMFLOAT4X4 Rotation180{
+			//	-1.0f, 0.0f, 0.0f, 0.0f,
+			//	0.0f, -1.0f, 0.0f, 0.0f,
+			//	0.0f, 0.0f, 1.0f, 0.0f,
+			//	0.0f, 0.0f, 0.0f, 1.0f
+			//};
+
+			//// 270-degree Z-rotation
+			//const DirectX::XMFLOAT4X4 Rotation270{
+			//	0.0f, -1.0f, 0.0f, 0.0f,
+			//	1.0f, 0.0f, 0.0f, 0.0f,
+			//	0.0f, 0.0f, 1.0f, 0.0f,
+			//	0.0f, 0.0f, 0.0f, 1.0f
+			//};
+
+			/*winrt::Windows::Foundation::IAsyncAction CallOnUiThreadAsync(winrt::Windows::UI::Core::CoreDispatcher dispatcher, winrt::Windows::UI::Core::DispatchedHandler handler) const
+			{
+				co_await dispatcher.RunAsync(winrt::Windows::UI::Core::CoreDispatcherPriority::Normal, handler);
+			};*/
+
+			// This should only be used if there is only one view
+			winrt::Windows::Foundation::IAsyncAction CallOnMainViewUiThreadAsync(winrt::Windows::UI::Core::DispatchedHandler handler) const
+			{
+				//CallOnUiThreadAsync(winrt::Windows::ApplicationModel::Core::CoreApplication::MainView().CoreWindow().Dispatcher(), handler);
+				co_await winrt::Windows::ApplicationModel::Core::CoreApplication::MainView().CoreWindow().Dispatcher().RunAsync(winrt::Windows::UI::Core::CoreDispatcherPriority::Normal, handler);
+			}
+
+			void SetWindowDX11()
+			{
+				auto process = CallOnMainViewUiThreadAsync([&]()
+					{
+						//currentDisplayInfo = winrt::Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
+						m_window = reinterpret_cast<winrt::Windows::UI::Core::CoreWindow*>(UWH.window);
+						//m_logicalSize = winrt::Windows::Foundation::Size(m_window->Bounds().Width, m_window->Bounds().Height);
+						//m_nativeOrientation = currentDisplayInfo.NativeOrientation();
+						//m_currentOrientation = currentDisplayInfo.CurrentOrientation();
+						//m_dpi = currentDisplayInfo.LogicalDpi();
+					});
+
+				process.get();
+			}
+
+		public:
+			~GDirectX11SurfaceImplementation()
+			{
+				winrt::Windows::ApplicationModel::Core::CoreApplication::Suspending(trim);
+			}
+			GReturn Create(GW::SYSTEM::GWindow _gwindow, unsigned long long _initMask)
+			{
+				if (!_gwindow)
+					return GReturn::INVALID_ARGUMENT;
+
+				
+				trim = winrt::Windows::ApplicationModel::Core::CoreApplication::Suspending([&]
+				(winrt::Windows::Foundation::IInspectable const&,
+					winrt::Windows::ApplicationModel::SuspendingEventArgs const& args)
+					{
+						winrt::Windows::ApplicationModel::SuspendingDeferral deferral = args.SuspendingOperation().GetDeferral();
+						winrt::com_ptr<IDXGIDevice3> dxgiDevice;
+						dxgiDevice = pDevice.as<IDXGIDevice3>();
+
+						dxgiDevice->Trim();
+						deferral.Complete();
+					});
+					
+
+				gwindow = _gwindow;
+				//Check if valid _initMask was passed in
+				unsigned long long allowed = ~(
+					GW::GRAPHICS::COLOR_10_BIT |
+					GW::GRAPHICS::DEPTH_BUFFER_SUPPORT |
+					GW::GRAPHICS::DEPTH_STENCIL_SUPPORT |
+					GW::GRAPHICS::DIRECT2D_SUPPORT |
+					GW::GRAPHICS::MSAA_2X_SUPPORT |
+					GW::GRAPHICS::MSAA_4X_SUPPORT |
+					GW::GRAPHICS::MSAA_8X_SUPPORT |
+					GW::GRAPHICS::MSAA_16X_SUPPORT
+					);
+				if (allowed & _initMask)
+				{
+					return GReturn::FEATURE_UNSUPPORTED;
+				}
+
+				// If COLOR_10_BIT and any MSAA flag is set, return FEATURE_UNSUPPORTED
+				if ((_initMask & GW::GRAPHICS::COLOR_10_BIT) &&
+					(_initMask & GW::GRAPHICS::MSAA_2X_SUPPORT ||
+					_initMask & GW::GRAPHICS::MSAA_4X_SUPPORT ||
+					_initMask & GW::GRAPHICS::MSAA_8X_SUPPORT ||
+					_initMask & GW::GRAPHICS::MSAA_16X_SUPPORT))
+				{
+					return GReturn::FEATURE_UNSUPPORTED;
+				}
+
+				short msaaSample = 1;
+				if (_initMask & GW::GRAPHICS::MSAA_2X_SUPPORT)
+					msaaSample = 2;
+				else if (_initMask & GW::GRAPHICS::MSAA_4X_SUPPORT)
+					msaaSample = 4;
+				else if (_initMask & GW::GRAPHICS::MSAA_8X_SUPPORT)
+					msaaSample = 8;
+				else if (_initMask & GW::GRAPHICS::MSAA_16X_SUPPORT)
+					msaaSample = 16;
+
+				gwindow.GetWindowHandle(UWH);
+				gwindow.GetClientWidth(width);
+				gwindow.GetClientHeight(height);
+				aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+
+				SetWindowDX11();
+
+				D3D_FEATURE_LEVEL featureLevels[] =
+				{
+					D3D_FEATURE_LEVEL_11_1,
+					D3D_FEATURE_LEVEL_11_0,
+					D3D_FEATURE_LEVEL_10_1,
+					D3D_FEATURE_LEVEL_10_0,
+					D3D_FEATURE_LEVEL_9_3,
+					D3D_FEATURE_LEVEL_9_2,
+					D3D_FEATURE_LEVEL_9_1
+				};
+
+				// if xbox
+				GAMING_DEVICE_MODEL_INFORMATION info = {};
+				GetGamingDeviceModelInformation(&info);
+				if (info.vendorId == GAMING_DEVICE_VENDOR_ID_MICROSOFT)
+				{
+					switch (info.deviceId)
+					{
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE:
+
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_S:
+						// keep swapchain 1080p
+						width = 1920;
+						height = 1080;
+						break;
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_X:
+
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_X_DEVKIT:
+					default:
+						// forward compat
+						// 4K
+						width = 3840;
+						height = 2160;
+						break;
+					}
+				}
+
+				D3D11_CREATE_DEVICE_FLAG deviceFlag = D3D11_CREATE_DEVICE_FLAG(0);
+
+#ifdef _DEBUG
+				deviceFlag = D3D11_CREATE_DEVICE_FLAG(deviceFlag | D3D11_CREATE_DEVICE_DEBUG);
 #endif
+
+				if (_initMask & GW::GRAPHICS::DIRECT2D_SUPPORT)
+				{
+					deviceFlag = D3D11_CREATE_DEVICE_FLAG(deviceFlag | D3D11_CREATE_DEVICE_BGRA_SUPPORT); // | D3D11_CREATE_DEVICE_VIDEO_SUPPORT);
+				}
+
+				DXGI_SWAP_CHAIN_DESC1 swapChainStruct;
+
+				if (_initMask & GW::GRAPHICS::COLOR_10_BIT)
+					swapChainStruct.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
+				else if (_initMask & GW::GRAPHICS::DIRECT2D_SUPPORT)
+					swapChainStruct.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+				else
+					swapChainStruct.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+				swapChainStruct.Width = width;
+				swapChainStruct.Height = height;
+				swapChainStruct.Stereo = FALSE;
+				swapChainStruct.Scaling = DXGI_SCALING_NONE;
+				swapChainStruct.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+				swapChainStruct.BufferCount = 2u;
+				swapChainStruct.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+				swapChainStruct.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // DXGI_SWAP_EFFECT_FLIP_DISCARD works as well ???
+				swapChainStruct.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED; // MIGHT NEED TO CHANGE THIS*******************
+
+				swapChainStruct.SampleDesc.Count = msaaSample;
+				swapChainStruct.SampleDesc.Quality = msaaSample > 1 ? D3D11_STANDARD_MULTISAMPLE_PATTERN : 0;
+
+				// Create the Direct3D 11 API device object and a corresponding context.
+				winrt::com_ptr<ID3D11Device> device;
+				winrt::com_ptr<ID3D11DeviceContext> context;
+
+				HRESULT hr = D3D11CreateDevice(
+					nullptr,
+					D3D_DRIVER_TYPE_HARDWARE,
+					nullptr,
+					deviceFlag,
+					featureLevels,
+					ARRAYSIZE(featureLevels),
+					D3D11_SDK_VERSION,
+					device.put(),
+					nullptr,
+					context.put()
+				);
+				// if init fails, fall back to software
+				if (FAILED(hr))
+				{
+					winrt::check_hresult(
+						D3D11CreateDevice(
+							nullptr,
+							D3D_DRIVER_TYPE_WARP,
+							nullptr,
+							deviceFlag,
+							featureLevels,
+							ARRAYSIZE(featureLevels),
+							D3D11_SDK_VERSION,
+							device.put(),
+							nullptr,
+							context.put()
+						)
+					);
+				}
+
+				// Store pointers to the Direct3D 11.1 API device and immediate context.
+				pDevice = device.as<ID3D11Device3>();
+				pImmediateContext = context.as<ID3D11DeviceContext3>();
+
+				// Obtain the DXGI factory that was used to create the Direct3D device.
+				winrt::com_ptr<IDXGIDevice3> dxgiDevice;
+				dxgiDevice = pDevice.as<IDXGIDevice3>();
+
+				winrt::com_ptr<IDXGIAdapter> dxgiAdapter;
+				winrt::check_hresult(
+					dxgiDevice->GetAdapter(dxgiAdapter.put())
+				);
+
+				winrt::com_ptr<IDXGIFactory3> dxgiFactory;
+				winrt::check_hresult(
+					dxgiAdapter->GetParent(IID_PPV_ARGS(&dxgiFactory))
+				);
+				auto process = CallOnMainViewUiThreadAsync([&]()
+					{
+						hr = dxgiFactory->CreateSwapChainForCoreWindow(
+							pDevice.get(),
+							winrt::get_unknown(*m_window),
+							&swapChainStruct,
+							nullptr,
+							pSwapChain.put()
+						);
+					});
+
+				process.get();
+
+				if (hr != S_OK)
+					return GReturn::HARDWARE_UNAVAILABLE;
+
+				// Create the rasterizer state
+				D3D11_RASTERIZER_DESC rasterizerDesc;
+				ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+				rasterizerDesc.AntialiasedLineEnable = true;
+				rasterizerDesc.CullMode = D3D11_CULL_BACK;
+				rasterizerDesc.DepthBias = 0;
+				rasterizerDesc.DepthBiasClamp = 0.0f;
+				rasterizerDesc.DepthClipEnable = true;
+				rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+				rasterizerDesc.FrontCounterClockwise = false;
+				rasterizerDesc.MultisampleEnable = true;
+				rasterizerDesc.ScissorEnable = false;
+				rasterizerDesc.SlopeScaledDepthBias = 0.0f;
+
+				// Create the rasterizer state object
+				hr = pDevice->CreateRasterizerState(&rasterizerDesc, &pRasterizerState);
+				if (hr != S_OK)
+					return GReturn::FAILURE;
+
+				// Set the rasterizer state
+				pImmediateContext->RSSetState(pRasterizerState.Get());
+
+				ID3D11Resource* buffer;
+				pSwapChain->GetBuffer(0, __uuidof(buffer), reinterpret_cast<void**>(&buffer));
+
+				if (buffer)
+					pDevice->CreateRenderTargetView(buffer, nullptr, &pBackBufferView);
+
+				buffer->Release();
+
+				if (_initMask & GW::GRAPHICS::DEPTH_BUFFER_SUPPORT)
+				{
+					/////////////////////////////////
+					// Create Depth Buffer Texture //
+					/////////////////////////////////
+
+					D3D11_TEXTURE2D_DESC depthTextureDesc = { 0 };
+					depthTextureDesc.Width = width;
+					depthTextureDesc.Height = height;
+					depthTextureDesc.ArraySize = 1;
+					depthTextureDesc.MipLevels = 1;
+
+					depthTextureDesc.SampleDesc.Count = msaaSample;
+					depthTextureDesc.SampleDesc.Quality = msaaSample > 1 ? D3D11_STANDARD_MULTISAMPLE_PATTERN : 0;
+
+					if (_initMask & GW::GRAPHICS::DEPTH_STENCIL_SUPPORT)
+						depthTextureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+					else
+						depthTextureDesc.Format = DXGI_FORMAT_D32_FLOAT;
+
+					depthTextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+					ID3D11Texture2D* depthBuffer;
+					pDevice->CreateTexture2D(&depthTextureDesc, nullptr, &depthBuffer);
+
+					///////////////////////////////
+					// Create Depth Stencil View //
+					///////////////////////////////
+
+					D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+					ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
+
+					if (_initMask & GW::GRAPHICS::DEPTH_STENCIL_SUPPORT)
+						depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+					else
+						depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+
+					if (msaaSample > 1)
+						depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+					else
+						depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+
+					if (depthBuffer)
+						hr = pDevice->CreateDepthStencilView(depthBuffer, &depthStencilViewDesc, &pDepthStencilView);
+
+					depthBuffer->Release();
+				}
+
+				/////////////////////////
+				// Initialize Viewport //
+				/////////////////////////
+
+				D3D11_VIEWPORT viewport;
+				viewport.Width = static_cast<float>(width);
+				viewport.Height = static_cast<float>(height);
+				viewport.MinDepth = 0.0f;
+				viewport.MaxDepth = 1.0f;
+
+				unsigned int nTopLeftX = 0;
+				unsigned int nTopLeftY = 0;
+				gwindow.GetClientTopLeft(nTopLeftX, nTopLeftY);
+
+				viewport.TopLeftX = 0;// static_cast<float>(nTopLeftX);
+				viewport.TopLeftY = 0;// static_cast<float>(nTopLeftY);
+
+				
+				pImmediateContext->RSSetViewports(1, &viewport);
+				
+				// Call back event handler for DX11
+				GReturn gr = responder.Create([&](const GEvent& event)
+					{
+						GW::SYSTEM::GWindow::Events windowEvent;
+						GW::SYSTEM::GWindow::EVENT_DATA windowEventData;
+						event.Read(windowEvent, windowEventData);
+						switch (windowEvent)
+						{
+						case GW::SYSTEM::GWindow::Events::MINIMIZE: {} break;
+						case GW::SYSTEM::GWindow::Events::DESTROY: { m_Deallocated = true; } break;
+
+						case GW::SYSTEM::GWindow::Events::MAXIMIZE:
+						case GW::SYSTEM::GWindow::Events::RESIZE:
+						{
+							// resize event has fired
+							// what would happen here has moved to EVENTS_PROCESSED due to it needing to be run on a non UI thread
+							resizeCounter++;
+						}
+						break;
+
+						case GW::SYSTEM::GWindow::Events::EVENTS_PROCESSED:
+						{
+							if (resizeCounter > 0)
+							{
+								resizeCounter--;
+
+								gwindow.GetClientWidth(width);
+								gwindow.GetClientHeight(height);
+
+								aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+
+								if (pSwapChain)
+								{
+									pBackBufferView.Reset();
+
+									HRESULT hr = pSwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
+									if (hr != S_OK)
+										return;
+
+									ID3D11Texture2D* newRTVBuffer;
+									hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&newRTVBuffer));
+
+									if (hr != S_OK)
+										return;
+
+									hr = pDevice->CreateRenderTargetView(newRTVBuffer, nullptr, &pBackBufferView);
+									newRTVBuffer->Release();
+
+									if (hr != S_OK)
+										return;
+
+									D3D11_TEXTURE2D_DESC depthTextureDesc = { 0 };
+									depthTextureDesc.Width = width;
+									depthTextureDesc.Height = height;
+									depthTextureDesc.ArraySize = 1;
+									depthTextureDesc.MipLevels = 1;
+									depthTextureDesc.Format = DXGI_FORMAT_D32_FLOAT;
+									depthTextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+									depthTextureDesc.SampleDesc.Count = msaaSample;
+									depthTextureDesc.SampleDesc.Quality = msaaSample > 1 ? D3D11_STANDARD_MULTISAMPLE_PATTERN : 0;
+
+									if (pDepthStencilView)
+									{
+										pDepthStencilView.Reset();
+										ID3D11Texture2D* depthBuffer;
+										pDevice->CreateTexture2D(&depthTextureDesc, nullptr, &depthBuffer);
+
+										D3D11_DEPTH_STENCIL_VIEW_DESC newDSVdesc;
+										ZeroMemory(&newDSVdesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+										newDSVdesc.Format = DXGI_FORMAT_D32_FLOAT;
+										newDSVdesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+
+										if (depthBuffer)
+											pDevice->CreateDepthStencilView(depthBuffer, &newDSVdesc, &pDepthStencilView);
+
+										depthBuffer->Release();
+									}
+									D3D11_VIEWPORT viewport;
+									viewport.TopLeftX = 0;
+									viewport.TopLeftY = 0;
+									viewport.Width = static_cast<float>(width);
+									viewport.Height = static_cast<float>(height);
+									viewport.MinDepth = 0.0f;
+									viewport.MaxDepth = 1.0f;
+
+									pImmediateContext->RSSetViewports(1, &viewport);
+								}
+							}
+						}
+						break;
+
+						case GW::SYSTEM::GWindow::Events::MOVE:
+						{
+							gwindow.GetClientWidth(width);
+							gwindow.GetClientHeight(height);
+
+							D3D11_VIEWPORT viewport;
+							viewport.TopLeftX = 0;
+							viewport.TopLeftY = 0;
+							viewport.Width = static_cast<float>(width);
+							viewport.Height = static_cast<float>(height);
+							viewport.MinDepth = 0.0f;
+							viewport.MaxDepth = 1.0f;
+
+							pImmediateContext->RSSetViewports(1, &viewport);
+						}
+						break;
+						}
+					});
+				return gwindow.Register(responder);
+			}
+
+			GReturn GetAspectRatio(float& _outRatio) const override
+			{
+				if (!gwindow)
+					return GReturn::FAILURE;
+
+				_outRatio = aspectRatio;
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetDevice(void** _outDevice) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				*_outDevice = pDevice.get();
+				pDevice->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetImmediateContext(void** _outContext) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				*_outContext = pImmediateContext.get();
+				pImmediateContext->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetSwapchain(void** _outSwapchain) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				*_outSwapchain = pSwapChain.get();
+				pSwapChain->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetRenderTargetView(void** _outRenderTarget) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				*_outRenderTarget = pBackBufferView.Get();
+				pBackBufferView->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetDepthStencilView(void** _outDepthStencilView) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				*_outDepthStencilView = pDepthStencilView.Get();
+				pDepthStencilView->AddRef();
+				return GReturn::SUCCESS;
+			}
+			//GEventResponderInterface
+			GReturn Assign(std::function<void()> _newHandler) override {
+				return responder.Assign(_newHandler);
+			}
+			GReturn Assign(std::function<void(const GEvent&)> _newEventHandler) override {
+				return responder.Assign(_newEventHandler);
+			}
+			GReturn Invoke() const override {
+				return responder.Invoke();
+			}
+			GReturn Invoke(const GEvent& _incomingEvent) const override {
+				return responder.Invoke(_incomingEvent);
+			}
+		};
+	}
+}
+
+    #endif
+#endif
+
 
 
 namespace GW
@@ -56877,7 +69814,7 @@ namespace GW
 			GReturn Create(SYSTEM::GWindow _gWindow, unsigned long long _initMask, unsigned int _layerCount, const char** _layers,
 				unsigned int _instanceExtensionCount, const char** _instanceExtensions, unsigned int _deviceExtensionCount, const char** _deviceExtensions,
 				bool allPhysicalDeviceFeatures) { return GReturn::FEATURE_UNSUPPORTED; }
-			GReturn Create(SYSTEM::GWindow _gWindow, GVulkanSurfaceQueryInfo* _queryInfo) { return GReturn::FEATURE_UNSUPPORTED; }
+			GReturn Create(SYSTEM::GWindow _gWindow, GVulkanSurfaceQueryInfo** _queryInfo) { return GReturn::FEATURE_UNSUPPORTED; }
 
             //GVulkanSurface
 			GReturn GetAspectRatio(float& _outRatio) const override              		  { return GReturn::FAILURE; }
@@ -56916,9 +69853,69 @@ namespace GW
     } // end I namespace
 } // end GW namespace
 
+
     #define GVULKANSURFACE_DUMMY_INCLUDED
+
 #elif defined(__APPLE__)
-    //Get the Core
+    #include <TargetConditionals.h>
+    #if TARGET_OS_IOS
+        //The core namespace to which all Gateware interfaces/structures/defines must belong.
+namespace GW
+{
+	//The namespace to which all Gateware internal implementation must belong.
+	namespace I
+	{
+		class GVulkanSurfaceImplementation :	public virtual GVulkanSurfaceInterface,
+												public GEventGeneratorImplementation
+		{
+		public:
+            //Create
+			GReturn Create(SYSTEM::GWindow _gwindow, unsigned long long _initMask) { return GReturn::FEATURE_UNSUPPORTED; }
+			GReturn Create(SYSTEM::GWindow _gWindow, unsigned long long _initMask, unsigned int _layerCount, const char** _layers,
+				unsigned int _instanceExtensionCount, const char** _instanceExtensions, unsigned int _deviceExtensionCount, const char** _deviceExtensions,
+				bool allPhysicalDeviceFeatures) { return GReturn::FEATURE_UNSUPPORTED; }
+			GReturn Create(SYSTEM::GWindow _gWindow, GVulkanSurfaceQueryInfo** _queryInfo) { return GReturn::FEATURE_UNSUPPORTED; }
+
+            //GVulkanSurface
+			GReturn GetAspectRatio(float& _outRatio) const override              		  { return GReturn::FAILURE; }
+            GReturn GetSwapchainImageCount(unsigned int& _outImageCount) const override   { return GReturn::FAILURE; }
+			GReturn GetSwapchainCurrentImage(unsigned int& _outImageIndex) const override { return GReturn::FAILURE; }
+			GReturn GetGraphicsQueue(void** _outVkQueue) const override         		  { return GReturn::FAILURE; }
+			GReturn GetPresentQueue(void** _outVkQueue) const override           		  { return GReturn::FAILURE; }
+			GReturn GetQueueFamilyIndices(unsigned int& _outGraphicsIndex, unsigned int& _outPresentIndex) const override { return GReturn::FAILURE; }
+			GReturn GetSwapchainImage(const int& _index, void** _outVkImage) const override								  { return GReturn::FAILURE; }
+			GReturn GetSwapchainView(const int& _index, void** _outVkImageView) const override          				  { return GReturn::FAILURE; }
+			GReturn GetSwapchainFramebuffer(const int& _index, void** _outVkFramebuffer) const override 		 		  { return GReturn::FAILURE; }
+			GReturn GetSwapchainDepthBufferImage(const int _index, void** _outVkDepthImage) const override					  { return GReturn::FAILURE; }
+			GReturn GetSwapchainDepthBufferView(const int _index, void** _outVkDepthView) const override					  { return GReturn::FAILURE; }
+
+			GReturn GetInstance(void** _outVkInstance) const override               { return GReturn::FAILURE; }
+			GReturn GetSurface(void** _outVkSurfaceKHR) const override              { return GReturn::FAILURE; }
+			GReturn GetPhysicalDevice(void** _outVkPhysicalDevice) const override   { return GReturn::FAILURE; }
+			GReturn GetDevice(void** _outVkDevice) const override                   { return GReturn::FAILURE; }
+			GReturn GetCommandPool(void** _outCommandPool) const override           { return GReturn::FAILURE; }
+			GReturn GetSwapchain(void** _outVkSwapchainKHR) const override          { return GReturn::FAILURE; }
+			GReturn GetRenderPass(void** _outVkRenderPass) const override			{ return GReturn::FAILURE;}
+			GReturn GetCommandBuffer(const int& _index, void** _outCommandBuffer) const override         { return GReturn::FAILURE; }
+			GReturn GetImageAvailableSemaphore(const int& _index, void** _outVkSemaphore) const override { return GReturn::FAILURE; }
+			GReturn GetRenderFinishedSemaphore(const int& _index, void** _outVkSemaphore) const override { return GReturn::FAILURE; }
+			GReturn GetRenderFence(const int& _index, void** _outVkFence) const override                 { return GReturn::FAILURE; }
+
+			GReturn StartFrame(const unsigned int& _clearCount, void* _vkClearValues) override { return GReturn::FAILURE; }
+			GReturn EndFrame(const bool& _vSync) override { return GReturn::FAILURE; }
+
+            //GEventResponderInterface
+			GReturn Assign(std::function<void()> _newHandler) override 						{ return GReturn::FAILURE;}
+			GReturn Assign(std::function<void(const GEvent&)> _newEventHandler) override 	{ return GReturn::FAILURE;}
+			GReturn Invoke() const override													{ return GReturn::FAILURE;}
+			GReturn Invoke(const GEvent& _incomingEvent) const override 					{ return GReturn::FAILURE;}
+		};
+    } // end I namespace
+} // end GW namespace
+
+
+    #elif TARGET_OS_MAC
+        //Get the Core
 @import QuartzCore;
 
 #include </usr/local/include/vulkan/vulkan.h>
@@ -56946,6 +69943,24 @@ namespace GW
                     return "VK_KHR_portability_subset";
                 else
                     return nullptr;
+            }
+            
+			void PlatformOverrideInstanceCreate(VkInstanceCreateInfo& _create_info, uint32_t& _instanceExtensionCount, 
+				const char*** _instanceExtensions, uint32_t& _instanceLayerCount, const char*** _instanceLayer) {
+
+                _create_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+                
+                const char** newExtensions = new const char*[_create_info.enabledExtensionCount + 1];
+                for (int i = 0; i < _create_info.enabledExtensionCount; ++i) {
+                    newExtensions[i] = _create_info.ppEnabledExtensionNames[i];
+                }
+
+				delete[] * _instanceExtensions;
+				*_instanceExtensions = newExtensions;
+
+                newExtensions[_create_info.enabledExtensionCount] = VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME;
+                _create_info.enabledExtensionCount = ++_instanceExtensionCount;
+                _create_info.ppEnabledExtensionNames = newExtensions;
             }
 
 			//Get the platform name
@@ -57022,6 +70037,8 @@ namespace GW
 }
 
 
+    #endif
+
 #elif defined(__linux__)
     //Get the Core
 #include <string.h>
@@ -57041,9 +70058,14 @@ namespace GW
 			const char* GetPlatformSurfaceExtension() {
 				return VK_KHR_XLIB_SURFACE_EXTENSION_NAME;
 			}
-            const char* GetPlatformDeviceExtension() {
-                return nullptr;
-            }
+			const char* GetPlatformDeviceExtension() {
+				return nullptr;
+			}
+
+			void PlatformOverrideInstanceCreate(VkInstanceCreateInfo& _create_info, uint32_t& _instanceExtensionCount,
+				const char*** _instanceExtensions, uint32_t& _instanceLayerCount, const char*** _instanceLayer) {
+				//Hey there! Nothing to see here!...yet
+			}
 
 			char* GetPlatformWindowName(const GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE& uwh) {
 				//Setup Window and Display
@@ -57054,7 +70076,7 @@ namespace GW
 				XTextProperty x11_window_title;
 				int status = XGetWMName(dpy, wnd, &x11_window_title);
 
-				//Create a Window Title Separate from X11 (Cause it needs to be Free'd by X11, According to the docs)
+				//Create a Window Title Separate from X11 (Cause it needs to be `Free`d by X11, According to the docs)
 				char* window_title = nullptr;
 				uint32_t len = strlen((char*)x11_window_title.value);
 				if (x11_window_title.value && len)
@@ -57074,7 +70096,7 @@ namespace GW
 			}
 
 			VkResult CreateVkSurfaceKHR(const VkInstance& vkInstance, const GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE& uwh, VkSurfaceKHR& vkSurface) {
-				
+
 				//Setup Window and Display
 				Window wnd = *(static_cast<Window*>(uwh.window));
 				Display* dpy = static_cast<Display*>(uwh.display);
@@ -57103,8 +70125,13 @@ namespace GW
 } //GW
 
 
+
 #elif defined(_WIN32)
-    #include <Windows.h>
+    #include <winapifamily.h>
+
+    // checks for windows desktop
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #include <Windows.h>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_win32.h>
 #pragma comment(lib, "vulkan-1.lib")
@@ -57121,6 +70148,11 @@ namespace GW
             const char* GetPlatformDeviceExtension() {
                 return nullptr;
             }
+
+			void PlatformOverrideInstanceCreate(VkInstanceCreateInfo& _create_info, uint32_t& _instanceExtensionCount,
+				const char*** _instanceExtensions, uint32_t& _instanceLayerCount, const char*** _instanceLayer) {
+				//Hey there! Nothing to see here!...yet
+			}
 
 			char* GetPlatformWindowName(const GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE& uwh) {
 				//Get the proper window handle
@@ -57177,8 +70209,66 @@ namespace GW
 
 
 
-#endif
+    // check for UWP
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP) // can be else,
+        //The core namespace to which all Gateware interfaces/structures/defines must belong.
+namespace GW
+{
+	//The namespace to which all Gateware internal implementation must belong.
+	namespace I
+	{
+		class GVulkanSurfaceImplementation :	public virtual GVulkanSurfaceInterface,
+												public GEventGeneratorImplementation
+		{
+		public:
+            //Create
+			GReturn Create(SYSTEM::GWindow _gwindow, unsigned long long _initMask) { return GReturn::FEATURE_UNSUPPORTED; }
+			GReturn Create(SYSTEM::GWindow _gWindow, unsigned long long _initMask, unsigned int _layerCount, const char** _layers,
+				unsigned int _instanceExtensionCount, const char** _instanceExtensions, unsigned int _deviceExtensionCount, const char** _deviceExtensions,
+				bool allPhysicalDeviceFeatures) { return GReturn::FEATURE_UNSUPPORTED; }
+			GReturn Create(SYSTEM::GWindow _gWindow, GVulkanSurfaceQueryInfo** _queryInfo) { return GReturn::FEATURE_UNSUPPORTED; }
 
+            //GVulkanSurface
+			GReturn GetAspectRatio(float& _outRatio) const override              		  { return GReturn::FAILURE; }
+            GReturn GetSwapchainImageCount(unsigned int& _outImageCount) const override   { return GReturn::FAILURE; }
+			GReturn GetSwapchainCurrentImage(unsigned int& _outImageIndex) const override { return GReturn::FAILURE; }
+			GReturn GetGraphicsQueue(void** _outVkQueue) const override         		  { return GReturn::FAILURE; }
+			GReturn GetPresentQueue(void** _outVkQueue) const override           		  { return GReturn::FAILURE; }
+			GReturn GetQueueFamilyIndices(unsigned int& _outGraphicsIndex, unsigned int& _outPresentIndex) const override { return GReturn::FAILURE; }
+			GReturn GetSwapchainImage(const int& _index, void** _outVkImage) const override								  { return GReturn::FAILURE; }
+			GReturn GetSwapchainView(const int& _index, void** _outVkImageView) const override          				  { return GReturn::FAILURE; }
+			GReturn GetSwapchainFramebuffer(const int& _index, void** _outVkFramebuffer) const override 		 		  { return GReturn::FAILURE; }
+			GReturn GetSwapchainDepthBufferImage(const int _index, void** _outVkDepthImage) const override					  { return GReturn::FAILURE; }
+			GReturn GetSwapchainDepthBufferView(const int _index, void** _outVkDepthView) const override					  { return GReturn::FAILURE; }
+
+			GReturn GetInstance(void** _outVkInstance) const override               { return GReturn::FAILURE; }
+			GReturn GetSurface(void** _outVkSurfaceKHR) const override              { return GReturn::FAILURE; }
+			GReturn GetPhysicalDevice(void** _outVkPhysicalDevice) const override   { return GReturn::FAILURE; }
+			GReturn GetDevice(void** _outVkDevice) const override                   { return GReturn::FAILURE; }
+			GReturn GetCommandPool(void** _outCommandPool) const override           { return GReturn::FAILURE; }
+			GReturn GetSwapchain(void** _outVkSwapchainKHR) const override          { return GReturn::FAILURE; }
+			GReturn GetRenderPass(void** _outVkRenderPass) const override			{ return GReturn::FAILURE;}
+			GReturn GetCommandBuffer(const int& _index, void** _outCommandBuffer) const override         { return GReturn::FAILURE; }
+			GReturn GetImageAvailableSemaphore(const int& _index, void** _outVkSemaphore) const override { return GReturn::FAILURE; }
+			GReturn GetRenderFinishedSemaphore(const int& _index, void** _outVkSemaphore) const override { return GReturn::FAILURE; }
+			GReturn GetRenderFence(const int& _index, void** _outVkFence) const override                 { return GReturn::FAILURE; }
+
+			GReturn StartFrame(const unsigned int& _clearCount, void* _vkClearValues) override { return GReturn::FAILURE; }
+			GReturn EndFrame(const bool& _vSync) override { return GReturn::FAILURE; }
+
+            //GEventResponderInterface
+			GReturn Assign(std::function<void()> _newHandler) override 						{ return GReturn::FAILURE;}
+			GReturn Assign(std::function<void(const GEvent&)> _newEventHandler) override 	{ return GReturn::FAILURE;}
+			GReturn Invoke() const override													{ return GReturn::FAILURE;}
+			GReturn Invoke(const GEvent& _incomingEvent) const override 					{ return GReturn::FAILURE;}
+		};
+    } // end I namespace
+} // end GW namespace
+
+
+        #define GVULKANSURFACE_DUMMY_INCLUDED
+    #endif
+#endif
 
 #if !defined(GVULKANSURFACE_DUMMY_INCLUDED)
     // This file is automatically generated by our CMake build scripts.
@@ -57191,19 +70281,61 @@ namespace GW
 static_assert(sizeof(void*) == 8, "Gateware supports x64 platforms only.");
 
 // The Major version is auto-generated based on the current year.
-#define GATEWARE_MAJOR 22
+#define GATEWARE_MAJOR 24
 // The Minor version is auto-generated based on the current day of the year.
-#define GATEWARE_MINOR 296
+#define GATEWARE_MINOR 47
 // The Patch version is auto-generated based on the current UTC hour of the day.
-#define GATEWARE_PATCH 20
+#define GATEWARE_PATCH 21
 // Pulled directly from GIT  
 #define GATEWARE_BRANCH "master"
 // Pulled directly from GIT
-#define GATEWARE_COMMIT_HASH 0x636b27d
+#define GATEWARE_COMMIT_HASH 0x6acdab6
 // Standard Window Title Bar
-#define GATEWARE_VERSION_STRING "Gateware v22.296.20"
+#define GATEWARE_VERSION_STRING "Gateware v24.47.21"
 // Window Title Bar displayed in DEBUG builds
-#define GATEWARE_VERSION_STRING_LONG "Gateware v22.296.20 (master) [636b27d]"
+#define GATEWARE_VERSION_STRING_LONG "Gateware v24.47.21 (master) [6acdab6]"
+
+// Distinguishes the platform Gateware is compiling for
+//// This file contains defines for platform-specific code
+// Authors: Jacob Morales
+#ifndef GENVIRONMENT_HPP
+#define GENVIRONMENT_HPP
+
+#if defined(__APPLE__)
+
+    #include <TargetConditionals.h>
+
+    #if TARGET_OS_IOS
+
+        #define GATEWARE_ENV_APP
+
+    #elif TARGET_OS_MAC
+
+        #define GATEWARE_ENV_DESKTOP
+
+    #endif //TARGET_OS_MAC/IOS
+
+#elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+    #include <gamingdeviceinformation.h>
+
+    #define GATEWARE_ENV_APP
+
+#elif defined(__linux__) || defined(_WIN32)
+
+    #define GATEWARE_ENV_DESKTOP
+
+#else
+
+    #define GATEWARE_ENV_UNKNOWN
+
+#endif //__APPLE__
+
+
+
+#endif //GENVIRONMENT_HPP
+
+
 
 #endif
 
@@ -57213,7 +70345,7 @@ static_assert(sizeof(void*) == 8, "Gateware supports x64 platforms only.");
 #define GVULKANHELPER_HPP
 
 namespace GvkHelper {
-	//Extension, Layers and Enumeration Support (RETRUNS: VK_FALSE IS SUCCESS, VK_TRUE IS FAILURE)
+	//Extension, Layers and Enumeration Support (RETURNS: VK_FALSE IS SUCCESS, VK_TRUE IS FAILURE)
 	inline VkResult check_instance_extension_name(const char* _extension);
 	inline VkResult check_instance_layer_name(const char* _layer);
 	inline VkResult check_device_extension_name(const VkPhysicalDevice& _physicalDevice, const char* _extension);
@@ -57255,7 +70387,7 @@ namespace GvkHelper {
 	inline VkResult find_memory_type(const VkPhysicalDevice& _physicalDevice, const uint32_t& _filter, const VkMemoryPropertyFlags& _propertyFlags, uint32_t* _outMemoryType);
 	inline VkResult create_shader(const VkDevice& _device, const char* _fileName, const char* _entryPoint, const VkShaderStageFlagBits& _shaderType, VkShaderModule* _outShaderModule, VkPipelineShaderStageCreateInfo* _outStageInfo);
 
-	//Overwite a buffer's data
+	//Overwrite a buffer's data
 	inline VkResult write_to_buffer(const VkDevice& device, VkDeviceMemory& memory, const void* data_to_write, unsigned int num_bytes)
 	{
 		void* data;
@@ -58511,6 +71643,7 @@ namespace GW
 {
 	//The namespace to which all Gateware internal implementation must belong.
 	namespace I {
+    
 		class GVulkanSurfaceImplementation :	public virtual GVulkanSurfaceInterface,
 												public GEventGeneratorImplementation
 			{
@@ -58585,7 +71718,7 @@ namespace GW
 						CleanupVulkanSurface();
 						return toCreate;
 					}
-					// disable it by default.(once intialization has completed)
+					// disable it by default.(once initialization has completed)
 					m_VSync = false;
 					return GReturn::SUCCESS;
 				}
@@ -59548,6 +72681,9 @@ namespace GW
 				create_info.ppEnabledExtensionNames = m_InstanceExtensions;
 				create_info.enabledLayerCount = m_InstanceLayerCount;
 				create_info.ppEnabledLayerNames = m_InstanceLayers;
+                
+                m_VulkanHelperOS.PlatformOverrideInstanceCreate(create_info, m_InstanceExtensionCount,
+					&m_InstanceExtensions, m_InstanceLayerCount, &m_InstanceLayers);
 
 				VkResult r = vkCreateInstance(&create_info, nullptr, &m_VkInstance);
 				return r;
@@ -60210,12 +73346,13 @@ namespace GW
                 if (gotExtFlag & 8) ++devExtAdded;
 
 				//Create the new arrays for the extensions
-				m_InstanceExtensions = new const char* [static_cast<size_t>(m_InstanceExtensionCount) + instExtAdded];
-				m_DeviceExtensions = new const char* [static_cast<size_t>(m_DeviceExtensionCount) + devExtAdded];
-				for (uint32_t i = 0; i < m_InstanceExtensionCount; ++i)
-					m_InstanceExtensions[i] = _instanceExtensions[i];
-				for (uint32_t i = 0; i < m_DeviceExtensionCount; ++i)
-					m_DeviceExtensions[i] = _deviceExtensions[i];
+
+                m_InstanceExtensions = new const char* [static_cast<size_t>(m_InstanceExtensionCount) + instExtAdded];
+                m_DeviceExtensions = new const char* [static_cast<size_t>(m_DeviceExtensionCount) + devExtAdded];
+                for (uint32_t i = 0; i < m_InstanceExtensionCount; ++i)
+                    m_InstanceExtensions[i] = _instanceExtensions[i];
+                for (uint32_t i = 0; i < m_DeviceExtensionCount; ++i)
+                    m_DeviceExtensions[i] = _deviceExtensions[i];
 
 				//Add in the adds if needed
 				if (gotExtFlag & 2) {
@@ -60587,7 +73724,7 @@ namespace GW
 				VkResult r = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VkPhysicalDevice, m_VkSurfaceKHR, &surface_capabilities);
 				if (r) return r;
 
-				//If Capabilities's extent is not MAX, Set to those extents
+				//If `Capabilities`'s extent is not MAX, Set to those extents
 				if (surface_capabilities.currentExtent.width != 0xFFFFFFFF)
 					m_VkExtent2DSurface = { surface_capabilities.currentExtent.width, surface_capabilities.currentExtent.height };
 				else //Otherwise set it to window's width and height.
@@ -60939,6 +74076,7 @@ namespace GW
 #endif
 
 
+
 namespace GW
 {
 	namespace GRAPHICS
@@ -61094,7 +74232,9 @@ namespace GW
 }
 
 #elif defined(_WIN32)
-    #pragma warning(disable : 26812) // prefer enum class over enum warning
+    #include <winapifamily.h>
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #pragma warning(disable : 26812) // prefer enum class over enum warning
 #include <wrl/client.h>
 #include <dxgi1_6.h>
 #if defined(_DEBUG)
@@ -61957,7 +75097,1001 @@ namespace GW
 	}
 }
 
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        #pragma warning(disable : 26812) // prefer enum class over enum warning
+#include <wrl/client.h>
+#include <dxgi1_6.h>
+
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.UI.Core.h>
+#include <winrt/Windows.Foundation.h>
+// This file contains defines for platform-specific code
+// Authors: Jacob Morales
+#ifndef GENVIRONMENT_HPP
+#define GENVIRONMENT_HPP
+
+#if defined(__APPLE__)
+
+    #include <TargetConditionals.h>
+
+    #if TARGET_OS_IOS
+
+        #define GATEWARE_ENV_APP
+
+    #elif TARGET_OS_MAC
+
+        #define GATEWARE_ENV_DESKTOP
+
+    #endif //TARGET_OS_MAC/IOS
+
+#elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+
+    #include <gamingdeviceinformation.h>
+
+    #define GATEWARE_ENV_APP
+
+#elif defined(__linux__) || defined(_WIN32)
+
+    #define GATEWARE_ENV_DESKTOP
+
+#else
+
+    #define GATEWARE_ENV_UNKNOWN
+
+#endif //__APPLE__
+
+
+
+#endif //GENVIRONMENT_HPP
+
+
+
+#if defined(_DEBUG)
+#include <dxgidebug.h>
 #endif
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "dxguid.lib")
+#include <d3d12.h>
+#pragma comment(lib, "d3d12.lib")
+#include <vector>
+
+
+namespace GW
+{
+	namespace I
+	{
+		class GDirectX12SurfaceImplementation : public virtual GDirectX12SurfaceInterface,
+			private virtual GEventResponderImplementation, private virtual GThreadSharedImplementation
+		{
+		private:
+			template<class T>
+			void SafeRelease(T*& COMObject)
+			{
+				if (COMObject)
+				{
+					COMObject->Release();
+					COMObject = nullptr;
+				}
+			}
+
+			GW::SYSTEM::GWindow m_GWindow;
+			GW::CORE::GEventResponder m_GEventResponder;
+			GW::SYSTEM::UNIVERSAL_WINDOW_HANDLE m_UWH;
+			unsigned int m_Width = 0;
+			unsigned int m_Height = 0;
+			float m_AspectRatio = 0.0f;
+
+			bool m_Deallocated;
+
+			static constexpr UINT m_SwapChainBufferCount = 2u; // How many swapchain back buffers will be createcd
+
+			DXGI_FORMAT m_SwapChainBufferFormat;
+			DXGI_FORMAT m_DepthBufferFormat;
+			bool m_DepthBufferSupport;
+
+			IDXGIFactory6* m_pDXGIFactory = nullptr;
+			IDXGISwapChain4* m_pSwapChain = nullptr;
+			IDXGIAdapter4* m_pAdapter = nullptr;
+
+			ID3D12Device* m_pDevice = nullptr;
+
+			winrt::Windows::UI::Core::CoreWindow* m_window = nullptr;
+			std::atomic_int m_resizeCounter = 0;
+
+			struct CommandList
+			{
+				ID3D12CommandAllocator* m_pCommandAllocator;
+				ID3D12GraphicsCommandList* m_pCommandList;
+
+				CommandList()
+				{
+					m_pCommandAllocator = nullptr;
+					m_pCommandList = nullptr;
+				}
+			} m_CommandList;
+
+			struct CommandQueue
+			{
+				ID3D12CommandQueue* m_pCommandQueue;
+				ID3D12Fence* m_pFence;
+				HANDLE m_EventHandle; // Handle used to synchronize
+				UINT64 m_FenceValue; // The fence value CPU should wait for
+
+				operator bool()
+				{
+					return m_pCommandQueue && m_pFence && m_EventHandle;
+				}
+
+				void Signal()
+				{
+					m_pCommandQueue->Signal(m_pFence, ++m_FenceValue);
+				}
+
+				void Flush()
+				{
+					if (!(m_pFence->GetCompletedValue() >= m_FenceValue))
+					{
+						HRESULT hr = m_pFence->SetEventOnCompletion(m_FenceValue, m_EventHandle);
+						if (FAILED(hr))
+							return;
+						::WaitForSingleObjectEx(m_EventHandle, INFINITE, FALSE);
+					}
+				}
+
+				CommandQueue()
+				{
+					m_pCommandQueue = nullptr;
+					m_pFence = nullptr;
+					m_EventHandle = nullptr;
+					m_FenceValue = 0u;
+				}
+			} m_CommandQueue;
+
+			struct DescriptorInfo
+			{
+				UINT CBSRUADescriptorSize;
+				UINT SamplerDescriptorSize;
+				UINT RenderTargetDescriptorSize;
+				UINT DepthStencilDescriptorSize;
+
+				DescriptorInfo()
+				{
+					CBSRUADescriptorSize = 0;
+					SamplerDescriptorSize = 0;
+					RenderTargetDescriptorSize = 0;
+					DepthStencilDescriptorSize = 0;
+				}
+			} m_DescriptorInfo;
+
+			// This should only be used if there is only one view
+			winrt::Windows::Foundation::IAsyncAction CallOnMainViewUiThreadAsync(winrt::Windows::UI::Core::DispatchedHandler handler) const
+			{
+				co_await winrt::Windows::ApplicationModel::Core::CoreApplication::MainView().CoreWindow().Dispatcher().RunAsync(winrt::Windows::UI::Core::CoreDispatcherPriority::Normal, handler);
+			}
+
+			ID3D12DescriptorHeap* m_pRenderTargetDescriptorHeap = nullptr;
+			ID3D12DescriptorHeap* m_pDepthStencilDescriptorHeap = nullptr;
+
+			ID3D12Resource* m_pRenderTargets[m_SwapChainBufferCount] = { nullptr, nullptr };
+			ID3D12Resource* m_pDepthStencil = nullptr;
+
+			D3D12_VIEWPORT m_ScreenViewport = {};
+			D3D12_RECT m_ScissorRect = {};
+
+			GReturn CreateFactory()
+			{
+				UINT factoryFlags = 0;
+#if defined (_DEBUG)
+				factoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+#endif
+				HRESULT hr = ::CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&m_pDXGIFactory));
+				if (FAILED(hr))
+					return GW::GReturn::FAILURE;
+				return GW::GReturn::SUCCESS;
+			}
+
+			GReturn QueryAdapter()
+			{
+				std::vector<Microsoft::WRL::ComPtr<IDXGIAdapter4>> m_pAdapters;
+				// Enumerate hardware
+				{
+					// Enumerating iGPU, dGPU, xGPU
+					Microsoft::WRL::ComPtr<IDXGIAdapter1> pAdapter1 = nullptr;
+					Microsoft::WRL::ComPtr<IDXGIAdapter4> pAdapter4 = nullptr;
+					for (UINT index = 0; m_pDXGIFactory->EnumAdapterByGpuPreference(index, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(pAdapter1.GetAddressOf())) != DXGI_ERROR_NOT_FOUND; ++index)
+					{
+						pAdapter1.As(&pAdapter4);
+						m_pAdapters.push_back(pAdapter4);
+						pAdapter1.Reset();
+					}
+				}
+
+				if (m_pAdapters.size() == 0)
+					return GW::GReturn::HARDWARE_UNAVAILABLE;
+
+				// Quering adapter
+				{
+					HRESULT hardwareResult = E_FAIL;
+					DXGI_ADAPTER_DESC3 adapterDesc;
+
+					for (unsigned int i = 0; i < static_cast<unsigned int>(m_pAdapters.size()); ++i)
+					{
+						HRESULT hr = m_pAdapters[i]->GetDesc3(&adapterDesc);
+						if (FAILED(hr))
+							return GW::GReturn::FAILURE;
+						// Attempt to create a DX12 compatible device
+						if ((adapterDesc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0)
+						{
+							hardwareResult = ::D3D12CreateDevice(
+								m_pAdapters[i].Get(),
+								D3D_FEATURE_LEVEL_11_0,
+								__uuidof(ID3D12Device), nullptr);
+							if (SUCCEEDED(hardwareResult))
+							{
+								m_pAdapter = m_pAdapters[i].Get();
+								m_pAdapter->AddRef();
+								break;
+							}
+						}
+					}
+
+					if (!m_pAdapter)
+						return GW::GReturn::HARDWARE_UNAVAILABLE;
+				}
+				return GW::GReturn::SUCCESS;
+			}
+
+			GReturn CreateDevice()
+			{
+				HRESULT hr;
+#if defined(_DEBUG)
+				// NOTE: Enabling the debug layer after creating the ID3D12Device will cause the DX runtime to remove the device.
+				ID3D12Debug* pDebug = nullptr;
+				hr = ::D3D12GetDebugInterface(IID_PPV_ARGS(&pDebug));
+				if (FAILED(hr))
+					return GW::GReturn::FAILURE;
+				pDebug->EnableDebugLayer();
+				pDebug->Release();
+#endif
+
+				// Create our virtual device used for interacting with the GPU so we can create resources
+				{
+					hr = ::D3D12CreateDevice(m_pAdapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_pDevice));
+					if (FAILED(hr))
+						return GW::GReturn::FAILURE;
+				}
+
+				// Query descriptor size (descriptor size vary based on GPU vendor)
+				{
+					m_DescriptorInfo.CBSRUADescriptorSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+					m_DescriptorInfo.SamplerDescriptorSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+					m_DescriptorInfo.RenderTargetDescriptorSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+					m_DescriptorInfo.DepthStencilDescriptorSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+				}
+				return GW::GReturn::SUCCESS;
+			}
+
+			GReturn CreateCommandLists()
+			{
+				HRESULT hr = m_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_CommandList.m_pCommandAllocator));
+				if (FAILED(hr))
+					return GW::GReturn::FAILURE;
+				hr = m_pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+					m_CommandList.m_pCommandAllocator,
+					nullptr, IID_PPV_ARGS(&m_CommandList.m_pCommandList));
+				if (FAILED(hr))
+					return GW::GReturn::FAILURE;
+				hr = m_CommandList.m_pCommandList->Close();
+				if (FAILED(hr))
+					return GW::GReturn::FAILURE;
+				return GW::GReturn::SUCCESS;
+			}
+
+			GReturn CreateCommandQueues()
+			{
+				D3D12_COMMAND_QUEUE_DESC commandQueueDesc = {};
+				commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+				commandQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+				commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+				commandQueueDesc.NodeMask = 0;
+				HRESULT hr = m_pDevice->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&m_CommandQueue.m_pCommandQueue));
+				if (FAILED(hr))
+					return GW::GReturn::FAILURE;
+				hr = m_pDevice->CreateFence(m_CommandQueue.m_FenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_CommandQueue.m_pFence));
+				if (FAILED(hr))
+					return GW::GReturn::FAILURE;
+				m_CommandQueue.m_EventHandle = ::CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+				if (!m_CommandQueue.m_EventHandle)
+					return GW::GReturn::FAILURE;
+				return GW::GReturn::SUCCESS;
+			}
+
+			GReturn CreateSwapChain()
+			{
+				Microsoft::WRL::ComPtr<IDXGISwapChain4> pSwapChain;
+				DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
+				swapChainDesc.Width = m_Width;
+				swapChainDesc.Height = m_Height;
+				swapChainDesc.Format = m_SwapChainBufferFormat;
+				swapChainDesc.Stereo = FALSE;
+				swapChainDesc.SampleDesc.Count = 1u;
+				swapChainDesc.SampleDesc.Quality = 0u;
+				swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+				swapChainDesc.BufferCount = m_SwapChainBufferCount;
+				swapChainDesc.Scaling = DXGI_SCALING_NONE;
+				swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+				swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+				swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+				Microsoft::WRL::ComPtr<IDXGISwapChain1> pSwapChain1;
+
+				HRESULT hr = m_pDXGIFactory->CreateSwapChainForCoreWindow(m_CommandQueue.m_pCommandQueue,
+					winrt::get_unknown(*m_window),
+					&swapChainDesc,
+					nullptr,
+					pSwapChain1.GetAddressOf());
+
+				if (FAILED(hr))
+					return GW::GReturn::FAILURE;
+
+				// For Windows Store apps, because DXGI can't perform full-screen transitions, a Windows Store app has no way to control full-screen transitions.
+				/*hr = m_pDXGIFactory->MakeWindowAssociation(static_cast<HWND>(m_UWH.window), DXGI_MWA_NO_ALT_ENTER);
+				if (FAILED(hr))
+					return GW::GReturn::FAILURE;*/
+
+				hr = pSwapChain1.As(&pSwapChain);
+				if (FAILED(hr))
+					return GW::GReturn::FAILURE;
+				m_pSwapChain = pSwapChain.Get();
+				m_pSwapChain->AddRef();
+				return GW::GReturn::SUCCESS;
+			}
+
+			GReturn CreateDescriptorHeap()
+			{
+				// RT Descriptor Heap
+				{
+					D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc;
+					descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+					descriptorHeapDesc.NumDescriptors = m_SwapChainBufferCount;
+					descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+					descriptorHeapDesc.NodeMask = 0;
+
+					HRESULT hr = m_pDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_pRenderTargetDescriptorHeap));
+					if (FAILED(hr))
+						return GW::GReturn::FAILURE;
+				}
+
+				if (m_DepthBufferSupport)
+				{
+					// DS Descriptor Heap
+					{
+						D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc;
+						descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+						descriptorHeapDesc.NumDescriptors = 1;
+						descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+						descriptorHeapDesc.NodeMask = 0;
+
+						HRESULT hr = m_pDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_pDepthStencilDescriptorHeap));
+						if (FAILED(hr))
+							return GW::GReturn::FAILURE;
+					}
+				}
+				return GW::GReturn::SUCCESS;
+			}
+
+			void Resize()
+			{
+				m_GWindow.GetClientWidth(m_Width);
+				m_GWindow.GetClientHeight(m_Height);
+				// if xbox
+				GAMING_DEVICE_MODEL_INFORMATION info = {};
+				GetGamingDeviceModelInformation(&info);
+				if (info.vendorId == GAMING_DEVICE_VENDOR_ID_MICROSOFT)
+				{
+					switch (info.deviceId)
+					{
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE:
+
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_S:
+						// keep swapchan 1080p
+						m_Width = 1920;
+						m_Height = 1080;
+						break;
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_X:
+
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_X_DEVKIT:
+					default:
+						// forward compat
+						// 4K
+						m_Width = 3840;
+						m_Height = 2160;
+						break;
+					}
+				}
+				m_AspectRatio = static_cast<float>(m_Width) / static_cast<float>(m_Height);
+
+				// Wait for GPU to finish before changing any resources
+				m_CommandQueue.Signal();
+				m_CommandQueue.Flush();
+				{
+					// Release resources
+					for (unsigned int i = 0; i < m_SwapChainBufferCount; ++i)
+						if (m_pRenderTargets[i])
+							m_pRenderTargets[i]->Release();
+
+					// Resize backbuffer
+					UINT nodes[m_SwapChainBufferCount] = { 0, 0 };
+					IUnknown* commandQueues[m_SwapChainBufferCount] =
+					{
+						m_CommandQueue.m_pCommandQueue,
+						m_CommandQueue.m_pCommandQueue
+					};
+					m_pSwapChain->ResizeBuffers1(m_SwapChainBufferCount, m_Width, m_Height, m_SwapChainBufferFormat,
+						DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH, nodes, commandQueues);
+
+					// Recreate RT resource and descriptors
+					for (unsigned int i = 0; i < m_SwapChainBufferCount; ++i)
+					{
+						ID3D12Resource* pBackBuffer = nullptr;
+						m_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pBackBuffer));
+						m_pRenderTargets[i] = pBackBuffer;
+						D3D12_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
+						renderTargetViewDesc.Format = m_SwapChainBufferFormat;
+						renderTargetViewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+						renderTargetViewDesc.Texture2D.MipSlice = 0;
+						renderTargetViewDesc.Texture2D.PlaneSlice = 0;
+						D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
+						cpuHandle.ptr = m_pRenderTargetDescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + (static_cast<size_t>(i) * m_DescriptorInfo.RenderTargetDescriptorSize);
+						m_pDevice->CreateRenderTargetView(m_pRenderTargets[i], &renderTargetViewDesc, cpuHandle);
+					}
+
+					if (m_DepthBufferSupport)
+					{
+						// Recreate DS resource and descriptors
+						if (m_pDepthStencil)
+						{
+							m_pDepthStencil->Release();
+							m_pDepthStencil = nullptr;
+						}
+
+						D3D12_RESOURCE_DESC resourceDesc = {};
+						resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+						resourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+						resourceDesc.Width = m_Width;
+						resourceDesc.Height = m_Height;
+						resourceDesc.DepthOrArraySize = resourceDesc.MipLevels = 1;
+						resourceDesc.Format = m_DepthBufferFormat;
+						resourceDesc.SampleDesc = { 1, 0 };
+						resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+						resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+						D3D12_CLEAR_VALUE clearValue = {};
+						clearValue.Format = m_DepthBufferFormat;
+						clearValue.DepthStencil.Depth = 1.0f;
+						clearValue.DepthStencil.Stencil = 0;
+
+						// Create GPU Memory
+						{
+							D3D12_HEAP_PROPERTIES defaultHeapProperties;
+							defaultHeapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+							defaultHeapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+							defaultHeapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+							defaultHeapProperties.CreationNodeMask = 1;
+							defaultHeapProperties.VisibleNodeMask = 1;
+							const D3D12_HEAP_FLAGS heapFlags = D3D12_HEAP_FLAG_NONE;
+							const D3D12_RESOURCE_STATES depthWriteState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+							m_pDevice->CreateCommittedResource(&defaultHeapProperties, heapFlags,
+								&resourceDesc, depthWriteState, &clearValue, IID_PPV_ARGS(&m_pDepthStencil));
+						}
+
+						D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc = {};
+						depthStencilViewDesc.Format = m_DepthBufferFormat;
+						depthStencilViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+						depthStencilViewDesc.Flags = D3D12_DSV_FLAG_NONE;
+						depthStencilViewDesc.Texture2D.MipSlice = 0;
+						m_pDevice->CreateDepthStencilView(m_pDepthStencil, &depthStencilViewDesc, m_pDepthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+					}
+
+					// Update the viewport transform to cover the client area.
+					m_ScreenViewport.TopLeftX = m_ScreenViewport.TopLeftY = 0.0f;
+					m_ScreenViewport.Width = static_cast<FLOAT>(m_Width);
+					m_ScreenViewport.Height = static_cast<FLOAT>(m_Height);
+					m_ScreenViewport.MinDepth = 0.0f;
+					m_ScreenViewport.MaxDepth = 1.0f;
+					m_ScissorRect.left = m_ScissorRect.top = 0;
+					m_ScissorRect.right = m_Width;
+					m_ScissorRect.bottom = m_Height;
+				}
+				// Wait until resize is complete.
+				m_CommandQueue.Signal();
+				m_CommandQueue.Flush();
+			}
+
+			void Release()
+			{
+				if (!m_Deallocated)
+				{
+					if (m_CommandQueue)
+					{
+						m_CommandQueue.Signal();
+						m_CommandQueue.Flush();
+					}
+					SafeRelease(m_pDepthStencil);
+					for (unsigned int i = 0; i < m_SwapChainBufferCount; ++i)
+					{
+						SafeRelease(m_pRenderTargets[i]);
+					}
+					SafeRelease(m_pDepthStencilDescriptorHeap);
+					SafeRelease(m_pRenderTargetDescriptorHeap);
+					::CloseHandle(m_CommandQueue.m_EventHandle);
+					if (m_CommandQueue)
+					{
+						m_CommandQueue.m_EventHandle = nullptr;
+					}
+					SafeRelease(m_CommandQueue.m_pFence);
+					SafeRelease(m_CommandQueue.m_pCommandQueue);
+					SafeRelease(m_CommandList.m_pCommandList);
+					SafeRelease(m_CommandList.m_pCommandAllocator);
+					SafeRelease(m_pDevice);
+					SafeRelease(m_pAdapter);
+					SafeRelease(m_pSwapChain);
+					SafeRelease(m_pDXGIFactory);
+					m_Deallocated = true;
+				}
+			}
+		public:
+			~GDirectX12SurfaceImplementation()
+			{
+				Release();
+			}
+
+			GReturn Create(GW::SYSTEM::GWindow _gwindow, unsigned long long _initMask)
+			{
+				if (!_gwindow)
+					return GReturn::INVALID_ARGUMENT;
+
+				
+
+				m_GWindow = _gwindow;
+				//Check if valid _initMask was passed in
+				unsigned long long allowed = ~(GW::GRAPHICS::COLOR_10_BIT | GW::GRAPHICS::DEPTH_BUFFER_SUPPORT | GW::GRAPHICS::DEPTH_STENCIL_SUPPORT);
+				if (allowed & _initMask)
+				{
+					return GReturn::INVALID_ARGUMENT;
+				}
+
+				// Set swap chain buffer format
+				if (_initMask & GW::GRAPHICS::COLOR_10_BIT)
+					m_SwapChainBufferFormat = DXGI_FORMAT_R10G10B10A2_UNORM;
+				else if (_initMask & GW::GRAPHICS::DIRECT2D_SUPPORT)
+					m_SwapChainBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+				else
+					m_SwapChainBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+				// If depth buffer or depth stencil support is requested, set m_DepthBufferSupport to true, else false
+				if (_initMask & GW::GRAPHICS::DEPTH_BUFFER_SUPPORT || _initMask & GW::GRAPHICS::DEPTH_STENCIL_SUPPORT)
+				{
+					m_DepthBufferSupport = true;
+					// If depth stencil support is requested set format to DXGI_FORMAT_D24_UNORM_S8_UINT, else DXGI_FORMAT_D32_FLOAT
+					if (_initMask & GW::GRAPHICS::DEPTH_STENCIL_SUPPORT)
+						m_DepthBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+					else
+						m_DepthBufferFormat = DXGI_FORMAT_D32_FLOAT;
+				}
+				else
+					m_DepthBufferSupport = false;
+
+				m_GWindow.GetWindowHandle(m_UWH);
+				m_GWindow.GetClientWidth(m_Width);
+				m_GWindow.GetClientHeight(m_Height);
+				// if xbox
+				GAMING_DEVICE_MODEL_INFORMATION info = {};
+				GetGamingDeviceModelInformation(&info);
+				if (info.vendorId == GAMING_DEVICE_VENDOR_ID_MICROSOFT)
+				{
+					switch (info.deviceId)
+					{
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE:
+
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_S:
+						// keep swapchan 1080p
+						m_Width = 1920;
+						m_Height = 1080;
+						break;
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_X:
+
+					case GAMING_DEVICE_DEVICE_ID_XBOX_ONE_X_DEVKIT:
+					default:
+						// forward compat
+						// 4K
+						m_Width = 3840;
+						m_Height = 2160;
+						break;
+					}
+				}
+				m_AspectRatio = static_cast<float>(m_Width) / static_cast<float>(m_Height);
+
+				m_Deallocated = false;
+
+				auto process = CallOnMainViewUiThreadAsync([&]()
+					{
+						m_window = reinterpret_cast<winrt::Windows::UI::Core::CoreWindow*>(m_UWH.window);
+					});
+
+				process.get();
+
+				GReturn gr = CreateFactory();
+				if (G_FAIL(gr))
+					return gr;
+
+				gr = QueryAdapter();
+				if (G_FAIL(gr))
+					return gr;
+
+				gr = CreateDevice();
+				if (G_FAIL(gr))
+					return gr;
+
+				gr = CreateCommandLists();
+				if (G_FAIL(gr))
+					return gr;
+
+				gr = CreateCommandQueues();
+				if (G_FAIL(gr))
+					return gr;
+
+				gr = CreateSwapChain();
+				if (G_FAIL(gr))
+					return gr;
+
+				gr = CreateDescriptorHeap();
+				if (G_FAIL(gr))
+					return gr;
+
+				Resize();
+
+				m_GEventResponder.Create([&](const GW::GEvent& event)
+				{
+					GW::SYSTEM::GWindow::Events windowEvent;
+					GW::SYSTEM::GWindow::EVENT_DATA windowEventData;
+					event.Read(windowEvent, windowEventData);
+					switch (windowEvent)
+					{
+					case GW::SYSTEM::GWindow::Events::MINIMIZE: {} break;
+					case GW::SYSTEM::GWindow::Events::DESTROY:
+					{
+						Release();
+					}
+					break;
+
+					case GW::SYSTEM::GWindow::Events::MOVE:
+					case GW::SYSTEM::GWindow::Events::MAXIMIZE:
+					case GW::SYSTEM::GWindow::Events::RESIZE:
+					{
+						++m_resizeCounter;
+					}
+					break;
+					case GW::SYSTEM::GWindow::Events::EVENTS_PROCESSED:
+					{
+						if (m_resizeCounter > 0)
+						{
+							--m_resizeCounter;
+							Resize();
+						}
+					}
+					break;
+					}
+				});
+				return m_GWindow.Register(m_GEventResponder);
+			}
+
+			GReturn GetAspectRatio(float& outRatio) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_GWindow)
+					return GReturn::FAILURE;
+
+				outRatio = m_AspectRatio;
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetSwapchain4(void** ppOutSwapchain) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pSwapChain)
+					return GReturn::FAILURE;
+
+				if (!ppOutSwapchain)
+					return GReturn::INVALID_ARGUMENT;
+
+				*ppOutSwapchain = m_pSwapChain;
+				m_pSwapChain->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetSwapChainBufferIndex(unsigned int& outSwapChainBufferIndex) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pSwapChain)
+					return GReturn::FAILURE;
+
+				outSwapChainBufferIndex = m_pSwapChain->GetCurrentBackBufferIndex();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetDevice(void** ppOutDevice) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pDevice)
+					return GReturn::FAILURE;
+
+				if (!ppOutDevice)
+					return GReturn::INVALID_ARGUMENT;
+
+				*ppOutDevice = m_pDevice;
+				m_pDevice->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetCommandList(void** ppOutDirectCommandList) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_CommandList.m_pCommandList)
+					return GReturn::FAILURE;
+
+				if (!ppOutDirectCommandList)
+					return GReturn::INVALID_ARGUMENT;
+
+				*ppOutDirectCommandList = m_CommandList.m_pCommandList;
+				m_CommandList.m_pCommandList->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetCommandAllocator(void** ppOutDirectCommandAllocator) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_CommandList.m_pCommandAllocator)
+					return GReturn::FAILURE;
+
+				if (!ppOutDirectCommandAllocator)
+					return GReturn::INVALID_ARGUMENT;
+
+				*ppOutDirectCommandAllocator = m_CommandList.m_pCommandAllocator;
+				m_CommandList.m_pCommandAllocator->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetCommandQueue(void** ppOutDirectCommandQueue) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_CommandQueue.m_pCommandQueue)
+					return GReturn::FAILURE;
+
+				if (!ppOutDirectCommandQueue)
+					return GReturn::INVALID_ARGUMENT;
+
+				*ppOutDirectCommandQueue = m_CommandQueue.m_pCommandQueue;
+				m_CommandQueue.m_pCommandQueue->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetFence(void** ppOutDirectFence) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_CommandQueue.m_pFence)
+					return GReturn::FAILURE;
+
+				if (!ppOutDirectFence)
+					return GReturn::INVALID_ARGUMENT;
+
+				*ppOutDirectFence = m_CommandQueue.m_pFence;
+				m_CommandQueue.m_pFence->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetCBSRUADescriptorSize(unsigned int& outCBSRUADescriptorSize) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pDevice)
+					return GReturn::FAILURE;
+
+				outCBSRUADescriptorSize = m_DescriptorInfo.CBSRUADescriptorSize;
+				return GReturn::SUCCESS;
+			}
+			GReturn GetSamplerDescriptorSize(unsigned int& outSamplerDescriptorSize) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pDevice)
+					return GReturn::FAILURE;
+
+				outSamplerDescriptorSize = m_DescriptorInfo.SamplerDescriptorSize;
+				return GReturn::SUCCESS;
+			}
+			GReturn GetRenderTargetDescriptorSize(unsigned int& outRenderTargetDescriptorSize) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pDevice)
+					return GReturn::FAILURE;
+
+				outRenderTargetDescriptorSize = m_DescriptorInfo.RenderTargetDescriptorSize;
+				return GReturn::SUCCESS;
+			}
+			GReturn GetDepthStencilDescriptorSize(unsigned int& outDepthStencilDescriptorSize) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pDevice)
+					return GReturn::FAILURE;
+
+				outDepthStencilDescriptorSize = m_DescriptorInfo.DepthStencilDescriptorSize;
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetCurrentRenderTarget(void** ppOutRenderTarget) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pRenderTargets[m_pSwapChain->GetCurrentBackBufferIndex()])
+					return GReturn::FAILURE;
+
+				if (!ppOutRenderTarget)
+					return GReturn::INVALID_ARGUMENT;
+
+				*ppOutRenderTarget = m_pRenderTargets[m_pSwapChain->GetCurrentBackBufferIndex()];
+				m_pRenderTargets[m_pSwapChain->GetCurrentBackBufferIndex()]->AddRef();
+				return GReturn::SUCCESS;
+			}
+			GReturn GetDepthStencil(void** ppOutDepthStencil) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pDepthStencil)
+					return GReturn::FAILURE;
+
+				if (!ppOutDepthStencil)
+					return GReturn::INVALID_ARGUMENT;
+
+				*ppOutDepthStencil = m_pDepthStencil;
+				m_pDepthStencil->AddRef();
+				return GReturn::SUCCESS;
+			}
+
+			GReturn GetCurrentRenderTargetView(void* pOutRenderTargetView) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pRenderTargetDescriptorHeap)
+					return GReturn::FAILURE;
+
+				if (!pOutRenderTargetView)
+					return GReturn::INVALID_ARGUMENT;
+
+				reinterpret_cast<D3D12_CPU_DESCRIPTOR_HANDLE*>(pOutRenderTargetView)->ptr =
+					m_pRenderTargetDescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + (SIZE_T(m_pSwapChain->GetCurrentBackBufferIndex()) * SIZE_T(m_DescriptorInfo.RenderTargetDescriptorSize));
+				return GReturn::SUCCESS;
+			}
+			GReturn GetDepthStencilView(void* pOutDepthStencilView) const override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_pDepthStencilDescriptorHeap)
+					return GReturn::FAILURE;
+
+				if (!pOutDepthStencilView)
+					return GReturn::INVALID_ARGUMENT;
+
+				reinterpret_cast<D3D12_CPU_DESCRIPTOR_HANDLE*>(pOutDepthStencilView)->ptr = m_pDepthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr;
+				return GReturn::SUCCESS;
+			}
+
+			GReturn StartFrame() override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_CommandQueue.m_pCommandQueue ||
+					!m_CommandList.m_pCommandAllocator ||
+					!m_CommandList.m_pCommandList)
+					return GReturn::FAILURE;
+
+				m_CommandQueue.Signal();
+				m_CommandQueue.Flush();
+				m_CommandList.m_pCommandAllocator->Reset();
+				m_CommandList.m_pCommandList->Reset(m_CommandList.m_pCommandAllocator, nullptr);
+
+				D3D12_RESOURCE_BARRIER rtTransitionBarrier = {};
+				rtTransitionBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+				rtTransitionBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+				rtTransitionBarrier.Transition.pResource = m_pRenderTargets[m_pSwapChain->GetCurrentBackBufferIndex()];
+				rtTransitionBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+				rtTransitionBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+				rtTransitionBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+				m_CommandList.m_pCommandList->ResourceBarrier(1, &rtTransitionBarrier);
+
+				m_CommandList.m_pCommandList->RSSetViewports(1, &m_ScreenViewport);
+				m_CommandList.m_pCommandList->RSSetScissorRects(1, &m_ScissorRect);
+
+				return GReturn::SUCCESS;
+			}
+			GReturn EndFrame(bool VSync) override
+			{
+				if (m_Deallocated)
+					return GReturn::PREMATURE_DEALLOCATION;
+
+				if (!m_CommandQueue.m_pCommandQueue ||
+					!m_CommandList.m_pCommandAllocator ||
+					!m_CommandList.m_pCommandList ||
+					!m_pSwapChain)
+					return GReturn::FAILURE;
+
+				D3D12_RESOURCE_BARRIER rtTransitionBarrier = {};
+				rtTransitionBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+				rtTransitionBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+				rtTransitionBarrier.Transition.pResource = m_pRenderTargets[m_pSwapChain->GetCurrentBackBufferIndex()];
+				rtTransitionBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+				rtTransitionBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+				rtTransitionBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+				m_CommandList.m_pCommandList->ResourceBarrier(1, &rtTransitionBarrier);
+
+				ID3D12CommandList* DirectCommandList[] = { m_CommandList.m_pCommandList };
+				m_CommandList.m_pCommandList->Close();
+				m_CommandQueue.m_pCommandQueue->ExecuteCommandLists(1, DirectCommandList);
+
+				UINT SyncInterval = VSync ? 1u : 0u;
+				UINT PresentFlags = 0u;
+				DXGI_PRESENT_PARAMETERS PresentParameters = { 0u, NULL, NULL, NULL };
+				HRESULT hr = m_pSwapChain->Present1(SyncInterval, PresentFlags, &PresentParameters);
+				if (FAILED(hr))
+					return GReturn::FAILURE;
+				return GReturn::SUCCESS;
+			}
+			//GEventResponderInterface
+			GReturn Assign(std::function<void()> _newHandler) override {
+				return m_GEventResponder.Assign(_newHandler);
+			}
+			GReturn Assign(std::function<void(const GEvent&)> _newEventHandler) override {
+				return m_GEventResponder.Assign(_newEventHandler);
+			}
+			GReturn Invoke() const override {
+				return m_GEventResponder.Invoke();
+			}
+			GReturn Invoke(const GEvent& _incomingEvent) const override {
+				return m_GEventResponder.Invoke(_incomingEvent);
+			}
+		};
+	}
+}
+
+    #endif
+#endif
+
 
 
 namespace GW
@@ -63078,7 +77212,7 @@ namespace GW
 
 				if (!_gwindow)
 					return GReturn::INVALID_ARGUMENT;
-					
+
 				gwindow = _gwindow;
 				//Check if valid _initMask was passed in
 				unsigned long long allowed = ~(GW::GRAPHICS::COLOR_10_BIT | GW::GRAPHICS::DEPTH_BUFFER_SUPPORT | GW::GRAPHICS::DEPTH_STENCIL_SUPPORT | GW::GRAPHICS::OPENGL_ES_SUPPORT);
@@ -63130,8 +77264,8 @@ namespace GW
 				int queryCount = 0;
 				bool formatMatch = false;
 				GLXFBConfig* queryConfig;
-				if (queryConfig = glXGetFBConfigs(	static_cast<Display*>(UWH.display), 
-													DefaultScreen(static_cast<Display*>(UWH.display)), &queryCount))
+				if (queryConfig = glXGetFBConfigs(static_cast<Display*>(UWH.display),
+					DefaultScreen(static_cast<Display*>(UWH.display)), &queryCount))
 				{
 					int numAttrib2Search = sizeof(frameBufferAttributes) / sizeof(int) / 2;
 					// scan for matching frame attributes, fail if not found
@@ -63141,22 +77275,22 @@ namespace GW
 						int attribMatch = 0;
 						for (int j = 0; j < numAttrib2Search; ++j)
 						{
-							int attribVal; int errCode;	
+							int attribVal; int errCode;
 							// if the attribute we are looking for is DC we don't care about it, mark it anyway
-							if (frameBufferAttributes[j*2+1] != GLX_DONT_CARE)
+							if (frameBufferAttributes[j * 2 + 1] != GLX_DONT_CARE)
 							{
-								errCode = glXGetFBConfigAttrib(	static_cast<Display*>(UWH.display), queryConfig[i], 
-																frameBufferAttributes[j*2], &attribVal);
+								errCode = glXGetFBConfigAttrib(static_cast<Display*>(UWH.display), queryConfig[i],
+									frameBufferAttributes[j * 2], &attribVal);
 								if (errCode != GLX_NO_EXTENSION && errCode != GLX_BAD_ATTRIBUTE)
 								{
-									if (frameBufferAttributes[j*2] == GLX_DRAWABLE_TYPE ||
-										frameBufferAttributes[j*2] == GLX_RENDER_TYPE)
+									if (frameBufferAttributes[j * 2] == GLX_DRAWABLE_TYPE ||
+										frameBufferAttributes[j * 2] == GLX_RENDER_TYPE)
 									{
-										if ((frameBufferAttributes[j*2+1] & attribVal) ==
-											frameBufferAttributes[j*2+1])
+										if ((frameBufferAttributes[j * 2 + 1] & attribVal) ==
+											frameBufferAttributes[j * 2 + 1])
 											++attribMatch;
-									} 
-									else if(frameBufferAttributes[j*2+1] == attribVal)	
+									}
+									else if (frameBufferAttributes[j * 2 + 1] == attribVal)
 										++attribMatch;
 								}
 							}
@@ -63180,10 +77314,10 @@ namespace GW
 				if (glXQueryVersion(static_cast<Display*>(UWH.display),&ver[0],&ver[1]) == false) // is OpenGL available?
 					return GReturn::HARDWARE_UNAVAILABLE;
 				// I need to detect OpenGL 3.3 if we request HDR 1010102
-				
+
 				int frameBufferCount;
 				GLXFBConfig* frameBufferConfig = glXChooseFBConfig(static_cast<Display*>(UWH.display), DefaultScreen(static_cast<Display*>(UWH.display)), frameBufferAttributes, &frameBufferCount);
-				
+
 				if (!frameBufferConfig)
 					return GReturn::HARDWARE_UNAVAILABLE;
 				*/
@@ -63202,7 +77336,7 @@ namespace GW
 
 				XChangeWindowAttributes(static_cast<Display*>(UWH.display), *(static_cast<Window*>(UWH.window)), valueMask, &swa);
 				GLXContext oldContext = glXCreateContext(static_cast<Display*>(UWH.display), visualInfo, 0, GL_TRUE);
-				
+
 				XFree(visualInfo);
 
 				// Load GLX Extensions //
@@ -63217,17 +77351,17 @@ namespace GW
 					XFree(queryConfig);
 					return GReturn::FAILURE;
 				}
-				
+
 				// print openGL version
 				std::string ver = reinterpret_cast<const char*>(glGetString(GL_VERSION));
 				//std::cout << ver << std::endl;
 
 				glXDestroyContext(static_cast<Display*>(UWH.display), oldContext);
-				
-				// Extract the version number only contiue if 3.2 or better
+
+				// Extract the version number only continue if 3.2 or better
 				float glVer = std::stof(ver) + 0.000001f; // remove round down
 				if (glVer < 3.2f)
-				{					
+				{
 					XFree(queryConfig);
 					return GReturn::HARDWARE_UNAVAILABLE;
 				}
@@ -63243,13 +77377,13 @@ namespace GW
 
 				if (_initMask & GW::GRAPHICS::OPENGL_ES_SUPPORT)
 					contextAttribs[5] = GLX_CONTEXT_ES2_PROFILE_BIT_EXT;
-					
-				OGLXContext = glXCreateContextAttribsARB(static_cast<Display*>(UWH.display), 
+
+				OGLXContext = glXCreateContextAttribsARB(static_cast<Display*>(UWH.display),
 					queryConfig[queryCount], NULL, true, contextAttribs);
-				
+
 				XFree(queryConfig);
-					
-				if (!glXMakeCurrent(static_cast<Display*>(UWH.display), 
+
+				if (!glXMakeCurrent(static_cast<Display*>(UWH.display),
 					*static_cast<Window*>(UWH.window), OGLXContext))
 				{
 					XUnlockDisplay(static_cast<Display*>(UWH.display));
@@ -63313,13 +77447,13 @@ namespace GW
 
 				// Call back event handler for OpenGL
 				GReturn result = responder.Create([&](const GEvent& g)
-				{
-					GW::SYSTEM::GWindow::Events e;
-					GW::SYSTEM::GWindow::EVENT_DATA d;
-					if(+g.Read(e, d)) 
 					{
-						switch (e)
+						GW::SYSTEM::GWindow::Events e;
+						GW::SYSTEM::GWindow::EVENT_DATA d;
+						if (+g.Read(e, d))
 						{
+							switch (e)
+							{
 							case GW::SYSTEM::GWindow::Events::MINIMIZE: {} break;
 							case GW::SYSTEM::GWindow::Events::DESTROY:
 							{
@@ -63340,13 +77474,13 @@ namespace GW
 								glViewport(0, 0, width, height);
 							}
 							break;
+							}
 						}
-					}
-				});
+					});
 				if (G_PASS(result)) {
 					gwindow.Register(responder);
 				}
-				
+
 				return result;
 			}
 
@@ -63457,8 +77591,11 @@ namespace GW
 	}
 }
 
+
 #elif defined(_WIN32)
-    #define WIN32_LEAN_AND_MEAN
+    #include <winapifamily.h>
+    #if (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+        #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <gl/GL.h>
 #include <string>
@@ -72598,7 +86735,7 @@ namespace GW
 				wglMakeCurrent(NULL, NULL);
 				ReleaseDC(static_cast<HWND>(UWH.window), hdc);
 				wglDeleteContext(OGLcontext);
-				// Extract the version number only contiue if 3.2 or better
+				// Extract the version number only continue if 3.2 or better
 				float glVer = std::stof(ver) + 0.000001f; // remove round down
 				if (glVer < 3.2f)
 				{
@@ -72834,7 +86971,52 @@ namespace GW
 	}
 }
 
+    #elif (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        namespace GW {
+	namespace I 	{
+		class GOpenGLSurfaceImplementation : public virtual GOpenGLSurfaceInterface 		{
+		public:
+			GReturn Create(GW::SYSTEM::GWindow _gwindow, unsigned long long _initMask) {
+				return GReturn::FEATURE_UNSUPPORTED;
+			}
+			GReturn GetAspectRatio(float& _outRatio) const override {
+				return GReturn::FAILURE;
+			}
+			GReturn GetContext(void** _outContext) const override {
+				return GReturn::FAILURE;
+			}
+			GReturn UniversalSwapBuffers() override {
+				return GReturn::FAILURE;
+			}
+			GReturn QueryExtensionFunction(const char* _extension, const char* _funcName,
+										   void** _outFuncAddress) override {
+				return GReturn::FAILURE;
+			}
+			GReturn EnableSwapControl(bool _setSwapControl) override {
+				return GReturn::FAILURE;
+			}
+
+			//GEventResponderInterface
+			GReturn Assign(std::function<void()> _newHandler) override {
+				return GReturn::FAILURE;
+			}
+			GReturn Assign(std::function<void(const GEvent&)> _newEventHandler) override {
+				return GReturn::FAILURE;
+			}
+			GReturn Invoke() const override {
+				return GReturn::FAILURE;
+			}
+			GReturn Invoke(const GEvent& _incomingEvent) const override {
+				return GReturn::FAILURE;
+			}
+		};
+	}
+}
+
+
+    #endif
 #endif
+
 
 
 namespace GW
@@ -73239,7 +87421,7 @@ namespace GW
 			// Detected file type of a source data file
 			enum class SOURCE_FILE_TYPE : int
 			{
-				UNSUPPORTED				= -1,	// Filetype is not natively supported by GBlitter
+				UNSUPPORTED				= -1,	// File type is not natively supported by GBlitter
 				UNUSED					=  0,	// File is not used in source data (This value is used during data normalization while importing sources)
 				TGA						= +1,	// TGA (Targa)
 			};
@@ -73336,7 +87518,7 @@ namespace GW
 				};
 			};
 			
-			// Shorthands for DrawOptions bitflag combinations indicating basic transformations
+			// Shorthands for DrawOptions bit-flag combinations indicating basic transformations
 			/*
 			*	Labels also indicate the angle produced by the flag combination and whether it is inverted (read: mirrored about its local y-axis)
 			*
@@ -73360,7 +87542,7 @@ namespace GW
 				};
 			};
 			
-			// Shorthands for various DrawOptions bitflag combinations indicating different methods of drawing tiles
+			// Shorthands for various DrawOptions bit-flag combinations indicating different methods of drawing tiles
 			/*
 			*	MSK		USE_MASKING
 			*	TSF		USE_TRANSFORMATIONS
@@ -73523,7 +87705,7 @@ namespace GW
 			// 10 B + data
 			struct SourceDataBuffer
 			{
-				unsigned short			dataTypes = 0;		// bitflags indicating the types of data present
+				unsigned short			dataTypes = 0;		// bit-flags indicating the types of data present
 				unsigned short			w = 0;				// width of source, in pixels
 				unsigned short			h = 0;				// height of source, in pixels
 				unsigned int			size = 0;			// size of source, in pixels
@@ -73619,7 +87801,7 @@ namespace GW
 			// 88 B (86 B + padding)
 			struct ResultInstruction
 			{
-				unsigned short			flags;				//  2 B - bitflags indicating data to use and operations to perform
+				unsigned short			flags;				//  2 B - bit-flags indicating data to use and operations to perform
 				unsigned short			source_id;			//  2 B - index of source that instruction refers to
 				unsigned short			source_block_id;	//  2 B - index of source block that instruction refers to
 				unsigned short			x_source;			//  2 B - x coordinate of data origin in source block, in pixels
@@ -73989,9 +88171,9 @@ namespace GW
 				}
 			}
 
-			// Extracts the extension from a filepath and returns the detected filetype
+			// Extracts the extension from a filepath and returns the detected file type
 			/*
-			*	retval GReturn::SUCCESS				Filetype was determined.
+			*	retval GReturn::SUCCESS				File type was determined.
 			*	retval GReturn::FAILURE				_filepath did not have an extension.
 			*/
 			static GReturn filterFileExtension(const char* _filepath, SOURCE_FILE_TYPE& _outFiletype)
@@ -78818,11 +93000,11 @@ namespace GW
 					&& _layersFilepath == nullptr
 					&& _stencilsFilepath == nullptr)
 					return GReturn::INVALID_ARGUMENT;
-				// determine which filepaths are used
+				// determine which file paths are used
 				SOURCE_FILE_TYPE colorFiletype = _colorsFilepath ? SOURCE_FILE_TYPE::UNSUPPORTED : SOURCE_FILE_TYPE::UNUSED;
 				SOURCE_FILE_TYPE layerFiletype = _layersFilepath ? SOURCE_FILE_TYPE::UNSUPPORTED : SOURCE_FILE_TYPE::UNUSED;
 				SOURCE_FILE_TYPE stencilFiletype = _stencilsFilepath ? SOURCE_FILE_TYPE::UNSUPPORTED : SOURCE_FILE_TYPE::UNUSED;
-				// ensure used filepaths have extensions (if filtering file extension fails, filepath does not have a valid extension)
+				// ensure used file paths have extensions (if filtering file extension fails, filepath does not have a valid extension)
 				if (colorFiletype != SOURCE_FILE_TYPE::UNUSED)
 					if (-filterFileExtension(_colorsFilepath, colorFiletype))
 						return GReturn::INVALID_ARGUMENT;
@@ -78832,7 +93014,7 @@ namespace GW
 				if (stencilFiletype != SOURCE_FILE_TYPE::UNUSED)
 					if (-filterFileExtension(_stencilsFilepath, stencilFiletype))
 						return GReturn::INVALID_ARGUMENT;
-				// ensure filetypes are supported (a valid extension does not guarantee a supported extension)
+				// ensure file types are supported (a valid extension does not guarantee a supported extension)
 				if (   colorFiletype == SOURCE_FILE_TYPE::UNSUPPORTED
 					|| layerFiletype == SOURCE_FILE_TYPE::UNSUPPORTED
 					|| stencilFiletype == SOURCE_FILE_TYPE::UNSUPPORTED)
@@ -79680,6 +93862,309 @@ namespace GW
 };
 
 #endif // GBLITTER_H
+
+
+#ifndef GATEWARE_IOSUTILS_H
+#define GATEWARE_IOSUTILS_H
+
+#if defined(__APPLE__)
+    #include <TargetConditionals.h>
+#if TARGET_OS_IOS
+
+@import Foundation;
+
+// This include is for iOS/tvOS/watchOS only.
+// This is the only change made to the macros to get them to work with other Apple OS's
+#import <objc/runtime.h>
+
+// G_OBJC MACROS
+//
+// Author: Ozzie Mercado
+// Contributors: Jacob Morales
+// Purpose: These macros are designed to simplify the process of writing Objective-C classes using the Objective-C
+//          Runtime Library. All Objective-C classes must be created at runtime. The implementation of Objective-C
+//          classes cannot be implicitly inlined. By using the Objective-C Runtime Library, we can get around that
+//          limitation. Using these macros will make writing and using the Objective-C Runtime Library classes easier.
+// Copyright: 7thGate Software LLC.
+// License : MIT
+//
+// For more information about the Objecti-C Runtime Library:
+// https://developer.apple.com/documentation/objectivec/objective-c_runtime
+//
+// --- DIRECTIONS ---
+// Below directions for writing a G_OBJC class interface, implementation, how to use call methods, and how to
+// retrieve data members. Further clarification for what each G_OBJC macro does can be found below the instructions
+// at each macro definition.
+//
+// Writing a G_OBJC Class Interface:
+//
+//    // This should be somewhere above the implementation of the C++ Gateware library.
+//    namespace internal_gw // Keep all G_OBJC class interfaces inside the internal_gw namespace.
+//    {
+//        // OPTIONAL: All data members of your class should go inside the data members struct for simplicity sake.
+//        //           This makes it much easier to access them later. If you don't need to include data members in
+//        //           your class, then you can skip creating the data members struct.
+//        G_OBJC_DATA_MEMBERS_STRUCT(YourClassNameHere)
+//        {
+//            // These data members are just for example.
+//            NSObject* someObject;
+//            bool active;
+//            int values[5];
+//        };
+//
+//        G_OBJC_HEADER_DATA_MEMBERS_PROPERTY_METHOD(YourClassNameHere); // OPTIONAL: Only required when using the G_OBJC_DATA_MEMBERS_STRUCT().
+//
+//        // Forward declare all member functions of your class. You could write implementation here, but this is cleaner.
+//        // These functions are just for example.
+//        G_OBJC_HEADER_STATIC_METHOD_WITH_ARGUMENTS(YourClassNameHere, void, clearValues, id classInstance);
+//        G_OBJC_HEADER_INSTANCE_METHOD(YourClassNameHere, void, toggleActive);
+//        G_OBJC_HEADER_INSTANCE_METHOD_WITH_ARGUMENTS(YourClassNameHere, unsigned int, windowWillResize, NSSize* size, int index);
+//
+//        // Create your class.
+//        // Note: If 'YourObjectiveCParentClass' is NSObject, then you may not need to write your class in Objective-C.
+//        //       Regardless, you can still create a G_OBJC class that subclasses NSObject.
+//        G_OBJC_CLASS_BEGIN(YourClassNameHere, YourObjectiveCParentClass)
+//        {
+//            // Add the data members getter function to your class definition.
+//            G_OBJC_CLASS_DATA_MEMBERS_PROPERTY(YourClassNameHere); // OPTIONAL: Only required when using the G_OBJC_DATA_MEMBERS_STRUCT().
+//
+//            // Add member functions to your class definition. These functions are just for example.
+//            // Note: The 3rd argument is the type encoding for the function. Check the macro definition for more
+//            //       information. The 4th argument in G_OBJC_CLASS_METHOD_WITH_ARGUMENTS() is a ':' for each
+//            //       argument in the member function.
+//            G_OBJC_CLASS_METHOD_WITH_ARGUMENTS(YourClassNameHere, clearValues, "v@:@", :);
+//            G_OBJC_CLASS_METHOD(YourClassNameHere, toggleActive, "v@:");
+//            G_OBJC_CLASS_METHOD_WITH_ARGUMENTS(YourClassNameHere, windowWillResize, "I@:@i", ::);
+//        }
+//        G_OBJC_CLASS_END(YourClassNameHere)
+//    }
+//
+// Writing a G_OBJC Class Implementation:
+//
+//    // This should be somewhere below the implementation of the C++ Gateware library.
+//    namespace internal_gw // Keep all G_OBJC class implementations inside the internal_gw namespace.
+//    {
+//        // Implementation for properties of your class.
+//        G_OBJC_IMPLEMENTATION_DATA_MEMBERS_PROPERTY_METHOD(YourClassNameHere) // OPTIONAL: Only required when using the G_OBJC_DATA_MEMBERS_STRUCT().
+//
+//        // Implementation for all member functions of your class. These functions are just for example.
+//        G_OBJC_HEADER_STATIC_METHOD_WITH_ARGUMENTS(YourClassNameHere, void, clearValues, id classInstance)
+//        {
+//            // Get the data members for 'classInstance'. We assume 'classInstance' is an instance of YourClassNameHere.
+//            // Note: Member functions do not have direct access to member variables. G_OBJC_GET_DATA_MEMBERS() makes it easy
+//            //       to get a reference to the data members of your class, use them, and make changes to them.
+//            G_OBJC_DATA_MEMBERS_TYPE(YourClassNameHere)& dataMembers = G_OBJC_GET_DATA_MEMBERS(YourClassNameHere, classInstance);
+//
+//            for (int i = 0; i < 5; ++i)
+//                dataMembers.values[i] = 0;
+//        }
+//
+//        G_OBJC_HEADER_INSTANCE_METHOD(YourClassNameHere, void, toggleActive)
+//        {
+//            // Note: 'self' is available in all non-static member functions.
+//            G_OBJC_DATA_MEMBERS_TYPE(YourClassNameHere)& dataMembers = G_OBJC_GET_DATA_MEMBERS(YourClassNameHere, self);
+//
+//            dataMembers.active = !dataMembers.active;
+//        }
+//
+//        G_OBJC_HEADER_INSTANCE_METHOD_WITH_ARGUMENTS(YourClassNameHere, unsigned int, windowWillResize, NSSize* size, int index)
+//        {
+//            // This is a call to the above static member function 'clearValues'.
+//            G_OBJC_CALL_METHOD_WITH_ARGUMENTS(YourClassNameHere, self, clearValues, self);
+//
+//            G_OBJC_DATA_MEMBERS_TYPE(YourClassNameHere)& dataMembers = G_OBJC_GET_DATA_MEMBERS(YourClassNameHere, self);
+//            dataMembers.someObject = nullptr;
+//            dataMembers.active = true;
+//
+//            return (unsigned int)index;
+//        }
+//    }
+//
+// Using a G_OBJC Class in a C++ Gateware library implementation:
+//
+//    // Allocating memory for a member of a G_OBJC class.
+//    id classInstance = [internal_gw::G_OBJC_GET_CLASS(YourClassNameHere) alloc];
+//
+//    // Initializing a member of a G_OBJC class. Note: This example is after allocating 'classInstance'.
+//    classInstance = [classInstance init];
+//
+//    // Both allocating and initializing a member of a G_OBJC class.
+//    id classInstance = [[internal_gw::G_OBJC_GET_CLASS(YourClassNameHere) alloc] init];
+//
+//    // Cleaning up a member of a G_OBJC class.
+//    [classInstance autorelease];
+//    or
+//    [classInstance release];
+//
+//    // Getting the data members of a G_OBJC class.
+//    G_OBJC_DATA_MEMBERS_TYPE(YourClassNameHere)& dataMembers = G_OBJC_GET_DATA_MEMBERS(YourClassNameHere, classInstance);
+//
+//    // Getting a specific data member of a G_OBJC class. Note: This example is after getting the data members of the G_OBJC class.
+//    dataMembers.specificDataMemberName
+//
+//    // Setting a specific data member of a G_OBJC class. Note: This example is after getting the data members of the G_OBJC class.
+//    dataMembers.specificDataMemberName = 3.14f;
+//
+//    // Calling a member function of a G_OBJC class.
+//    internal_gw::G_OBJC_CALL_METHOD(YourClassNameHere, classInstance, YourMemberFunctionNameHere);
+//
+//    // Calling a member function of a G_OBJC class with arguments.
+//    internal_gw::G_OBJC_CALL_METHOD_WITH_ARGUMENTS(YourClassNameHere, classInstance, YourMemberFunctionNameHere, 3.14f, true);
+//
+// --- DIRECTIONS END ---
+
+#define G_OBJC_GET_CLASS(class_name) Class##class_name()
+
+// G_OBJC Class Creation:
+
+#define G_OBJC_CLASS_DECLARE(class_name) static Class class_name
+
+#define G_OBJC_CLASS_ALLOCATE(class_name, class_parent) class_name = objc_allocateClassPair([class_parent class], #class_name, 0)
+
+#define G_OBJC_CLASS_REGISTER(class_name) objc_registerClassPair(class_name)
+
+#define G_OBJC_CLASS_DEFINITION_HEADER(class_name) static Class& G_OBJC_GET_CLASS(class_name)
+
+#define G_OBJC_CLASS_BEGIN(class_name, class_parent) G_OBJC_CLASS_DEFINITION_HEADER(class_name)\
+{\
+    G_OBJC_CLASS_DECLARE(class_name);\
+    if (class_name == nil)\
+    {\
+        G_OBJC_CLASS_ALLOCATE(class_name, class_parent);\
+        if (true) // Added to allow for a {code block}.
+
+#define G_OBJC_CLASS_END(class_name) G_OBJC_CLASS_REGISTER(class_name);\
+    }\
+    return class_name; \
+}
+
+#define G_OBJC_CLASS_METHOD(class_name, method_name, method_types_string) class_addMethod(class_name, @selector(method_name), (IMP)class_name##Method##method_name, method_types_string)
+
+#define G_OBJC_CLASS_METHOD_WITH_ARGUMENTS(class_name, method_name, method_types_string, argument_colons) class_addMethod(class_name, @selector(method_name argument_colons), (IMP)class_name##Method##method_name, method_types_string)
+
+#define G_OBJC_CLASS_ADD_PROPERTY(class_name, type_name, property_name) class_addIvar(class_name, "_"#property_name, sizeof(type_name), log2(sizeof(type_name)), @encode(type_name));\
+{\
+    objc_property_attribute_t instance_variable_type = { "T", "@\""#type_name"\"" };\
+    objc_property_attribute_t instance_property_name = { "V", "_"#property_name };\
+    objc_property_attribute_t instance_variable_attributes[2] = { instance_variable_type, instance_property_name };\
+    class_addProperty(class_name, #property_name, instance_variable_attributes, 2);\
+}
+
+#define G_OBJC_CLASS_GET_PROPERTY_METHOD(class_name, property_name) G_OBJC_CLASS_METHOD(class_name, property_name, "@@:")
+
+#define G_OBJC_CLASS_SET_PROPERTY_METHOD(class_name, property_name) G_OBJC_CLASS_METHOD_WITH_ARGUMENTS(class_name, Set##property_name, "v@:@", :)
+
+#define G_OBJC_CLASS_PROPERTY(class_name, type_name, property_name) G_OBJC_CLASS_ADD_PROPERTY(class_name, type_name, property_name);\
+G_OBJC_CLASS_GET_PROPERTY_METHOD(class_name, property_name);\
+G_OBJC_CLASS_SET_PROPERTY_METHOD(class_name, property_name)
+
+// G_OBJC Class Interface:
+
+#define G_OBJC_HEADER_STATIC_METHOD(class_name, method_return_type, method_name) static method_return_type class_name##Method##method_name(id self, SEL _cmd)
+
+#define G_OBJC_HEADER_STATIC_METHOD_WITH_ARGUMENTS(class_name, method_return_type, method_name, ...) static method_return_type class_name##Method##method_name(id self, SEL _cmd, __VA_ARGS__)
+
+#define G_OBJC_HEADER_INSTANCE_METHOD(class_name, method_return_type, method_name) inline method_return_type class_name##Method##method_name(id self, SEL _cmd)
+
+#define G_OBJC_HEADER_INSTANCE_METHOD_WITH_ARGUMENTS(class_name, method_return_type, method_name, ...) inline method_return_type class_name##Method##method_name(id self, SEL _cmd, __VA_ARGS__)
+
+#define G_OBJC_HEADER_GET_PROPERTY_METHOD(class_name, type_name, property_name) G_OBJC_HEADER_INSTANCE_METHOD(class_name, type_name&, property_name)
+
+#define G_OBJC_HEADER_GET_PROPERTY_METHOD_FOR_POINTER(class_name, type_name, property_name) G_OBJC_HEADER_INSTANCE_METHOD(class_name, type_name, property_name)
+
+#define G_OBJC_HEADER_SET_PROPERTY_METHOD(class_name, type_name, property_name) G_OBJC_HEADER_INSTANCE_METHOD_WITH_ARGUMENTS(class_name, void, Set##property_name, type_name newVal)
+
+#define G_OBJC_HEADER_SET_PROPERTY_METHOD_FOR_POINTER(class_name, type_name, property_name) G_OBJC_HEADER_INSTANCE_METHOD_WITH_ARGUMENTS(class_name, void, Set##property_name, type_name newVal)
+
+#define G_OBJC_IMPLEMENTATION_GET_PROPERTY_METHOD(class_name, type_name, property_name) G_OBJC_HEADER_GET_PROPERTY_METHOD(class_name, type_name, property_name)\
+{\
+    Ivar ivar = class_getInstanceVariable(G_OBJC_GET_CLASS(class_name), "_"#property_name);\
+    CFTypeRef selfPtr = CFBridgingRetain(self);\
+    type_name* varPtr = (type_name*)((uint8_t*)selfPtr + ivar_getOffset(ivar));\
+    return *varPtr;\
+}
+
+#define G_OBJC_IMPLEMENTATION_GET_PROPERTY_METHOD_FOR_POINTER(class_name, type_name, property_name) G_OBJC_HEADER_GET_PROPERTY_METHOD_FOR_POINTER(class_name, type_name, property_name)\
+{\
+    Ivar ivar = class_getInstanceVariable(G_OBJC_GET_CLASS(class_name), "_"#property_name);\
+    return (type_name)object_getIvar(self, ivar);\
+}
+
+#define G_OBJC_IMPLEMENTATION_SET_PROPERTY_METHOD(class_name, type_name, property_name) G_OBJC_HEADER_SET_PROPERTY_METHOD(class_name, type_name, property_name)\
+{\
+    Ivar ivar = class_getInstanceVariable(G_OBJC_GET_CLASS(class_name), "_"#property_name);\
+    CFTypeRef selfPtr = CFBridgingRetain(self);\
+    type_name* varPtr = (type_name*)((uint8_t*)selfPtr + ivar_getOffset(ivar));\
+    *varPtr = newVal;\
+}
+
+#define G_OBJC_IMPLEMENTATION_SET_PROPERTY_METHOD_FOR_POINTER(class_name, type_name, property_name) G_OBJC_HEADER_SET_PROPERTY_METHOD_FOR_POINTER(class_name, type_name, property_name)\
+{\
+    Ivar ivar = class_getInstanceVariable(G_OBJC_GET_CLASS(class_name), "_"#property_name);\
+    type_name oldVal = (type_name)object_getIvar(self, ivar);\
+    if (oldVal != newVal)\
+        object_setIvar(self, ivar, (id)newVal);\
+}
+
+#define G_OBJC_HEADER_PROPERTY_METHODS(class_name, type_name, property_name)\
+G_OBJC_HEADER_GET_PROPERTY_METHOD(class_name, type_name, property_name);\
+G_OBJC_HEADER_SET_PROPERTY_METHOD(class_name, type_name, property_name)
+
+#define G_OBJC_HEADER_PROPERTY_METHODS_FOR_POINTER(class_name, type_name, property_name)\
+G_OBJC_HEADER_GET_PROPERTY_METHOD_FOR_POINTER(class_name, type_name, property_name);\
+G_OBJC_HEADER_SET_PROPERTY_METHOD_FOR_POINTER(class_name, type_name, property_name)
+
+#define G_OBJC_IMPLEMENTATION_PROPERTY_METHODS(class_name, type_name, property_name)\
+G_OBJC_IMPLEMENTATION_GET_PROPERTY_METHOD(class_name, type_name, property_name);\
+G_OBJC_IMPLEMENTATION_SET_PROPERTY_METHOD(class_name, type_name, property_name)
+
+#define G_OBJC_IMPLEMENTATION_PROPERTY_METHODS_FOR_POINTER(class_name, type_name, property_name)\
+G_OBJC_IMPLEMENTATION_GET_PROPERTY_METHOD_FOR_POINTER(class_name, type_name, property_name);\
+G_OBJC_IMPLEMENTATION_SET_PROPERTY_METHOD_FOR_POINTER(class_name, type_name, property_name)
+
+// G_OBJC Class Usage:
+
+#define G_OBJC_CALL_METHOD(class_name, class_instance, method_name) class_name##Method##method_name(class_instance, @selector(method_name))
+
+#define G_OBJC_CALL_METHOD_WITH_ARGUMENTS(class_name, class_instance, method_name, ...) class_name##Method##method_name(class_instance, @selector(method_name), __VA_ARGS__)
+
+#define G_OBJC_GET_PROPERTY(class_name, class_instance, property_name) class_name##Method##property_name(class_instance, @selector(property_name))
+
+#define G_OBJC_SET_PROPERTY(class_name, class_instance, property_name, new_value) class_name##MethodSet##property_name(class_instance, @selector(property_name), new_value)
+
+// G_OBJC Class Data Members:
+
+#define G_OBJC_DATA_MEMBERS_TYPE(class_name) class_name##DataMembers
+
+#define G_OBJC_DATA_MEMBERS_STRUCT(class_name) struct class_name##DataMembers
+
+#define G_OBJC_CLASS_DATA_MEMBERS_PROPERTY(class_name) G_OBJC_CLASS_ADD_PROPERTY(class_name, G_OBJC_DATA_MEMBERS_TYPE(class_name), dataMembersOf##class_name);\
+G_OBJC_CLASS_GET_PROPERTY_METHOD(class_name, dataMembersOf##class_name)
+
+#define G_OBJC_HEADER_DATA_MEMBERS_PROPERTY_METHOD(class_name)\
+G_OBJC_HEADER_GET_PROPERTY_METHOD(class_name, G_OBJC_DATA_MEMBERS_TYPE(class_name), dataMembersOf##class_name)
+
+#define G_OBJC_IMPLEMENTATION_DATA_MEMBERS_PROPERTY_METHOD(class_name)\
+G_OBJC_IMPLEMENTATION_GET_PROPERTY_METHOD(class_name, G_OBJC_DATA_MEMBERS_TYPE(class_name), dataMembersOf##class_name)
+
+#define G_OBJC_GET_DATA_MEMBERS(class_name, class_instance) G_OBJC_GET_PROPERTY(class_name, class_instance, dataMembersOf##class_name)
+
+// G_OBJC MACROS END
+
+
+// Thanks to Chris for this little snippet and reminding everyone the proper way to interact with the apple UI layer
+// https://chritto.wordpress.com/2012/12/20/updating-the-ui-from-another-thread/
+inline void RUN_ON_UI_THREAD(dispatch_block_t block)
+{
+    if ([NSThread isMainThread])
+        block();
+    else
+        dispatch_sync(dispatch_get_main_queue(), block);
+}
+
+#endif // #endif TARGET_OS_IOS
+#endif // #endif __APPLE__
+#endif // #endif GATEWARE_IOSUTILS_H
 
 
 #ifndef GDEPENDENCIESTEST_HPP

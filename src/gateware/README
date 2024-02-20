@@ -146,3 +146,23 @@ else
 
 optional: (if you would rather use Clang)
 sudo apt-get install llvm clang
+
+
+UWP:
+
+How to setup your dev machine to run UWP: (Windows)
+
+It is recommended to have your machine running on Windows 11
+
+All first party libraries are auto-linked so not much to do here.
+
+Requires Visual Studio and the Windows SDK
+
+Vulkan and OpenGL are not supported on UWP, so add the following #defines below
+	#define GATEWARE_DISABLE_GVULKANSURFACE // above include
+	#define GATEWARE_DISABLE_GOPENGLSURFACE // above include
+
+When you first launch a UWP project in Visual Studio, it will prompt you 
+	to download a Windows SDK. Click install and let it run.
+
+Go into your computer's settings and enable Developer mode.
