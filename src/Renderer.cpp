@@ -250,15 +250,21 @@ void Renderer::CleanUp() const
     vkDestroyPipeline(device_, pipeline_, nullptr);
 }
 
-void Renderer::Init(const std::shared_ptr<GVulkanSurface>& VulkanSurface, const unsigned Width, const unsigned Height, unsigned MaxFrames)
+bool Renderer::Init(const std::shared_ptr<GVulkanSurface>& VulkanSurface, const unsigned Width, const unsigned Height, unsigned MaxFrames)
 {
     vulkanSurface_ = VulkanSurface;
     renderables_ = std::vector<std::shared_ptr<Renderable>>();
     
     /***************** GEOMETRY INTIALIZATION ******************/
     // Grab the device & physical device so we can allocate some stuff
-    vulkanSurface_->GetPhysicalDevice(reinterpret_cast<void**>(&physicalDevice_));
-    vulkanSurface_->GetDevice(reinterpret_cast<void**>(&device_));
+    vulkanSurface_->GetPhysicalDevice((void**)&physicalDevice_);
+    vulkanSurface_->GetDevice((void**)&device_);
+
+    if (physicalDevice_ == nullptr || device_ == nullptr)
+    {
+        VK_LOG(LogCategory::Error, "Failed to get physical device or device.")
+        return false;
+    }
     
     UpdateStorageBuffers(physicalDevice_, MaxFrames, true);
 
@@ -274,6 +280,8 @@ void Renderer::Init(const std::shared_ptr<GVulkanSurface>& VulkanSurface, const 
             CleanUp();
         }
     });
+
+    return true;
 }
 
 void Renderer::BindRenderable(Renderable* NewRenderable)
@@ -325,7 +333,7 @@ void Renderer::CompileShader(const std::string& VsFilePath, const std::string& P
     NewShader = Shader(VsFilePath, PsFilePath, shaders_.size() - 1);
 }
 
-void Renderer::UpdateStorageBuffers(VkPhysicalDevice PhysicalDevice, unsigned& MaxFrames, bool Create)
+void Renderer::UpdateStorageBuffers(const VkPhysicalDevice PhysicalDevice, unsigned& MaxFrames, bool Create)
 {
     vulkanSurface_->GetSwapchainImageCount(MaxFrames);
 

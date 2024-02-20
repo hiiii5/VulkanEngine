@@ -16,7 +16,6 @@
 
 class Window
 {
-private:
     std::shared_ptr<GW::SYSTEM::GWindow> window_;
     std::unique_ptr<GW::CORE::GEventResponder> eventResponder_;
     std::shared_ptr<GW::GRAPHICS::GVulkanSurface> vulkanSurface_;

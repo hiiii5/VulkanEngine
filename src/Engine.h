@@ -39,7 +39,7 @@ private:
     std::unique_ptr<Logger> logger_;
     
 public:
-    void Init(const char* Title, int X, int Y, int Width, int Height);
+    bool Init(const char* Title, int X, int Y, int Width, int Height);
 
     void Start();
     void Update();

@@ -5,12 +5,20 @@
 #include "Window.h"
 #include "Object.h"
 
-void Engine::Init(const char* Title, int X, int Y, int Width, int Height)
+bool Engine::Init(const char* Title, int X, int Y, int Width, int Height)
 {
-    window_ = std::make_unique<Window>(Title, X, Y, Width, Height);
     logger_ = std::make_unique<Logger>();
+    window_ = std::make_unique<Window>(Title, X, Y, Width, Height);
+    
     // Start the graphics renderer, with 2 frames of buffer.
-    Renderer::GRenderer().Init(window_->GetVulkanSurface(), Width, Height, 2);
+    if (!Renderer::GRenderer().Init(window_->GetVulkanSurface(), Width, Height, 2))
+    {
+        VK_LOG(LogCategory::Error, "Failed to initialize the renderer.")
+        isRunning_ = false;
+        return false;
+    }
+
+    return true;
 }
 
 void Engine::Start()

@@ -104,7 +104,7 @@ private:
     void CleanUp() const;
     
 public:
-    void Init(const std::shared_ptr<GVulkanSurface>& VulkanSurface, unsigned Width, unsigned Height, unsigned MaxFrames);
+    bool Init(const std::shared_ptr<GVulkanSurface>& VulkanSurface, unsigned Width, unsigned Height, unsigned MaxFrames);
 
     /** Binds a renderable to the renderer. */
     void BindRenderable(Renderable* NewRenderable);
